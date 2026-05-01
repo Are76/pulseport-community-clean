@@ -36,3 +36,13 @@ describe('buildAssetMap', () => {
     expect(buildAssetMap([]).size).toBe(0);
   });
 });
+
+describe('buildAssetMap round-trip', () => {
+  it('key used to build matches key used to look up', () => {
+    const asset: Asset = { symbol: 'WPLS', chain: 'pulsechain', price: 0.0001, value: 0.01 } as Asset;
+    const m = buildAssetMap([asset]);
+    // normalizeSymbol('WPLS', 'pulsechain') => 'PLS' (WPLS is the wrapped native on pulsechain)
+    const key = 'pulsechain:PLS';
+    expect(m.get(key)).toBe(asset);
+  });
+});

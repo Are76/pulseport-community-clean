@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useMemo, useRef } from 'react';
+﻿import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import {
   Wallet as WalletIcon,
   Coins,
@@ -3285,7 +3285,7 @@ export default function App() {
     return `https://dexscreener.com/${slug}/${address}`;
   };
 
-  const getTokenLogoUrl = (asset: Asset): string => {
+  const getTokenLogoUrl = useCallback((asset: Asset): string => {
     // 0. STATIC_LOGOS always wins - curated logos that must never be overwritten by any remote source
     const addrKey0 = (asset as any).address?.toLowerCase?.() as string | undefined;
     if (addrKey0 && STATIC_LOGOS[addrKey0]) return STATIC_LOGOS[addrKey0];
@@ -3317,7 +3317,21 @@ export default function App() {
     // 5. Fall back to tokenLogos map (covers DexScreener CDN images cached during market-data fetch)
     if (addrKey0 && tokenLogos[addrKey0]) return tokenLogos[addrKey0];
     return '';
-  };
+  }, [tokenLogos]);
+
+  // Stable callbacks for TransactionList props
+  const handleToggleHide = useCallback((id: string) => {
+    setHiddenTxIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  }, []);
+  const handleFilterByAssetHistory = useCallback((symbol: string) => {
+    setTxAssetFilter(symbol); setActiveTab('history');
+  }, []);
+  const handleFilterByAssetSwap = useCallback((symbol: string) => {
+    setTxAssetFilter(symbol); setTxTypeFilter('swap');
+  }, []);
+  const handleFilterByAssetOnly = useCallback((symbol: string) => {
+    setTxAssetFilter(symbol);
+  }, []);
 
   // -- RENDER ----------------------------------------------------------------
 
@@ -5656,9 +5670,9 @@ export default function App() {
                         getTokenLogoUrl={getTokenLogoUrl}
                         tokenLogos={tokenLogos}
                         hideIds={hiddenTxIds}
-                        onToggleHide={id => setHiddenTxIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])}
+                        onToggleHide={handleToggleHide}
                         showHidden={showHiddenTxs}
-                        onFilterByAsset={symbol => setTxAssetFilter(symbol)}
+                        onFilterByAsset={handleFilterByAssetOnly}
                         emptyMessage="No transactions found for these filters."
                       />
                       {/* Hidden transactions bar */}
@@ -5898,9 +5912,9 @@ export default function App() {
                   getTokenLogoUrl={getTokenLogoUrl}
                   tokenLogos={tokenLogos}
                   hideIds={hiddenTxIds}
-                  onToggleHide={id => setHiddenTxIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])}
+                  onToggleHide={handleToggleHide}
                   showHidden={showHiddenTxs}
-                  onFilterByAsset={symbol => { setTxAssetFilter(symbol); setTxTypeFilter('swap'); }}
+                  onFilterByAsset={handleFilterByAssetSwap}
                   emptyMessage="No swaps found for these filters."
                 />
               </div>
@@ -6393,7 +6407,7 @@ export default function App() {
                                              assets={currentAssets}
                                              getTokenLogoUrl={getTokenLogoUrl}
                                              tokenLogos={tokenLogos}
-                                             onFilterByAsset={symbol => { setTxAssetFilter(symbol); setActiveTab('history'); }}
+                                             onFilterByAsset={handleFilterByAssetHistory}
                                              emptyMessage="No transactions for this token."
                                            />
                                            {tokenTxs.length > 8 && (
@@ -6493,7 +6507,7 @@ export default function App() {
                           getTokenLogoUrl={getTokenLogoUrl}
                           tokenLogos={tokenLogos}
                           hideIds={hiddenTxIds}
-                          onToggleHide={id => setHiddenTxIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])}
+                          onToggleHide={handleToggleHide}
                           showHidden={showHiddenTxs}
                           emptyMessage="No transactions found for these filters."
                         />
@@ -6732,7 +6746,7 @@ export default function App() {
                         getTokenLogoUrl={getTokenLogoUrl}
                         tokenLogos={tokenLogos}
                         hideIds={hiddenTxIds}
-                        onToggleHide={id => setHiddenTxIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])}
+                        onToggleHide={handleToggleHide}
                         showHidden={showHiddenTxs}
                         emptyMessage="No received token transactions found for these filters."
                       />
