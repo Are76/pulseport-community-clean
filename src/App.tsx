@@ -522,7 +522,15 @@ export default function App() {
   const [realStakes, setRealStakes] = useState<HexStake[]>(() => tryReadCache<HexStake[]>('pulseport_cache_stakes', true) ?? []);
   const [lpPositions, setLpPositions] = useState<LpPosition[]>(() => tryReadCache<LpPosition[]>('pulseport_cache_lp') ?? []);
   const [farmPositions, setFarmPositions] = useState<FarmPosition[]>(() => tryReadCache<FarmPosition[]>('pulseport_cache_farms') ?? []);
-  const [transactions, setTransactions] = useState<Transaction[]>(() => tryReadCache<Transaction[]>('pulseport_cache_txs') ?? []);
+  const [transactions, setTransactions] = useState<Transaction[]>(() => {
+    // v1 cache stored swap-only data; invalidate so next refresh fetches all types
+    if (localStorage.getItem('pulseport_cache_txs_v') !== '2') {
+      localStorage.removeItem('pulseport_cache_txs');
+      localStorage.setItem('pulseport_cache_txs_v', '2');
+      return [];
+    }
+    return tryReadCache<Transaction[]>('pulseport_cache_txs') ?? [];
+  });
   const [history, setHistory] = useState<HistoryPoint[]>(() => readStoredJSON<HistoryPoint[]>('pulseport_history', []));
   const [newWalletAddress, setNewWalletAddress] = useState('');
   const [newWalletName, setNewWalletName] = useState('');
@@ -571,7 +579,7 @@ export default function App() {
   const [overviewTokenSearch, setOverviewTokenSearch] = useState<string>('');
   const [lastUpdated, setLastUpdated] = useState<number | null>(null);
   const [historyRange, setHistoryRange] = useState<'1D' | '1W' | '1M'>('1M');
-  const [txTypeFilter, setTxTypeFilter] = useState<string>('swap');
+  const [txTypeFilter, setTxTypeFilter] = useState<string>('all');
   const [txAssetFilter, setTxAssetFilter] = useState<string>('all');
   const [txYearFilter, setTxYearFilter] = useState<string>('all');
   const [txCoinCategory, setTxCoinCategory] = useState<string>('all');
@@ -748,6 +756,7 @@ export default function App() {
   useEffect(() => {
     if (transactions.length > 0) {
       scheduleLocalStorageWrite('pulseport_cache_txs', JSON.stringify(transactions.slice(0, 200)));
+      localStorage.setItem('pulseport_cache_txs_v', '2');
     }
   }, [transactions]);
 
@@ -2504,7 +2513,6 @@ export default function App() {
   }, [currentAssets]);
 
   const matchesHistoryTransactionFilters = React.useCallback((tx: Transaction) => {
-    if (tx.chain !== 'pulsechain') return false;
     const walletKey = selectedWalletAddr.toLowerCase();
     const matchesWallet = walletKey === 'all' ||
       tx.from?.toLowerCase() === walletKey ||
@@ -2533,15 +2541,17 @@ export default function App() {
   }, [selectedWalletAddr, txAssetFilter, txYearFilter, txCoinCategory]);
 
   const filteredTransactions = useMemo(() => {
-    return currentTransactions.filter(tx =>
-      matchesHistoryTransactionFilters(tx) && (tx.type === 'swap' || !!tx.swapLegOnly)
-    );
-  }, [currentTransactions, matchesHistoryTransactionFilters]);
+    return currentTransactions.filter(tx => {
+      if (!matchesHistoryTransactionFilters(tx)) return false;
+      const matchesType = txTypeFilter === 'all' || tx.type === txTypeFilter ||
+        (txTypeFilter === 'swap' && !!tx.swapLegOnly);
+      return matchesType;
+    });
+  }, [currentTransactions, matchesHistoryTransactionFilters, txTypeFilter]);
 
   const swapAssetFilterOptions = useMemo<[string, string][]>(() => {
     const symbols = Array.from(new Set<string>(
       currentTransactions
-        .filter((tx) => tx.chain === 'pulsechain' && (tx.type === 'swap' || tx.swapLegOnly))
         .flatMap((tx) => [tx.asset, tx.counterAsset].filter(Boolean) as string[])
     )).sort((a, b) => a.localeCompare(b));
     return [['all', 'All Tokens'], ...symbols.map((symbol) => [symbol, symbol] as [string, string])];
@@ -2550,7 +2560,6 @@ export default function App() {
   const swapYearFilterOptions = useMemo<[string, string][]>(() => {
     const years = Array.from(new Set(
       currentTransactions
-        .filter((tx) => tx.chain === 'pulsechain' && (tx.type === 'swap' || tx.swapLegOnly))
         .map((tx) => new Date(tx.timestamp).getFullYear().toString())
     )).sort((a, b) => Number(b) - Number(a));
     return [['all', 'All Years'], ...years.map((year) => [year, year] as [string, string])];
@@ -2568,9 +2577,7 @@ export default function App() {
   }, [currentTransactions]);
 
   const holdingsPulsechainTransactions = useMemo(() => {
-    return currentTransactions.filter(tx =>
-      matchesHistoryTransactionFilters(tx) && (tx.type === 'swap' || !!tx.swapLegOnly)
-    );
+    return currentTransactions.filter(tx => matchesHistoryTransactionFilters(tx));
   }, [currentTransactions, matchesHistoryTransactionFilters]);
 
   const activeHistoryAsset = useMemo(() => {
@@ -5635,7 +5642,7 @@ export default function App() {
                         {txAssetFilter !== 'all' && (<button className="filter-chip" onClick={() => setTxAssetFilter('all')}>{txAssetFilter}<span className="chip-x">&#x2715;</span></button>)}
                         {txYearFilter !== 'all' && (<button className="filter-chip" onClick={() => setTxYearFilter('all')}>{txYearFilter}<span className="chip-x">&#x2715;</span></button>)}
                         {txCoinCategory !== 'all' && (<button className="filter-chip" onClick={() => setTxCoinCategory('all')}>{txCoinCategory === 'stablecoins' ? 'Stablecoins' : txCoinCategory === 'eth_weth' ? 'ETH/WETH' : txCoinCategory === 'hex' ? 'HEX/eHEX' : txCoinCategory === 'pls_wpls' ? 'PLS/WPLS' : 'Bridged'}<span className="chip-x">&#x2715;</span></button>)}
-                <button onClick={() => { setTxTypeFilter('swap'); setTxAssetFilter('all'); setTxYearFilter('all'); setTxCoinCategory('all'); }} style={{ fontSize: 11, fontWeight: 700, color: 'var(--fg-subtle)', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 6px', textDecoration: 'underline', marginLeft: 4 }}>Clear all</button>
+                <button onClick={() => { setTxTypeFilter('all'); setTxAssetFilter('all'); setTxYearFilter('all'); setTxCoinCategory('all'); }} style={{ fontSize: 11, fontWeight: 700, color: 'var(--fg-subtle)', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 6px', textDecoration: 'underline', marginLeft: 4 }}>Clear all</button>
                       </div>
                     )}
                     {/* -- Wallet-style transaction cards -- */}
