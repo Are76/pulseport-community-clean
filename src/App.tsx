@@ -65,7 +65,6 @@ import type { Asset, Wallet, Chain, HexStake, LpPosition, FarmPosition, HistoryP
 import { LiquidityOverviewStrip, LiquiditySection } from './components/LiquiditySection';
 import { PnLModal } from './components/PnLModal';
 import { ProfitPlannerModal } from './components/ProfitPlannerModal';
-import { StakesSection } from './components/StakesSection';
 import { TokenCardModal } from './components/TokenCardModal';
 import { MarketWatchModal } from './components/MarketWatchModal';
 import { TransactionList } from './components/TransactionList';
@@ -81,6 +80,7 @@ import { MyInvestmentsPage } from './pages/MyInvestmentsPage';
 import { MyInvestmentsUtilityStrip } from './components/my-investments/MyInvestmentsUtilityStrip';
 import { usePortfolio } from './context/PortfolioContext';
 import { HistoryTab } from './tabs/HistoryTab';
+import { StakesTab } from './tabs/StakesTab';
 
 export const ERC20_ABI = [
   {
@@ -591,7 +591,6 @@ export default function App() {
   const [assetSortDir, setAssetSortDir] = useState<'desc' | 'asc'>('desc');
   // tokenLogos is seeded from the module-level STATIC_LOGOS map so overrides are
   // available before any remote fetch completes.
-  const [expandedStakeIds, setExpandedStakeIds] = useState<Set<string>>(new Set());
   const [expandedAssetIds, setExpandedAssetIds] = useState<Set<string>>(new Set());
   const [priceDisplayCurrency, setPriceDisplayCurrency] = useState<'usd' | 'pls'>('usd');
   const [pnlAsset, setPnlAsset] = useState<Asset | null>(null);
@@ -3872,32 +3871,7 @@ export default function App() {
 
             {activeTab === 'stakes' && (
               <motion.div key="stakes" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                {(() => {
-                  const HEX_ADDR = '0x2b591e99afe9f32eaa6214f7b7629768c40eeb39';
-                  const pHexLiquid = currentAssets
-                    .filter(a => a.chain === 'pulsechain' && (a as any).address?.toLowerCase() === HEX_ADDR)
-                    .reduce((sum, asset) => sum + asset.balance, 0);
-                  const eHexLiquid = currentAssets
-                    .filter(a =>
-                      (a.chain === 'ethereum' && (a as any).address?.toLowerCase() === HEX_ADDR) ||
-                      (a.chain === 'pulsechain' && a.symbol.toLowerCase() === 'ehex')
-                    )
-                    .reduce((sum, asset) => sum + asset.balance, 0);
-                  return (
-                    <div className="stakes-page-shell">
-                      <StakesSection
-                        stakes={currentStakes}
-                        hexUsdPrice={prices['pulsechain:0x2b591e99afe9f32eaa6214f7b7629768c40eeb39']?.usd || prices['pulsechain:hex']?.usd || 0}
-                        phexUsdPrice={prices['pulsechain:0x2b591e99afe9f32eaa6214f7b7629768c40eeb39']?.usd || prices['pulsechain:hex']?.usd || 0}
-                        ehexUsdPrice={prices['ethereum:0x2b591e99afe9f32eaa6214f7b7629768c40eeb39']?.usd || prices['hex']?.usd || 0}
-                        liquidPHex={pHexLiquid}
-                        liquidEHex={eHexLiquid}
-                        walletAddresses={wallets.map(w => w.address)}
-                        walletLabels={Object.fromEntries(wallets.filter(w => w.name).map(w => [w.address, w.name!]))}
-                      />
-                    </div>
-                  );
-                })()}
+                <StakesTab selectedWalletAddr={selectedWalletAddr} />
               </motion.div>
             )}
 
