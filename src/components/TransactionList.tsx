@@ -105,6 +105,7 @@ function txVisual(type: Transaction['type']) {
     case 'deposit':  return { Icon: ArrowDownLeft, bg: 'rgba(0,255,159,.10)', color: 'var(--accent)',  label: 'Received' } as const;
     case 'withdraw': return { Icon: ArrowUpRight,  bg: 'rgba(239,68,68,.10)',  color: '#ef4444',        label: 'Sent'     } as const;
     case 'swap':     return { Icon: RefreshCcw,    bg: 'rgba(139,92,246,.10)', color: '#8b5cf6',        label: 'Swap'     } as const;
+    default: return { Icon: ArrowLeftRight, bg: 'rgba(148,163,184,.10)', color: '#94a3b8', label: 'Transaction' } as const;
   }
 }
 
