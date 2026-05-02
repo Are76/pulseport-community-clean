@@ -82,6 +82,7 @@ import { usePortfolio } from './context/PortfolioContext';
 import { HistoryTab } from './tabs/HistoryTab';
 import { StakesTab } from './tabs/StakesTab';
 import { AssetsTab } from './tabs/AssetsTab';
+import { WalletsTab } from './tabs/WalletsTab';
 
 export const ERC20_ABI = [
   {
@@ -704,8 +705,6 @@ export default function App() {
     }, 1000);
     return () => clearInterval(interval);
   }, [lastUpdated]);
-
-
 
   const addWallet = () => {
     const normalizedInput = newWalletAddress.trim();
