@@ -16,7 +16,6 @@ export interface StakesSectionProps {
   ehexUsdPrice: number;
   liquidPHex?: number;
   liquidEHex?: number;
-  walletAddresses?: string[];
   walletLabels?: Record<string, string>;
 }
 

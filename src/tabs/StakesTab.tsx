@@ -82,7 +82,6 @@ export function StakesTab({ selectedWalletAddr }: StakesTabProps) {
         ehexUsdPrice={ehexUsdPrice}
         liquidPHex={pHexLiquid}
         liquidEHex={eHexLiquid}
-        walletAddresses={wallets.map(w => w.address)}
         walletLabels={walletLabels}
       />
     </div>
