@@ -16,8 +16,6 @@ import {
   Pencil
 } from 'lucide-react';
 import type { Asset, Wallet, Transaction } from '../types';
-import { usePortfolio } from '../context/PortfolioContext';
-import { usePortfolioData } from '../hooks/usePortfolioData';
 import { HoldingsTable } from '../components/HoldingsTable';
 import type { HoldingDisplayAsset, HoldingSortField } from '../components/HoldingsTable';
 import { TransactionList } from '../components/TransactionList';
