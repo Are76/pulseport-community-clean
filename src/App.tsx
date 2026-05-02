@@ -3190,6 +3190,22 @@ export default function App() {
           </motion.div>
         )}
 
+        {activeTab === 'wallets' && (
+          <WalletsTab
+            wallets={wallets}
+            selectedWalletAddr={selectedWalletAddr}
+            onSelectWallet={setSelectedWalletAddr}
+            onRemoveWallet={removeWallet}
+            onOpenAddWallet={() => setIsAddingWallet(true)}
+            onOpenEditWallet={(addr, name) => {
+              setEditingWalletAddress(addr);
+              setEditWalletName(name);
+            }}
+            t={t}
+            WALLET_DOT_COLORS={WALLET_DOT_COLORS}
+          />
+        )}
+
               </AnimatePresence>
           </div>
 
