@@ -1,0 +1,245 @@
+[data-shell-root='executive'] {
+  width: 100%;
+}
+
+[data-shell-root='executive'] .app-shell__content {
+  width: min(100%, var(--executive-shell-max-width));
+}
+
+[data-shell-root='executive'] .app-shell__command-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: var(--executive-shell-command-bar-min-height);
+  margin-bottom: 1.5rem;
+  padding: var(--executive-shell-command-bar-padding);
+  border-radius: var(--executive-shell-command-bar-radius);
+}
+
+[data-shell-root='executive'] .app-shell__command-bar:empty {
+  display: block;
+}
+
+[data-shell-root='executive'] .app-shell__brand {
+  display: grid;
+  gap: 0.85rem;
+  align-items: center;
+  padding: 1rem 1.05rem 1.15rem;
+  border-radius: var(--executive-shell-brand-radius);
+}
+
+[data-shell-root='executive'] .app-shell__brand-copy {
+  display: grid;
+  gap: 0.18rem;
+}
+
+[data-shell-root='executive'] .app-shell__brand-eyebrow {
+  margin: 0;
+  color: var(--shell-accent);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+[data-shell-root='executive'] .app-shell__brand-wordmark {
+  display: block;
+  color: var(--shell-fg);
+  font-family: var(--font-shell-display);
+  font-size: 1.38rem;
+  line-height: 1;
+  letter-spacing: -0.05em;
+}
+
+[data-shell-root='executive'] .app-shell__brand-caption {
+  margin: 0;
+  color: var(--shell-subtle);
+  font-size: 0.82rem;
+}
+
+[data-shell-root='executive'] .app-shell__nav-group {
+  display: grid;
+  gap: 0.75rem;
+}
+
+[data-shell-root='executive'] .app-shell__nav-group + .app-shell__nav-group {
+  margin-top: 1.15rem;
+}
+
+[data-shell-root='executive'] .app-shell__nav-group-label {
+  margin: 0;
+  padding: 0 0.9rem;
+  color: var(--shell-subtle);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+[data-shell-root='executive'] .app-shell__nav-group-items {
+  display: grid;
+  gap: 0.5rem;
+}
+
+[data-shell-root='executive'] .app-shell__nav-item {
+  width: 100%;
+}
+
+[data-shell-root='executive'] .app-shell__command-bar-layout {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+[data-shell-root='executive'] .app-shell__page-meta {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 1rem;
+}
+
+[data-shell-root='executive'] .app-shell__page-meta-copy {
+  display: grid;
+  min-width: 0;
+  gap: 0.18rem;
+}
+
+[data-shell-root='executive'] .app-shell__page-meta-label {
+  display: inline-flex;
+  align-items: center;
+  align-self: stretch;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  padding-right: 1rem;
+  color: var(--shell-accent);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+[data-shell-root='executive'] .app-shell__page-meta-title {
+  color: var(--shell-fg);
+  font-family: var(--font-shell-display);
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+[data-shell-root='executive'] .app-shell__page-meta-subtitle {
+  color: var(--shell-muted);
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+[data-shell-root='executive'] .app-shell__page-meta-status {
+  flex-shrink: 0;
+  margin-left: 0.25rem;
+}
+
+[data-shell-root='executive'] .app-shell__page-meta-status-copy {
+  color: var(--shell-subtle);
+  font-size: 0.74rem;
+  font-variant-numeric: tabular-nums;
+}
+
+[data-shell-root='executive'] .app-shell__command-bar-actions {
+  flex-shrink: 0;
+}
+
+[data-shell-root='executive'] .app-shell__page-hero,
+[data-shell-root='executive'] .app-shell__section-frame,
+[data-shell-root='executive'] .app-shell__context-action-strip,
+[data-shell-root='executive'] .app-shell__insight-rail {
+  display: grid;
+  gap: 1rem;
+}
+
+[data-shell-root='executive'] .app-shell__page-hero-copy,
+[data-shell-root='executive'] .app-shell__section-frame-header > div,
+[data-shell-root='executive'] .app-shell__insight-rail-body {
+  display: grid;
+  gap: 0.45rem;
+}
+
+[data-shell-root='executive'] .app-shell__page-hero-eyebrow,
+[data-shell-root='executive'] .app-shell__context-action-strip-title {
+  margin: 0;
+  color: var(--shell-accent);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+[data-shell-root='executive'] .app-shell__page-hero-title,
+[data-shell-root='executive'] .app-shell__section-frame-title,
+[data-shell-root='executive'] .app-shell__insight-rail-title {
+  margin: 0;
+  color: var(--shell-fg);
+  font-family: var(--font-shell-display);
+  letter-spacing: -0.03em;
+}
+
+[data-shell-root='executive'] .app-shell__page-hero-title {
+  font-size: clamp(2rem, 4vw, 3rem);
+}
+
+[data-shell-root='executive'] .app-shell__section-frame-title,
+[data-shell-root='executive'] .app-shell__insight-rail-title {
+  font-size: 1.1rem;
+}
+
+[data-shell-root='executive'] .app-shell__page-hero-description,
+[data-shell-root='executive'] .app-shell__section-frame-description {
+  margin: 0;
+  color: var(--shell-muted);
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
+[data-shell-root='executive'] .app-shell__page-hero-actions,
+[data-shell-root='executive'] .app-shell__section-frame-header,
+[data-shell-root='executive'] .app-shell__context-action-strip-body {
+  display: grid;
+  gap: 1rem;
+}
+
+[data-shell-root='executive'] .app-shell__section-frame-actions {
+  justify-self: start;
+}
+
+.wa-page-layout {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(0, 1.45fr) minmax(280px, 0.95fr);
+  align-items: start;
+}
+
+.wa-page-main {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (max-width: 960px) {
+  [data-shell-root='executive'] .app-shell__command-bar-layout,
+  [data-shell-root='executive'] .app-shell__page-meta {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  [data-shell-root='executive'] .app-shell__page-meta-label {
+    border-right: 0;
+    padding-right: 0;
+  }
+
+  [data-shell-root='executive'] .app-shell__section-frame-header {
+    grid-template-columns: 1fr;
+  }
+
+  .wa-page-layout {
+    grid-template-columns: 1fr;
+  }
+}

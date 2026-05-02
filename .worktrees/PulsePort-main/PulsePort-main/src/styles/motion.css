@@ -1,0 +1,14 @@
+[data-shell-root='executive'] .app-shell__command-bar,
+[data-shell-root='executive'] .app-shell__page,
+[data-shell-root='executive'] .app-shell__nav button {
+  transition-duration: var(--executive-shell-motion-fast);
+  transition-timing-function: ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-shell-root='executive'] .app-shell__command-bar,
+  [data-shell-root='executive'] .app-shell__page,
+  [data-shell-root='executive'] .app-shell__nav button {
+    transition-duration: 0ms;
+  }
+}

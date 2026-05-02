@@ -12,12 +12,12 @@ export function MyInvestmentsAssetPanel({ row, onClose, onOpenTransactions }: My
   const pnlTone = row.pnlUsd >= 0 ? 'is-positive' : 'is-negative';
 
   return (
-    <aside className="mi-asset-panel ws-asset-panel" aria-label={`${row.symbol} details`}>
+    <aside className="mi-asset-panel" aria-label={`${row.symbol} details`}>
       <div className="mi-asset-panel-header">
         <div>
-          <p className="mi-label">Holdings Detail</p>
+          <p className="mi-label">Asset Detail</p>
           <h2>{row.symbol}</h2>
-          <p className="mi-asset-panel-subtitle">{row.name} | {row.chain}</p>
+          <p className="mi-asset-panel-subtitle">{row.name} · {row.chain}</p>
         </div>
         <button type="button" className="mi-close-button" onClick={onClose}>Close</button>
       </div>

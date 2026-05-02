@@ -41,30 +41,28 @@ export function MyInvestmentsTable({ rows, plsUsdPrice, portfolioValue, expanded
   const rowMap = React.useMemo(() => new Map(rows.map((row) => [row.id, row])), [rows]);
 
   return (
-    <div className="ws-dense-table ws-dense-table--holdings">
-      <CoinList
-        items={items}
-        variant="detailed"
-        expandedId={expandedId}
-        onToggleExpanded={onToggleRow}
-        onRowClick={(item) => {
-          const row = rowMap.get(item.id);
-          if (row) onOpenAsset(row);
-        }}
-        onOpenExternal={(item) => {
-          const row = rowMap.get(item.id);
-          if (row && onOpenTransactions) onOpenTransactions(row);
-        }}
-        onCalculator={(item) => {
-          const row = rowMap.get(item.id);
-          if (row) onOpenAsset(row);
-        }}
-        renderExpanded={(item) => {
-          const row = rowMap.get(item.id);
-          return row ? <MyInvestmentsExpanded row={row} onOpenAsset={onOpenAsset} plsUsdPrice={plsUsdPrice} portfolioValue={portfolioValue} /> : null;
-        }}
-      />
-    </div>
+    <CoinList
+      items={items}
+      variant="detailed"
+      expandedId={expandedId}
+      onToggleExpanded={onToggleRow}
+      onRowClick={(item) => {
+        const row = rowMap.get(item.id);
+        if (row) onOpenAsset(row);
+      }}
+      onOpenExternal={(item) => {
+        const row = rowMap.get(item.id);
+        if (row && onOpenTransactions) onOpenTransactions(row);
+      }}
+      onCalculator={(item) => {
+        const row = rowMap.get(item.id);
+        if (row) onOpenAsset(row);
+      }}
+      renderExpanded={(item) => {
+        const row = rowMap.get(item.id);
+        return row ? <MyInvestmentsExpanded row={row} onOpenAsset={onOpenAsset} plsUsdPrice={plsUsdPrice} portfolioValue={portfolioValue} /> : null;
+      }}
+    />
   );
 }
 
@@ -85,7 +83,7 @@ function MyInvestmentsExpanded({
   const portfolioShare = portfolioValue > 0 ? (row.currentValue / portfolioValue) * 100 : 0;
 
   return (
-    <div className="mi-detail-shell ws-detail-shell">
+    <div className="mi-detail-shell">
       <div className="mi-detail-sections">
         <section className="mi-detail-section">
           <div className="mi-detail-section-head">

@@ -1,0 +1,86 @@
+[data-shell-root='executive'] .app-shell__command-bar {
+  border: 1px solid var(--executive-shell-outline);
+  background:
+    linear-gradient(135deg, rgba(0, 214, 143, 0.08), transparent 35%),
+    var(--executive-shell-surface);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(16px);
+}
+
+[data-shell-root='executive'] .app-shell__page {
+  background: var(--executive-shell-elevated);
+  box-shadow: var(--executive-shell-shadow);
+}
+
+[data-shell-root='executive'] .app-shell__brand {
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background:
+    radial-gradient(circle at top left, rgba(0, 214, 143, 0.16), transparent 48%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.015));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+[data-shell-root='executive'] .app-shell__brand-mark {
+  background: linear-gradient(135deg, rgba(0, 214, 143, 0.2), rgba(109, 99, 255, 0.28));
+  border-color: rgba(0, 214, 143, 0.3);
+}
+
+[data-shell-root='executive'] .app-shell__page-hero,
+[data-shell-root='executive'] .app-shell__section-frame,
+[data-shell-root='executive'] .app-shell__context-action-strip,
+[data-shell-root='executive'] .app-shell__insight-rail,
+[data-shell-root='executive'] .app-shell__metric-card {
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.015)),
+    var(--executive-shell-elevated);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+[data-shell-root='executive'] .app-shell__page-hero,
+[data-shell-root='executive'] .app-shell__section-frame,
+[data-shell-root='executive'] .app-shell__context-action-strip,
+[data-shell-root='executive'] .app-shell__insight-rail {
+  padding: 1.35rem;
+  border-radius: 1.5rem;
+}
+
+[data-shell-root='executive'] .app-shell__page-hero {
+  background:
+    radial-gradient(circle at top left, rgba(0, 214, 143, 0.14), transparent 34%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.015)),
+    var(--executive-shell-elevated);
+}
+
+[data-shell-root='executive'] .app-shell__metric-card {
+  display: grid;
+  gap: 0.55rem;
+  min-height: 10.5rem;
+  padding: 1rem 1.05rem;
+  border-radius: 1.25rem;
+}
+
+[data-shell-root='executive'] .app-shell__metric-card-label {
+  margin: 0;
+  color: var(--shell-subtle);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+[data-shell-root='executive'] .app-shell__metric-card-value {
+  margin: 0;
+  color: var(--shell-fg);
+  font-family: var(--font-shell-display);
+  font-size: 1.7rem;
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+[data-shell-root='executive'] .app-shell__metric-card-detail {
+  margin: 0;
+  color: var(--shell-muted);
+  font-size: 0.86rem;
+  line-height: 1.55;
+}

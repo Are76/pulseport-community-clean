@@ -32,7 +32,7 @@ describe('investment holding row shape', () => {
 });
 
 describe('MyInvestmentsHero', () => {
-  it('renders invested fiat as the dominant headline label', () => {
+  it('renders the canonical ledger label while keeping invested fiat as the dominant value', () => {
     render(
       <MyInvestmentsHero
         investedFiat={27465}
@@ -44,8 +44,9 @@ describe('MyInvestmentsHero', () => {
       />
     );
 
-    expect(screen.getByText('Invested Fiat')).toBeInTheDocument();
+    expect(screen.getByText('Canonical cost-basis ledger')).toBeInTheDocument();
     expect(screen.getByText('$27,465')).toBeInTheDocument();
+    expect(screen.getByText(/invested fiat preserved as the historical entry anchor/i)).toBeInTheDocument();
     expect(screen.getByText('Net P&L')).toBeInTheDocument();
   });
 });
@@ -142,7 +143,7 @@ describe('MyInvestmentsAssetPanel', () => {
 });
 
 describe('MyInvestmentsPage', () => {
-  it('renders portfolio as a workstation holdings surface', () => {
+  it('renders executive shell framing around the canonical holdings ledger without the old utility strip', () => {
     render(
       <MyInvestmentsPage
         investedFiat={27465}
@@ -155,13 +156,12 @@ describe('MyInvestmentsPage', () => {
       />
     );
 
-    expect(screen.getByText('Invested Fiat')).toBeInTheDocument();
-    expect(screen.getByText('Holdings')).toBeInTheDocument();
-    expect(screen.getByLabelText(/chain filters/i)).toBeInTheDocument();
-    expect(document.querySelector('.ws-table-surface')).not.toBeNull();
+    expect(screen.getByRole('heading', { name: 'My Investments' })).toBeInTheDocument();
+    expect(screen.getAllByText('Canonical cost-basis ledger')).toHaveLength(2);
+    expect(screen.getByRole('tablist', { name: /chain filters/i })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /profit planner/i })).not.toBeInTheDocument();
     expect(screen.queryByText('24H Swap P&L')).not.toBeInTheDocument();
-    expect(screen.getByText('Holdings Attribution')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Holdings ledger' })).toBeInTheDocument();
   });
 });
 

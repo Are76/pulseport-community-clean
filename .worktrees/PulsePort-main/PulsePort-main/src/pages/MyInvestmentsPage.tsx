@@ -1,4 +1,5 @@
 import React from 'react';
+import { ContextActionStrip, PageHero, SectionFrame } from '../components/dashboard-shell';
 import { MyInvestmentsAssetPanel } from '../components/my-investments/MyInvestmentsAssetPanel';
 import { MyInvestmentsFilters } from '../components/my-investments/MyInvestmentsFilters';
 import { MyInvestmentsHero } from '../components/my-investments/MyInvestmentsHero';
@@ -29,6 +30,10 @@ export function MyInvestmentsPage(props: MyInvestmentsPageProps) {
     ethereum: props.rows.filter((row) => row.chain === 'ethereum').length,
     base: props.rows.filter((row) => row.chain === 'base').length,
   }), [props.rows]);
+  const activeChainCount = React.useMemo(
+    () => [chainCounts.pulsechain, chainCounts.ethereum, chainCounts.base].filter((count) => count > 0).length,
+    [chainCounts],
+  );
   const filteredRows = React.useMemo(
     () => chainFilter === 'all' ? props.rows : props.rows.filter((row) => row.chain === chainFilter),
     [chainFilter, props.rows],
@@ -47,8 +52,12 @@ export function MyInvestmentsPage(props: MyInvestmentsPageProps) {
   }, [filteredRows, selectedAsset]);
 
   return (
-    <div className="mi-page ws-portfolio-page">
-      <div className="ws-wallet-header ws-wallet-header--portfolio">
+    <div className="mi-page">
+      <PageHero
+        eyebrow="Canonical cost-basis ledger"
+        title="My Investments"
+        description="Executive framing for the live bag, with invested fiat, source routes, and row-level drilldowns preserved as the canonical ledger."
+      >
         <MyInvestmentsHero
           investedFiat={props.investedFiat}
           currentValue={props.currentValue}
@@ -57,19 +66,36 @@ export function MyInvestmentsPage(props: MyInvestmentsPageProps) {
           liquidValue={props.liquidValue}
           stakedValue={props.stakedValue}
         />
-      </div>
-      <section className="ws-control-bar" aria-label="Portfolio holdings controls">
-        <div className="ws-control-bar__title">
-          <p className="mi-label">Portfolio</p>
-          <h2>Holdings</h2>
-        </div>
-        <MyInvestmentsFilters
-          activeFilter={chainFilter}
-          counts={chainCounts}
-          onChange={setChainFilter}
-        />
-      </section>
-      <section className="ws-table-surface" aria-label="Portfolio holdings workspace">
+      </PageHero>
+      <ContextActionStrip title="Ledger context" label="My Investments ledger context">
+        <article className="mi-context-card">
+          <span className="mi-label">Rows in scope</span>
+          <strong>{filteredRows.length}</strong>
+          <p>Every position keeps its original cost basis, source mix, and transaction handoff intact.</p>
+        </article>
+        <article className="mi-context-card">
+          <span className="mi-label">Active chains</span>
+          <strong>{activeChainCount}</strong>
+          <p>Filter the current bag across PulseChain, Ethereum, and Base without altering ledger math.</p>
+        </article>
+        <article className="mi-context-card">
+          <span className="mi-label">Primary mode</span>
+          <strong>{chainFilter === 'all' ? 'Unified board' : `${chainFilter} only`}</strong>
+          <p>Use the holdings ledger below to open route context, attribution, and transaction detail.</p>
+        </article>
+      </ContextActionStrip>
+      <SectionFrame
+        title="Holdings ledger"
+        description="Filter the live bag by chain, then open a row for source capital, P&L, and route context."
+        actions={(
+          <MyInvestmentsFilters
+            activeFilter={chainFilter}
+            counts={chainCounts}
+            onChange={setChainFilter}
+            showHeading={false}
+          />
+        )}
+      >
         <MyInvestmentsTable
           rows={filteredRows}
           plsUsdPrice={props.plsUsdPrice}
@@ -79,7 +105,7 @@ export function MyInvestmentsPage(props: MyInvestmentsPageProps) {
           onOpenAsset={setSelectedAsset}
           onOpenTransactions={props.onOpenTransactions}
         />
-      </section>
+      </SectionFrame>
       {selectedAsset ? (
         <MyInvestmentsAssetPanel
           row={selectedAsset}

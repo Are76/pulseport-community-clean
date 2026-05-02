@@ -1,0 +1,15 @@
+:root {
+  --executive-shell-max-width: 1600px;
+  --executive-shell-gutter: clamp(1rem, 2vw, 2rem);
+  --executive-shell-sidebar-width: 280px;
+  --executive-shell-command-bar-min-height: 4rem;
+  --executive-shell-command-bar-radius: 1.25rem;
+  --executive-shell-command-bar-padding: 0.875rem 1rem;
+  --executive-shell-brand-radius: 1.5rem;
+  --executive-shell-outline: rgba(255, 255, 255, 0.08);
+  --executive-shell-surface: rgba(17, 20, 30, 0.76);
+  --executive-shell-elevated: rgba(15, 18, 27, 0.84);
+  --executive-shell-strong-surface: rgba(11, 14, 22, 0.94);
+  --executive-shell-shadow: 0 24px 80px rgba(0, 0, 0, 0.28);
+  --executive-shell-motion-fast: 180ms;
+}
