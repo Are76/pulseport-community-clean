@@ -1,13 +1,11 @@
 import { useMemo } from 'react';
 import { usePortfolio } from '../context/PortfolioContext';
+import { normalizeAssetSymbol } from '../utils/assetHelpers';
 import type { Asset, Transaction } from '../types';
 
 // ── Pure helpers (exported for testing) ──────────────────────────────────────
 
-export function normalizeAssetSymbol(symbol: string, chain: string): string {
-  const upper = (symbol || '').toUpperCase();
-  return chain === 'pulsechain' && upper === 'WPLS' ? 'PLS' : upper;
-}
+export { normalizeAssetSymbol };
 
 export function buildAssetByKey(assets: Asset[]): Map<string, Asset> {
   const map = new Map<string, Asset>();
