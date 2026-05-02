@@ -1664,7 +1664,7 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(false);
       isFetchingRef.current = false;
     }
-  }, [wallets, setRealAssets, setRealStakes, setLpPositions, setFarmPositions, setTransactions, setPrices, setTokenLogos, setHistory, setIsLoading, setWalletAssets]);
+  }, [wallets, prices, setRealAssets, setRealStakes, setLpPositions, setFarmPositions, setTransactions, setPrices, setTokenLogos, setHistory, setIsLoading, setWalletAssets]);
   // ── Auto-refresh ─────────────────────────────────────────────────────────────
 
   useEffect(() => {
