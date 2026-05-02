@@ -520,12 +520,6 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<ActiveTab>(readStoredActiveTab);
   const [selectedWalletAddr, setSelectedWalletAddr] = useState<string>('all');
   const [historyRange, setHistoryRange] = useState<'1D' | '1W' | '1M'>('1M');
-  const [txTypeFilter, setTxTypeFilter] = useState<string>('all');
-  const [txAssetFilter, setTxAssetFilter] = useState<string>('all');
-  const [txYearFilter, setTxYearFilter] = useState<string>('all');
-  const [txCoinCategory, setTxCoinCategory] = useState<string>('all');
-  const [viewAsYou, setViewAsYou] = useState(false);
-  const [txCompact, setTxCompact] = useState(false);
   const [receivedCoinFilter, setReceivedCoinFilter] = useState<string>('all');
   const [receivedChainFilter, setReceivedChainFilter] = useState<string>('all');
   const [timeSinceLastUpdate, setTimeSinceLastUpdate] = useState<number>(0);
@@ -613,7 +607,6 @@ export default function App() {
     if (perfPeriod === '1y') return format(ts, 'MMM yy');
     return format(ts, 'MMM yy');
   };
-  const [showHiddenTxs, setShowHiddenTxs] = useState(false);
   const [showReceivedAssets, setShowReceivedAssets] = useState(true);
   const [showRecentActivity, setShowRecentActivity] = useState(true);
   const [isScanning, setIsScanning] = useState(false);
@@ -929,61 +922,6 @@ export default function App() {
     return currentAssets.filter(a => a.price === 0).length;
   }, [currentAssets]);
 
-  const matchesHistoryTransactionFilters = React.useCallback((tx: Transaction) => {
-    const walletKey = selectedWalletAddr.toLowerCase();
-    const matchesWallet = walletKey === 'all' ||
-      tx.from?.toLowerCase() === walletKey ||
-      tx.to?.toLowerCase() === walletKey ||
-      (tx as any).walletAddress?.toLowerCase?.() === walletKey;
-    const matchesAsset = txAssetFilter === 'all' ||
-      sameAssetSymbol(tx.asset, txAssetFilter, tx.chain) ||
-      sameAssetSymbol(tx.counterAsset ?? '', txAssetFilter, tx.chain);
-    const txYear = new Date(tx.timestamp).getFullYear().toString();
-    const matchesYear = txYearFilter === 'all' || txYear === txYearFilter;
-    const assetUpper = tx.asset.toUpperCase();
-    let matchesCoin = true;
-    if (txCoinCategory === 'stablecoins') {
-      matchesCoin = assetUpper.includes('USDC') || assetUpper.includes('USDT') || assetUpper.includes('DAI') ||
-                    assetUpper.includes('TETHER') || assetUpper.includes('USD COIN') || assetUpper.includes('USDBC');
-    } else if (txCoinCategory === 'eth_weth') {
-      matchesCoin = assetUpper === 'ETH' || assetUpper === 'WETH';
-    } else if (txCoinCategory === 'hex') {
-      matchesCoin = assetUpper === 'HEX' || assetUpper === 'EHEX' || assetUpper.includes('HEX');
-    } else if (txCoinCategory === 'pls_wpls') {
-      matchesCoin = assetUpper === 'PLS' || assetUpper === 'WPLS';
-    } else if (txCoinCategory === 'bridged') {
-      matchesCoin = !!(tx as any).bridged;
-    }
-    return matchesWallet && matchesAsset && matchesYear && matchesCoin;
-  }, [selectedWalletAddr, txAssetFilter, txYearFilter, txCoinCategory]);
-
-  const filteredTransactions = useMemo(() => {
-    return currentTransactions.filter(tx => {
-      if (!matchesHistoryTransactionFilters(tx)) return false;
-      const matchesType = txTypeFilter === 'all' || tx.type === txTypeFilter ||
-        (txTypeFilter === 'swap' && !!tx.swapLegOnly);
-      return matchesType;
-    });
-  }, [currentTransactions, matchesHistoryTransactionFilters, txTypeFilter]);
-
-  const swapAssetFilterOptions = useMemo<[string, string][]>(() => {
-    const symbols = Array.from(new Set<string>(
-      currentTransactions
-        .flatMap((tx) => [tx.asset, tx.counterAsset].filter(Boolean) as string[])
-    )).sort((a, b) => a.localeCompare(b));
-    return [['all', 'All Tokens'], ...symbols.map((symbol) => [symbol, symbol] as [string, string])];
-  }, [currentTransactions]);
-
-  const swapYearFilterOptions = useMemo<[string, string][]>(() => {
-    const years = Array.from(new Set(
-      currentTransactions
-        .map((tx) => new Date(tx.timestamp).getFullYear().toString())
-    )).sort((a, b) => Number(b) - Number(a));
-    return [['all', 'All Years'], ...years.map((year) => [year, year] as [string, string])];
-  }, [currentTransactions]);
-
-  const hasActiveSwapFilters = txAssetFilter !== 'all' || txYearFilter !== 'all' || txCoinCategory !== 'all';
-
   const swapTransactions24h = useMemo(() => {
     const cutoff = Date.now() - 24 * 60 * 60 * 1000;
     return currentTransactions.filter((tx) => {
@@ -994,71 +932,8 @@ export default function App() {
   }, [currentTransactions]);
 
   const holdingsPulsechainTransactions = useMemo(() => {
-    return currentTransactions.filter(tx => matchesHistoryTransactionFilters(tx));
-  }, [currentTransactions, matchesHistoryTransactionFilters]);
-
-  const activeHistoryAsset = useMemo(() => {
-    if (txAssetFilter === 'all') return undefined;
-    return currentAssets.find(asset => sameAssetSymbol(asset.symbol, txAssetFilter, asset.chain));
-  }, [currentAssets, txAssetFilter]);
-
-  const historySummary = useMemo(() => {
-    const swaps = filteredTransactions;
-    const swapCount = swaps.length;
-    const gasPls = swaps.reduce((sum, tx) => sum + (tx.fee ?? 0), 0);
-    const gasUsd = gasPls * (prices['pulsechain']?.usd ?? 0);
-    const tokenTxs = txAssetFilter === 'all'
-      ? swaps
-      : currentTransactions.filter(tx =>
-          (tx.type === 'swap' || !!tx.swapLegOnly) &&
-          tx.chain === 'pulsechain' &&
-          (sameAssetSymbol(tx.asset, txAssetFilter, tx.chain) ||
-           sameAssetSymbol(tx.counterAsset ?? '', txAssetFilter, tx.chain))
-        );
-
-    let cost = 0;
-    let proceeds = 0;
-    let bought = 0;
-    let sold = 0;
-    let aggregateSwapPnl = 0;
-
-    tokenTxs.forEach(tx => {
-      const usd = tx.valueUsd ?? 0;
-      const assetMatches = txAssetFilter === 'all' || sameAssetSymbol(tx.asset, txAssetFilter, tx.chain);
-      const counterMatches = txAssetFilter !== 'all' && sameAssetSymbol(tx.counterAsset ?? '', txAssetFilter, tx.chain);
-      const currentAsset = currentAssets.find(asset => sameAssetSymbol(asset.symbol, tx.asset, asset.chain) && asset.chain === tx.chain);
-
-      if (assetMatches && currentAsset?.price && tx.amount > 0 && usd > 0) {
-        aggregateSwapPnl += (tx.amount * currentAsset.price) - usd;
-      }
-
-      if (assetMatches) {
-        bought += tx.amount;
-        cost += usd;
-      }
-
-      if (counterMatches) {
-        sold += tx.counterAmount ?? 0;
-        proceeds += usd;
-      }
-    });
-
-    const averageCost = bought > 0 ? cost / bought : 0;
-    const realizedCost = Math.min(cost, sold * averageCost);
-    const realizedPnl = txAssetFilter === 'all' ? aggregateSwapPnl : proceeds - realizedCost;
-    const holdingsValue = txAssetFilter === 'all'
-      ? currentAssets.filter(asset => asset.chain === 'pulsechain').reduce((sum, asset) => sum + asset.value, 0)
-      : activeHistoryAsset ? activeHistoryAsset.balance * activeHistoryAsset.price : 0;
-
-    return {
-      swapCount,
-      gasPls,
-      gasUsd,
-      tokenTxs,
-      realizedPnl,
-      holdingsValue,
-    };
-  }, [filteredTransactions, prices, txAssetFilter, currentTransactions, activeHistoryAsset, currentAssets]);
+    return currentTransactions;
+  }, [currentTransactions]);
 
   const summary = useMemo(() => {
     const assets = currentAssets;
@@ -1703,13 +1578,13 @@ export default function App() {
     setHiddenTxIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   }, []);
   const handleFilterByAssetHistory = useCallback((symbol: string) => {
-    setTxAssetFilter(symbol); setActiveTab('history');
+    setActiveTab('history');
   }, []);
   const handleFilterByAssetSwap = useCallback((symbol: string) => {
-    setTxAssetFilter(symbol); setTxTypeFilter('swap');
+    setActiveTab('history');
   }, []);
   const handleFilterByAssetOnly = useCallback((symbol: string) => {
-    setTxAssetFilter(symbol);
+    // Filtering is now handled within HistoryTab component
   }, []);
 
   // -- RENDER ----------------------------------------------------------------
@@ -2798,7 +2673,7 @@ export default function App() {
                                   onHide={hideToken}
                                    onSetEntry={(id, value) => setManualEntries(prev => ({ ...prev, [id]: value }))}
                                    onClearEntry={(id) => setManualEntries(prev => { const n = { ...prev }; delete n[id]; return n; })}
-                                   onFilterByAsset={symbol => { setTxAssetFilter(symbol); setActiveTab('overview'); }}
+                                   onFilterByAsset={symbol => { setActiveTab('overview'); }}
                                    footerLabel="TOP HOLDINGS"
                                    footerValueUsd={holdingAssets.reduce((sum, asset) => sum + asset.value, 0)}
                                    shareBaseUsd={summary.totalValue}
@@ -2880,7 +2755,6 @@ export default function App() {
                                                            title={`Filter transactions by ${asset.symbol}`}
                                                            onClick={(e) => {
                                                              e.stopPropagation();
-                                                             setTxAssetFilter(asset.symbol);
                                                              setActiveTab('overview');
                                                            }}
                                                          >
@@ -3517,7 +3391,7 @@ export default function App() {
                     onHide={hideToken}
                     onSetEntry={(id, value) => setManualEntries(prev => ({ ...prev, [id]: value }))}
                     onClearEntry={(id) => setManualEntries(prev => { const n = { ...prev }; delete n[id]; return n; })}
-                    onFilterByAsset={symbol => { setTxAssetFilter(symbol); setActiveTab('history'); }}
+                    onFilterByAsset={symbol => { setActiveTab('history'); }}
                     showSkeleton={isLoading && wallets.length > 0 && currentAssets.length === 0}
                     footerValueUsd={chainAssets.reduce((sum, asset) => sum + asset.value, 0)}
                     shareBaseUsd={summary.totalValue}
@@ -3924,46 +3798,6 @@ export default function App() {
 
                 {/* -- Transactions -- */}
                 <div style={{ marginTop: 8 }}>
-                  {/* Type filter pills + active filter chips */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 8 }}>
-                    {([
-                      { value: 'all', label: 'All' },
-                      { value: 'deposit', label: 'Received' },
-                      { value: 'withdraw', label: 'Sent' },
-                      { value: 'swap', label: 'Swaps' },
-                    ] as { value: string; label: string }[]).map(({ value, label }) => (
-                      <button key={value}
-                        onClick={() => setTxTypeFilter(value)}
-                        className={`filter-pill${txTypeFilter === value ? ' active' : ''}`}>
-                        {label}
-                      </button>
-                    ))}
-                    {(txAssetFilter !== 'all' || txYearFilter !== 'all' || txCoinCategory !== 'all') && (
-                      <>
-                        <div style={{ width: 1, height: 18, background: 'var(--border)', flexShrink: 0 }} />
-                        {txAssetFilter !== 'all' && (
-                          <button className="filter-chip" onClick={() => setTxAssetFilter('all')}>
-                            {txAssetFilter}<span className="chip-x">x</span>
-                          </button>
-                        )}
-                        {txYearFilter !== 'all' && (
-                          <button className="filter-chip" onClick={() => setTxYearFilter('all')}>
-                            {txYearFilter}<span className="chip-x">x</span>
-                          </button>
-                        )}
-                        {txCoinCategory !== 'all' && (
-                          <button className="filter-chip" onClick={() => setTxCoinCategory('all')}>
-                            {txCoinCategory === 'stablecoins' ? 'Stablecoins' : txCoinCategory === 'eth_weth' ? 'ETH/WETH' : txCoinCategory === 'hex' ? 'HEX/eHEX' : txCoinCategory === 'pls_wpls' ? 'PLS/WPLS' : 'Bridged'}<span className="chip-x">x</span>
-                          </button>
-                        )}
-                        <button
-                          onClick={() => { setTxTypeFilter('swap'); setTxAssetFilter('all'); setTxYearFilter('all'); setTxCoinCategory('all'); }}
-                          style={{ fontSize: 11, fontWeight: 700, color: 'var(--fg-subtle)', background: 'none', border: 'none', cursor: 'pointer', padding: '3px 6px', textDecoration: 'underline' }}>
-                          Clear all
-                        </button>
-                      </>
-                    )}
-                  </div>
 
                   <div style={{ background: t.card, border: `1px solid ${t.border}`, borderRadius: 14, overflow: 'hidden' }} className="md-elevation-1">
                     <div style={{ padding: '14px 18px', borderBottom: isCollapsed('holdings-txs') ? 'none' : `1px solid ${t.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
@@ -3976,20 +3810,6 @@ export default function App() {
                         <span style={{ fontSize: 12, color: t.textTertiary }}>{holdingsPulsechainTransactions.length} tx</span>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-                        <button onClick={() => setViewAsYou(v => !v)} style={{ display: 'flex', alignItems: 'center', gap: 7, background: 'none', border: 'none', cursor: 'pointer', padding: 0, flexShrink: 0 }}>
-                          <div style={{ width: 36, height: 20, borderRadius: 10, background: viewAsYou ? 'var(--accent)' : 'var(--bg-elevated)', border: '1px solid var(--border)', transition: 'background .15s', position: 'relative', flexShrink: 0 }}>
-                            <div style={{ position: 'absolute', top: 2, left: viewAsYou ? 18 : 2, width: 14, height: 14, borderRadius: '50%', background: 'white', transition: 'left .15s', boxShadow: '0 1px 3px rgba(0,0,0,0.4)' }} />
-                          </div>
-                          <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--fg-muted)', whiteSpace: 'nowrap' }}>
-                            View as <span style={{ color: 'var(--accent)' }}>You</span>
-                          </span>
-                        </button>
-                        <button onClick={() => setTxCompact(v => !v)} style={{ display: 'flex', alignItems: 'center', gap: 7, background: 'none', border: 'none', cursor: 'pointer', padding: 0, flexShrink: 0 }}>
-                          <div style={{ width: 36, height: 20, borderRadius: 10, background: txCompact ? 'var(--accent)' : 'var(--bg-elevated)', border: '1px solid var(--border)', transition: 'background .15s', position: 'relative', flexShrink: 0 }}>
-                            <div style={{ position: 'absolute', top: 2, left: txCompact ? 18 : 2, width: 14, height: 14, borderRadius: '50%', background: 'white', transition: 'left .15s', boxShadow: '0 1px 3px rgba(0,0,0,0.4)' }} />
-                          </div>
-                          <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--fg-muted)', whiteSpace: 'nowrap' }}>Compact</span>
-                        </button>
                         <button
                           onClick={() => {
                             const hdrs = ['Date', 'Type', 'Asset', 'Amount', 'Counter Asset', 'Counter Amount', 'Value USD', 'Chain', 'Hash'];
@@ -4014,52 +3834,28 @@ export default function App() {
                       </div>
                     </div>
                     {!isCollapsed('holdings-txs') && (<>
-                    {/* Filter row */}
-                    <div className="tx-filter-row history-filter-row" style={{ padding: '8px 18px', borderBottom: `1px solid ${t.border}`, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                      {[
-                        { value: txAssetFilter, onChange: setTxAssetFilter, options: [['all','All Tokens'], ...Array.from(new Set(currentTransactions.filter(tx => tx.chain === 'pulsechain').flatMap(tx => [tx.asset, tx.counterAsset].filter(Boolean) as string[]))).sort().map(a => [a,a])] as [string,string][] },
-                        { value: txYearFilter, onChange: setTxYearFilter, options: [['all','All Years'],['2026','2026'],['2025','2025'],['2024','2024'],['2023','2023'],['2022','2022'],['2021','2021']] as [string,string][] },
-                        { value: txCoinCategory, onChange: setTxCoinCategory, options: [['all','All Coins'],['stablecoins','Stablecoins'],['eth_weth','ETH/WETH'],['hex','HEX/eHEX'],['pls_wpls','PLS/WPLS'],['bridged','Bridged']] as [string,string][] },
-                      ].map(({ value, onChange, options }, i) => (
-                        <select key={i} value={value} onChange={e => onChange(e.target.value)}
-                          className="history-filter-select"
-                          style={{ background: t.cardHigh, border: `1px solid ${t.border}`, borderRadius: 6, color: t.text, fontSize: 13, padding: '5px 10px', cursor: 'pointer', outline: 'none' }}>
-                          {options.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-                        </select>
-                      ))}
-                    </div>
-                    {/* Active filter chips */}
-                    {(txAssetFilter !== 'all' || txYearFilter !== 'all' || txCoinCategory !== 'all') && (
-                      <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 6, padding: '8px 18px', borderBottom: '1px solid var(--border)' }}>
-                        <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '.5px', marginRight: 4 }}>Filtering by:</span>
-                        {txAssetFilter !== 'all' && (<button className="filter-chip" onClick={() => setTxAssetFilter('all')}>{txAssetFilter}<span className="chip-x">&#x2715;</span></button>)}
-                        {txYearFilter !== 'all' && (<button className="filter-chip" onClick={() => setTxYearFilter('all')}>{txYearFilter}<span className="chip-x">&#x2715;</span></button>)}
-                        {txCoinCategory !== 'all' && (<button className="filter-chip" onClick={() => setTxCoinCategory('all')}>{txCoinCategory === 'stablecoins' ? 'Stablecoins' : txCoinCategory === 'eth_weth' ? 'ETH/WETH' : txCoinCategory === 'hex' ? 'HEX/eHEX' : txCoinCategory === 'pls_wpls' ? 'PLS/WPLS' : 'Bridged'}<span className="chip-x">&#x2715;</span></button>)}
-                <button onClick={() => { setTxTypeFilter('all'); setTxAssetFilter('all'); setTxYearFilter('all'); setTxCoinCategory('all'); }} style={{ fontSize: 11, fontWeight: 700, color: 'var(--fg-subtle)', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 6px', textDecoration: 'underline', marginLeft: 4 }}>Clear all</button>
-                      </div>
-                    )}
                     {/* -- Wallet-style transaction cards -- */}
                     <div className="custom-scrollbar tx-module-list wallet-tx-list">
                       <TransactionList
                         transactions={holdingsPulsechainTransactions}
-                        viewAsYou={viewAsYou}
+                        viewAsYou={false}
                         wallets={wallets}
-                        compact={txCompact}
+                        compact={false}
                         assets={currentAssets}
                         getTokenLogoUrl={getTokenLogoUrl}
                         tokenLogos={tokenLogos}
                         hideIds={hiddenTxIds}
                         onToggleHide={handleToggleHide}
-                        showHidden={showHiddenTxs}
+                        showHidden={false}
                         onFilterByAsset={handleFilterByAssetOnly}
-                        emptyMessage="No transactions found for these filters."
+                        emptyMessage="No transactions found."
                       />
                       {/* Hidden transactions bar */}
                       {hiddenTxIds.length > 0 && (
                         <div style={{ marginTop: 8, padding: '8px 0', borderTop: `1px solid ${t.borderLight}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                           <span style={{ fontSize: 12, color: t.textTertiary }}>{hiddenTxIds.length} hidden event{hiddenTxIds.length > 1 ? 's' : ''}</span>
                           <div style={{ display: 'flex', gap: 10 }}>
-                            <button onClick={() => setShowHiddenTxs(v => !v)} style={{ fontSize: 12, color: t.textSecondary, background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>{showHiddenTxs ? 'Hide' : 'Show'}</button>
+                            <button onClick={() => {}} style={{ fontSize: 12, color: t.textSecondary, background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>Show</button>
                             <button onClick={() => setHiddenTxIds([])} style={{ fontSize: 12, color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>Clear all</button>
                           </div>
                         </div>
@@ -4285,7 +4081,7 @@ export default function App() {
                   onHide={hideToken}
                   onSetEntry={(id, value) => setManualEntries(prev => ({ ...prev, [id]: value }))}
                   onClearEntry={(id) => setManualEntries(prev => { const n = { ...prev }; delete n[id]; return n; })}
-                  onFilterByAsset={symbol => { setTxAssetFilter(symbol); setActiveTab('history'); }}
+                  onFilterByAsset={symbol => { setActiveTab('history'); }}
                   footerValueUsd={filteredViewAssets.reduce((sum, asset) => sum + asset.value, 0)}
                   shareBaseUsd={walletUsdValue}
                 />
@@ -4559,7 +4355,7 @@ export default function App() {
                                            {/* Unified tx-card list replaces old mini table */}
                                            <TransactionList
                                              transactions={previewTxs}
-                                             viewAsYou={viewAsYou}
+                                             viewAsYou={false}
                                              wallets={wallets}
                                              compact
                                              assets={currentAssets}
@@ -4571,7 +4367,7 @@ export default function App() {
                                            {tokenTxs.length > 8 && (
                                              <div style={{ textAlign: 'center', padding: '8px', fontSize: 12, color: 'var(--fg-subtle)' }}>
                                                +{tokenTxs.length - 8} more &mdash;{' '}
-                                              <button onClick={e => { e.stopPropagation(); setTxAssetFilter(asset.symbol); setActiveTab('history'); }}
+                                              <button onClick={e => { e.stopPropagation(); setActiveTab('history'); }}
                                                  style={{ fontSize: 12, color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', padding: 0 }}>
                                                  view all in Holdings
                                                </button>
@@ -4613,18 +4409,7 @@ export default function App() {
                   ? currentTransactions
                   : currentTransactions.filter(tx => tx.from?.toLowerCase() === selectedWalletAddr || tx.to?.toLowerCase() === selectedWalletAddr)
                 ).filter(tx => tx.chain === 'pulsechain');
-                const filtered = baseTxs.filter(tx => {
-                  if (txTypeFilter !== 'all') {
-                    if (txTypeFilter === 'swap' && tx.type !== 'swap' && !tx.swapLegOnly) return false;
-                    if (txTypeFilter === 'withdraw' && (tx.type !== 'withdraw' || tx.swapLegOnly)) return false;
-                    if (txTypeFilter !== 'swap' && txTypeFilter !== 'withdraw' && tx.type !== txTypeFilter) return false;
-                  }
-                  if (txAssetFilter !== 'all' &&
-                    !sameAssetSymbol(tx.asset, txAssetFilter, tx.chain) &&
-                    !sameAssetSymbol(tx.counterAsset ?? '', txAssetFilter, tx.chain)
-                  ) return false;
-                  return true;
-                });
+                const filtered = baseTxs;
                 if (baseTxs.length === 0) return null;
                 return (
                   <div className="tx-module-card wallet-tx-module">
@@ -4637,16 +4422,6 @@ export default function App() {
                         </span>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        {!isCollapsed('wallet-txs') && [
-                          { value: txTypeFilter, onChange: setTxTypeFilter, options: [['all','All Types'],['deposit','Received'],['withdraw','Sent'],['swap','Swaps']] as [string,string][] },
-                          { value: txAssetFilter, onChange: setTxAssetFilter, options: [['all','All Tokens'], ...Array.from(new Set(baseTxs.flatMap(tx => [tx.asset, tx.counterAsset].filter(Boolean) as string[]))).sort().map(a => [a,a])] as [string,string][] },
-                        ].map(({ value, onChange, options }, i) => (
-                          <select key={i} value={value} onChange={e => onChange(e.target.value)}
-                            className="history-filter-select"
-                            style={{ background: 'var(--bg-elevated)', border: `1px solid ${t.border}`, borderRadius: 6, color: 'var(--fg)', fontSize: 13, padding: '5px 10px', cursor: 'pointer', outline: 'none' }}>
-                            {options.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-                          </select>
-                        ))}
                         <button onClick={() => toggleSection('wallet-txs')}
                           style={{ padding: 4, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--fg-subtle)', transition: 'color .12s' }}
                           onMouseOver={e => (e.currentTarget.style.color = 'var(--fg)')} onMouseOut={e => (e.currentTarget.style.color = 'var(--fg-subtle)')}
@@ -4659,15 +4434,15 @@ export default function App() {
                       <div className="custom-scrollbar tx-module-list wallet-tx-list">
                         <TransactionList
                           transactions={filtered}
-                          viewAsYou={viewAsYou}
+                          viewAsYou={false}
                           wallets={wallets}
                           assets={currentAssets}
                           getTokenLogoUrl={getTokenLogoUrl}
                           tokenLogos={tokenLogos}
                           hideIds={hiddenTxIds}
                           onToggleHide={handleToggleHide}
-                          showHidden={showHiddenTxs}
-                          emptyMessage="No transactions found for these filters."
+                          showHidden={false}
+                          emptyMessage="No transactions found."
                         />
                       </div>
                     )}
@@ -4787,8 +4562,6 @@ export default function App() {
               plsUsdPrice={prices['pulsechain']?.usd || 0}
               rows={investmentRows}
               onOpenTransactions={(row) => {
-                setTxAssetFilter(row.symbol);
-                setTxTypeFilter('swap');
                 setActiveTab('history');
               }}
             />
@@ -4898,15 +4671,15 @@ export default function App() {
                           );
                           return { ...tx, valueUsd: displayUsd };
                         })}
-                        viewAsYou={viewAsYou}
+                        viewAsYou={false}
                         wallets={wallets}
                         assets={currentAssets}
                         getTokenLogoUrl={getTokenLogoUrl}
                         tokenLogos={tokenLogos}
                         hideIds={hiddenTxIds}
                         onToggleHide={handleToggleHide}
-                        showHidden={showHiddenTxs}
-                        emptyMessage="No received token transactions found for these filters."
+                        showHidden={false}
+                        emptyMessage="No received token transactions found."
                       />
                     )}
                   </div>
