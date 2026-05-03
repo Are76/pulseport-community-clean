@@ -9240,6 +9240,10 @@ body,
 }
 
 .portfolio-page-shell {
+  width: min(100%, 1180px);
+  margin: 0 auto;
+  padding-inline: clamp(6px, 1.4vw, 22px);
+  min-width: 0;
   display: grid;
   gap: 16px;
 }
@@ -9538,6 +9542,13 @@ body,
   gap: 14px;
 }
 
+.wallets-tab-shell {
+  width: min(100%, 1180px);
+  margin: 0 auto;
+  padding-inline: clamp(6px, 1.4vw, 22px);
+  min-width: 0;
+}
+
 .wallet-page-shell {
   width: min(100%, 1180px);
   margin: 0 auto;
@@ -9757,6 +9768,10 @@ body,
 }
 
 .transaction-page-shell {
+  width: min(100%, 1180px);
+  margin: 0 auto;
+  padding-inline: clamp(6px, 1.4vw, 22px);
+  min-width: 0;
   display: grid;
   gap: 16px;
   padding-bottom: 56px;
