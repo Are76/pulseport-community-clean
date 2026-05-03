@@ -129,10 +129,15 @@ export interface LpPositionEnriched extends LpPosition {
 
 export interface PortfolioSummary {
   totalValue: number;
+  liquidValue: number;
+  stakingValueUsd: number;
   pnl24h: number;
   pnl24hPercent: number;
   chainDistribution: Record<Chain, number>;
   nativeValue: number;
+  nativePlsBalance?: number;
+  stakedPlsValue?: number;
+  tokenPlsValue?: number;
   netInvestment: number;
   unifiedPnl: number;
   realizedPnl: number;

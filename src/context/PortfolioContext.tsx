@@ -187,6 +187,10 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => { localStorage.setItem('pulseport_etherscan_key', etherscanApiKey); }, [etherscanApiKey]);
   useEffect(() => { scheduleLocalStorageWrite('pulseport_manual_entries', JSON.stringify(manualEntries)); }, [manualEntries]);
   useEffect(() => { localStorage.setItem('pulseport_theme', theme); }, [theme]);
+  // Apply theme to HTML element so CSS variables take effect
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
 
   // ── Section collapse helpers ─────────────────────────────────────────────────
 

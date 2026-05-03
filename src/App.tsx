@@ -1979,6 +1979,7 @@ export default function App() {
               <OverviewTab
                 wallets={wallets}
                 currentAssets={currentAssets}
+                currentStakes={currentStakes}
                 summary={summary}
                 tokenPrices={tokenPrices}
                 setActiveTab={setActiveTab}

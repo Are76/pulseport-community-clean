@@ -16,6 +16,21 @@ export default defineConfig(({mode}) => {
         '@': path.resolve(__dirname, '.'),
       },
     },
+    build: {
+      minify: 'esbuild',
+      rollupOptions: {
+        output: {
+          // Suppress CSS minification warnings for unsupported properties
+        },
+      },
+    },
+    esbuild: {
+      logLevel: 'warning',
+      logLimit: 100,
+      logOverride: {
+        'unsupported-css-property': 'silent',
+      },
+    },
     server: {
       hmr: process.env.DISABLE_HMR !== 'true',
       proxy: {
