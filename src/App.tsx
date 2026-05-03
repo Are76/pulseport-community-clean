@@ -517,7 +517,6 @@ export default function App() {
   const [customCoinDraft, setCustomCoinDraft] = useState({ symbol: '', name: '', balance: '', price: '' });
   const [activeTab, setActiveTab] = useState<ActiveTab>(readStoredActiveTab);
   const [selectedWalletAddr, setSelectedWalletAddr] = useState<string>('all');
-  const [historyRange, setHistoryRange] = useState<'1D' | '1W' | '1M'>('1M');
   const [receivedCoinFilter, setReceivedCoinFilter] = useState<string>('all');
   const [receivedChainFilter, setReceivedChainFilter] = useState<string>('all');
   const [timeSinceLastUpdate, setTimeSinceLastUpdate] = useState<number>(0);
@@ -525,8 +524,6 @@ export default function App() {
     return (localStorage.getItem('pulseport_yield_unit') as 'hex' | 'usd') || 'usd';
   });
   const [marketWatchInitialSearch, setMarketWatchInitialSearch] = useState('');
-  const [homeSearch, setHomeSearch] = useState('');
-  const [expandedWalletAssetIds, setExpandedWalletAssetIds] = useState<Set<string>>(new Set());
   const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState(false);
   const [apiKeyInput, setApiKeyInput] = useState('');
   const [activeWallet, setActiveWallet] = useState<string | null>(null);
@@ -582,14 +579,6 @@ export default function App() {
   const [pnlAsset, setPnlAsset] = useState<Asset | null>(null);
   const [selectedBridgeTxId, setSelectedBridgeTxId] = useState<string | null>(null);
   const [profitPlannerOpen, setProfitPlannerOpen] = useState(false);
-  const [allocWheelOpen, setAllocWheelOpen] = useState(true);
-  const [perfPeriod, setPerfPeriod] = useState<'1w' | '1m' | '1y' | 'all'>('all');
-  const fmtLabel = (ts: number) => {
-    if (perfPeriod === '1w') return format(ts, 'EEE d');
-    if (perfPeriod === '1m') return format(ts, 'MMM d');
-    if (perfPeriod === '1y') return format(ts, 'MMM yy');
-    return format(ts, 'MMM yy');
-  };
   const [showReceivedAssets, setShowReceivedAssets] = useState(true);
   const [showRecentActivity, setShowRecentActivity] = useState(true);
   const [isScanning, setIsScanning] = useState(false);
