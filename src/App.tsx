@@ -1976,19 +1976,16 @@ export default function App() {
           <AnimatePresence mode="wait">
             {activeTab === 'home' && (
               <HomeTab
-                wallets={wallets}
                 currentAssets={currentAssets}
                 summary={summary}
                 topHoldingCards={topHoldingCards}
                 tokenMarketData={tokenMarketData}
                 tokenLogos={tokenLogos}
                 currentTransactions={currentTransactions}
-                prices={prices}
                 setActiveTab={setActiveTab}
                 setProfitPlannerOpen={setProfitPlannerOpen}
                 openMarketWatch={openMarketWatch}
                 getTokenLogoUrl={getTokenLogoUrl}
-                t={t}
               />
             )}
 

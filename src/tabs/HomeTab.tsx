@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { motion } from 'motion/react';
 import { ArrowRight, History, TrendingUp } from 'lucide-react';
 import type { Asset, Wallet } from '../types';
@@ -31,30 +31,16 @@ interface PortfolioPriceCard {
 type FrontMarketPeriod = '5m' | '1h' | '6h' | '24h' | '7d';
 
 interface HomeTabProps {
-  wallets: Wallet[];
   currentAssets: Asset[];
   summary: PortfolioSummary;
   topHoldingCards: PortfolioPriceCard[];
   tokenMarketData: Record<string, any>;
   tokenLogos: Record<string, string>;
   currentTransactions: any[];
-  prices: Record<string, any>;
   setActiveTab: (tab: string) => void;
   setProfitPlannerOpen: (open: boolean) => void;
   openMarketWatch: (initialSearch: string) => void;
   getTokenLogoUrl: (asset: Asset) => string;
-  t: {
-    green: string;
-    red: string;
-    card: string;
-    border: string;
-    cardHigh: string;
-    text: string;
-    textSecondary: string;
-    textMuted: string;
-    expandedBg: string;
-    borderLight: string;
-  };
 }
 
 const MIN_INVESTMENT_THRESHOLD = 100;
@@ -77,13 +63,14 @@ const FRONT_MARKET_PERIODS: FrontMarketPeriod[] = ['5m', '1h', '6h', '24h', '7d'
 export function HomeTab(props: HomeTabProps) {
   const [frontMarketPeriod, setFrontMarketPeriod] = useState<FrontMarketPeriod>('24h');
 
-  const getFrontMarketChange = (marketData: any, _priceData: any, asset?: Asset | null): number | null => {
+  const getFrontMarketChange = useCallback((marketData: any, _priceData: any, asset?: Asset | null): number | null => {
     if (frontMarketPeriod === '5m') return marketData?.priceChange5m ?? null;
-    if (frontMarketPeriod === '1h') return marketData?.priceChange1h ?? _priceData?.usd_1h_change ?? asset?.priceChange1h ?? null;
-    if (frontMarketPeriod === '6h') return marketData?.priceChange6h ?? null;
-    if (frontMarketPeriod === '7d') return marketData?.priceChange7d ?? _priceData?.usd_7d_change ?? asset?.priceChange7d ?? null;
-    return marketData?.priceChange24h ?? _priceData?.usd_24h_change ?? asset?.priceChange24h ?? null;
-  };
+    if (frontMarketPeriod === '1h') return marketData?.priceChange1h ?? null;
+    if (frontMarketPeriod === '24h') return marketData?.priceChange24h ?? null;
+    if (frontMarketPeriod === '7d') return marketData?.priceChange7d ?? null;
+    if (frontMarketPeriod === '30d') return marketData?.priceChange30d ?? null;
+    return null;
+  }, [frontMarketPeriod]);
 
   const fmtCompact = (n: number) =>
     n >= 1e9 ? `${(n / 1e9).toFixed(2)}B` :
