@@ -38,12 +38,15 @@ interface OverviewTabProps {
 }
 
 function fmtPrice(val: number, decimals = 2): string {
+  if (!isFinite(val)) return '0.00';
   if (val === 0) return '0.00';
   const abs = Math.abs(val);
+  const safeDecimals = Math.min(Math.max(decimals, 0), 20);
+  const minDecimals = Math.min(2, safeDecimals);
   if (abs >= 1) {
-    return val.toLocaleString('en-US', { maximumFractionDigits: decimals, minimumFractionDigits: 2 });
+    return val.toLocaleString('en-US', { maximumFractionDigits: safeDecimals, minimumFractionDigits: minDecimals });
   } else if (abs >= 0.01) {
-    return val.toLocaleString('en-US', { maximumFractionDigits: decimals, minimumFractionDigits: 2 });
+    return val.toLocaleString('en-US', { maximumFractionDigits: safeDecimals, minimumFractionDigits: minDecimals });
   } else if (abs >= 0.0001) {
     return val.toLocaleString('en-US', { maximumFractionDigits: 6, minimumFractionDigits: 4 });
   } else {
@@ -52,12 +55,56 @@ function fmtPrice(val: number, decimals = 2): string {
 }
 
 function fmtNum(val: number): string {
-  return val.toLocaleString('en-US', { maximumFractionDigits: 2, minimumFractionDigits: 0 });
+  if (!isFinite(val)) return '0';
+  return val.toLocaleString('en-US', { maximumFractionDigits: 0 });
+}
+
+function fmtAmount(val: number): string {
+  if (!isFinite(val)) return '0';
+  if (val >= 1e6) return (val / 1e6).toFixed(1) + 'M';
+  if (val >= 1e3) return (val / 1e3).toFixed(1) + 'K';
+  return val.toFixed(0);
 }
 
 export function OverviewTab(props: OverviewTabProps) {
   const MAX_HERO_HOLDINGS = 7;
   const holdingAssets = useMemo(() => [...props.currentAssets].sort((a, b) => b.value - a.value).slice(0, MAX_HERO_HOLDINGS), [props.currentAssets]);
+
+  // Empty state: no wallets connected
+  if (props.wallets.length === 0) {
+    return (
+      <motion.div
+        key="overview-empty"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="overview-page-shell"
+        style={{ width: '100%', minWidth: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '400px' }}
+      >
+        <div style={{
+          textAlign: 'center',
+          padding: '40px 20px',
+        }}>
+          <div style={{
+            fontSize: '20px',
+            fontWeight: 600,
+            color: props.t.text,
+            marginBottom: '12px',
+          }}>
+            No Wallets Connected
+          </div>
+          <div style={{
+            fontSize: '14px',
+            color: props.t.textMuted,
+            marginBottom: '24px',
+            maxWidth: '400px',
+          }}>
+            Add a wallet from the sidebar to view your portfolio, holdings, and performance metrics.
+          </div>
+        </div>
+      </motion.div>
+    );
+  }
 
   const hexStakesInfo = useMemo(() => {
     const PHEX_YIELD_PER_TSHARE = 2.5;
@@ -71,9 +118,23 @@ export function OverviewTab(props: OverviewTabProps) {
     let pHexYield = 0;
     let eHexPrincipal = 0;
     let eHexYield = 0;
+    let pHexLiquid = 0;
+    let eHexLiquid = 0;
+
+    // Add liquid HEX holdings
+    props.currentAssets.forEach(asset => {
+      if (asset.chain === 'pulsechain' && asset.symbol.toLowerCase() === 'hex') {
+        pHexLiquid += asset.balance;
+      }
+      const HEX_ADDR = '0x2b591e99afe9f32eaa6214f7b7629768c40eeb39';
+      if ((asset.chain === 'ethereum' && (asset as any).address?.toLowerCase() === HEX_ADDR) ||
+          (asset.chain === 'pulsechain' && asset.symbol.toLowerCase() === 'ehex')) {
+        eHexLiquid += asset.balance;
+      }
+    });
 
     props.currentStakes.forEach(stake => {
-      if ((stake.daysRemaining ?? 0) <= 0) return; // skip ended stakes
+      if ((stake.daysRemaining ?? 0) <= 0) return;
 
       const hexPriceKey = `${stake.chain}:0x2b591e99afe9f32eaa6214f7b7629768c40eeb39`;
       const chainHexFallback = stake.chain === 'pulsechain' ? props.tokenPrices['pulsechain:hex']?.usd : props.tokenPrices['hex']?.usd;
@@ -100,8 +161,11 @@ export function OverviewTab(props: OverviewTabProps) {
       }
     });
 
-    return { pHexAmount, eHexAmount, pHexValue, eHexValue, pHexPrincipal, pHexYield, eHexPrincipal, eHexYield };
-  }, [props.currentStakes, props.tokenPrices]);
+    return {
+      pHexAmount, eHexAmount, pHexValue, eHexValue, pHexPrincipal, pHexYield, eHexPrincipal, eHexYield,
+      pHexLiquid, eHexLiquid, pHexStaked: pHexAmount, eHexStaked: eHexAmount
+    };
+  }, [props.currentAssets, props.currentStakes, props.tokenPrices]);
 
   const pnlChangeColor = props.summary.unifiedPnl >= 0 ? props.t.green : props.t.red;
   const pnl24hChangeColor = props.summary.pnl24h >= 0 ? props.t.green : props.t.red;
@@ -115,88 +179,90 @@ export function OverviewTab(props: OverviewTabProps) {
       className="overview-page-shell space-y-4"
       style={{ width: '100%', minWidth: 1 }}
     >
-      {/* MY NET WORTH Section */}
+      {/* Hero Card - MY NET WORTH */}
       <div style={{
         background: props.t.card,
         border: `1px solid ${props.t.border}`,
         borderRadius: '12px',
-        padding: '20px',
+        padding: '32px',
       }}>
-        <div style={{ fontSize: '12px', color: props.t.textSecondary, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>MY NET WORTH</div>
-        <div style={{ fontSize: '32px', fontWeight: 700, color: props.t.text, marginBottom: '8px' }}>
-          ${fmtNum(props.summary.totalValue)}
-        </div>
-        <div style={{ fontSize: '13px', color: pnl24hChangeColor, fontWeight: 500 }}>
-          {props.summary.pnl24h >= 0 ? '+' : ''}{fmtPrice(props.summary.pnl24h, 2)} ({props.summary.pnl24hPercent >= 0 ? '+' : ''}{props.summary.pnl24hPercent.toFixed(2)}%) in 24h
-        </div>
-      </div>
-
-      {/* Asset Breakdown Section */}
-      <div style={{
-        background: props.t.card,
-        border: `1px solid ${props.t.border}`,
-        borderRadius: '12px',
-        padding: '20px',
-      }}>
-        <div style={{ fontSize: '12px', color: props.t.textSecondary, marginBottom: '16px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>ASSET BREAKDOWN</div>
-        <div className="space-y-3">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '12px', borderBottom: `1px solid ${props.t.border}` }}>
-            <span style={{ color: props.t.textSecondary, fontSize: '13px' }}>Liquid Assets</span>
-            <span style={{ color: props.t.text, fontSize: '14px', fontWeight: 500 }}>${fmtNum(props.summary.liquidValue)}</span>
+        <div style={{ marginBottom: '20px' }}>
+          <div style={{ fontSize: '12px', color: props.t.textSecondary, marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>MY NET WORTH</div>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '16px', marginBottom: '12px' }}>
+            <div style={{ fontSize: '48px', fontWeight: 700, color: props.t.text }}>
+              ${fmtNum(props.summary.totalValue)}
+            </div>
+            <div style={{ fontSize: '16px', fontWeight: 500, color: pnl24hChangeColor }}>
+              {props.summary.pnl24h >= 0 ? '+' : ''}{fmtPrice(props.summary.pnl24h, 2)} / {props.summary.pnl24hPercent >= 0 ? '+' : ''}{props.summary.pnl24hPercent.toFixed(2)}%
+            </div>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '12px', borderBottom: `1px solid ${props.t.border}` }}>
-            <span style={{ color: props.t.textSecondary, fontSize: '13px' }}>Staked Assets</span>
-            <span style={{ color: props.t.text, fontSize: '14px', fontWeight: 500 }}>${fmtNum(props.summary.stakingValueUsd)}</span>
+          <div style={{ fontSize: '14px', color: props.t.textSecondary }}>
+            {fmtNum(props.summary.nativeValue)} PLS tracked
+          </div>
+        </div>
+
+        {/* Asset breakdown row */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
+          gap: '20px',
+          paddingTop: '20px',
+          borderTop: `1px solid ${props.t.border}`,
+        }}>
+          <div>
+            <div style={{ fontSize: '12px', color: props.t.textSecondary, marginBottom: '6px' }}>Liquid</div>
+            <div style={{ fontSize: '16px', fontWeight: 600, color: props.t.text }}>${fmtNum(props.summary.liquidValue)}</div>
+          </div>
+          <div>
+            <div style={{ fontSize: '12px', color: props.t.textSecondary, marginBottom: '6px' }}>Staked</div>
+            <div style={{ fontSize: '16px', fontWeight: 600, color: props.t.text }}>${fmtNum(props.summary.stakingValueUsd)}</div>
           </div>
           {hexStakesInfo.pHexAmount > 0 && (
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '12px', borderBottom: `1px solid ${props.t.border}` }}>
-              <span style={{ color: props.t.textSecondary, fontSize: '13px' }}>pHEX</span>
-              <span style={{ color: props.t.text, fontSize: '14px', fontWeight: 500 }}>${fmtNum(hexStakesInfo.pHexValue)}</span>
+            <div>
+              <div style={{ fontSize: '12px', color: props.t.textSecondary, marginBottom: '6px' }}>pHEX</div>
+              <div style={{ fontSize: '16px', fontWeight: 600, color: props.t.text }}>{fmtAmount(hexStakesInfo.pHexAmount)}</div>
             </div>
           )}
           {hexStakesInfo.eHexAmount > 0 && (
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ color: props.t.textSecondary, fontSize: '13px' }}>eHEX</span>
-              <span style={{ color: props.t.text, fontSize: '14px', fontWeight: 500 }}>${fmtNum(hexStakesInfo.eHexValue)}</span>
+            <div>
+              <div style={{ fontSize: '12px', color: props.t.textSecondary, marginBottom: '6px' }}>eHEX</div>
+              <div style={{ fontSize: '16px', fontWeight: 600, color: props.t.text }}>{fmtAmount(hexStakesInfo.eHexAmount)}</div>
             </div>
           )}
         </div>
       </div>
 
-      {/* TRACKED CAPITAL Section */}
+      {/* Two-column layout: TRACKED CAPITAL and TOTAL PnL */}
       <div style={{
-        background: props.t.card,
-        border: `1px solid ${props.t.border}`,
-        borderRadius: '12px',
-        padding: '20px',
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr',
+        gap: '16px',
       }}>
-        <div style={{ fontSize: '12px', color: props.t.textSecondary, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>TRACKED CAPITAL</div>
-        <div style={{ fontSize: '24px', fontWeight: 600, color: props.t.text }}>
-          ${fmtNum(props.summary.netInvestment)}
-        </div>
-        <div style={{ fontSize: '12px', color: props.t.textMuted, marginTop: '6px' }}>Total capital tracked from deposits</div>
-      </div>
-
-      {/* TOTAL PnL Section */}
-      <div style={{
-        background: props.t.card,
-        border: `1px solid ${props.t.border}`,
-        borderRadius: '12px',
-        padding: '20px',
-      }}>
-        <div style={{ fontSize: '12px', color: props.t.textSecondary, marginBottom: '16px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>TOTAL PnL</div>
-        <div className="space-y-3">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '12px', borderBottom: `1px solid ${props.t.border}` }}>
-            <span style={{ color: props.t.textSecondary, fontSize: '13px' }}>Unrealized PnL</span>
-            <span style={{ color: pnlChangeColor, fontSize: '14px', fontWeight: 500 }}>
-              {props.summary.unifiedPnl >= 0 ? '+' : ''}{fmtPrice(props.summary.unifiedPnl, 2)}
-            </span>
+        <div style={{
+          background: props.t.card,
+          border: `1px solid ${props.t.border}`,
+          borderRadius: '12px',
+          padding: '24px',
+        }}>
+          <div style={{ fontSize: '12px', color: props.t.textSecondary, marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>TRACKED CAPITAL</div>
+          <div style={{ fontSize: '32px', fontWeight: 700, color: props.t.text, marginBottom: '8px' }}>
+            ${fmtNum(props.summary.netInvestment)}
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ color: props.t.textSecondary, fontSize: '13px' }}>Realized PnL</span>
-            <span style={{ color: props.summary.realizedPnl >= 0 ? props.t.green : props.t.red, fontSize: '14px', fontWeight: 500 }}>
-              {props.summary.realizedPnl >= 0 ? '+' : ''}{fmtPrice(props.summary.realizedPnl, 2)}
-            </span>
+          <div style={{ fontSize: '13px', color: props.t.textMuted }}>ETH + stablecoin inflows</div>
+        </div>
+
+        <div style={{
+          background: props.t.card,
+          border: `1px solid ${props.t.border}`,
+          borderRadius: '12px',
+          padding: '24px',
+        }}>
+          <div style={{ fontSize: '12px', color: props.t.textSecondary, marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>TOTAL PnL</div>
+          <div style={{ fontSize: '32px', fontWeight: 700, color: pnlChangeColor, marginBottom: '8px' }}>
+            {props.summary.unifiedPnl >= 0 ? '+' : ''}{fmtPrice(props.summary.unifiedPnl, 0)}
+          </div>
+          <div style={{ fontSize: '13px', color: props.t.textMuted }}>
+            {props.summary.netInvestment > 0 ? ((props.summary.unifiedPnl / props.summary.netInvestment) * 100).toFixed(1) : '0.0'}% vs invested
           </div>
         </div>
       </div>
@@ -207,52 +273,102 @@ export function OverviewTab(props: OverviewTabProps) {
           background: props.t.card,
           border: `1px solid ${props.t.border}`,
           borderRadius: '12px',
-          padding: '20px',
+          padding: '24px',
         }}>
-          <div style={{ fontSize: '12px', color: props.t.textSecondary, marginBottom: '16px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>HEX POSITIONING</div>
-          <div className="space-y-4">
+          <div style={{ marginBottom: '24px' }}>
+            <div style={{ fontSize: '12px', color: props.t.textSecondary, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>HEX POSITIONING</div>
+            <div style={{ fontSize: '20px', fontWeight: 600, color: props.t.text }}>My HEX Holdings</div>
+          </div>
+
+          {/* Total PHEX and EHEX row */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: '32px',
+            marginBottom: '32px',
+            paddingBottom: '24px',
+            borderBottom: `1px solid ${props.t.border}`,
+          }}>
             {hexStakesInfo.pHexAmount > 0 && (
-              <div style={{ paddingBottom: '16px', borderBottom: `1px solid ${props.t.border}` }}>
-                <div style={{ fontSize: '13px', fontWeight: 600, color: props.t.text, marginBottom: '8px' }}>pHEX (Pulsechain)</div>
-                <div className="space-y-2">
+              <div>
+                <div style={{ fontSize: '12px', color: props.t.textSecondary, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#F59E0B' }}></div>
+                  TOTAL PHEX
+                </div>
+                <div style={{ fontSize: '36px', fontWeight: 700, color: '#F59E0B', marginBottom: '8px' }}>
+                  {fmtNum(hexStakesInfo.pHexAmount)}
+                </div>
+                <div style={{ fontSize: '14px', color: props.t.text, marginBottom: '8px', fontWeight: 500 }}>
+                  ${fmtNum(hexStakesInfo.pHexValue)}
+                </div>
+                <div style={{ fontSize: '12px', color: props.t.textMuted }}>
+                  {fmtNum(hexStakesInfo.pHexLiquid)} liquid - {fmtNum(hexStakesInfo.pHexStaked)} staked
+                </div>
+              </div>
+            )}
+            {hexStakesInfo.eHexAmount > 0 && (
+              <div>
+                <div style={{ fontSize: '12px', color: props.t.textSecondary, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#6366F1' }}></div>
+                  TOTAL EHEX
+                </div>
+                <div style={{ fontSize: '36px', fontWeight: 700, color: '#6366F1', marginBottom: '8px' }}>
+                  {fmtNum(hexStakesInfo.eHexAmount)}
+                </div>
+                <div style={{ fontSize: '14px', color: props.t.text, marginBottom: '8px', fontWeight: 500 }}>
+                  ${fmtNum(hexStakesInfo.eHexValue)}
+                </div>
+                <div style={{ fontSize: '12px', color: props.t.textMuted }}>
+                  {fmtNum(hexStakesInfo.eHexLiquid)} liquid - {fmtNum(hexStakesInfo.eHexStaked)} staked
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Stake breakdown */}
+          <div style={{ marginBottom: '12px' }}>
+            <div style={{ fontSize: '12px', color: props.t.textSecondary, textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>STAKE BREAKDOWN - PRINCIPAL + ACCRUED YIELD</div>
+          </div>
+
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: '32px',
+          }}>
+            {hexStakesInfo.pHexAmount > 0 && (
+              <div>
+                <div style={{ fontSize: '11px', color: '#F59E0B', textTransform: 'uppercase', fontWeight: 700, marginBottom: '12px', letterSpacing: '0.5px' }}>PHEX STAKED</div>
+                <div style={{ display: 'grid', gap: '8px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-                    <span style={{ color: props.t.textSecondary }}>Amount</span>
-                    <span style={{ color: props.t.text, fontWeight: 500 }}>{fmtNum(hexStakesInfo.pHexAmount)} HEX</span>
+                    <span style={{ color: props.t.textSecondary }}>Principal</span>
+                    <span style={{ color: props.t.text, fontWeight: 500 }}>${fmtNum(hexStakesInfo.pHexPrincipal)}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-                    <span style={{ color: props.t.textSecondary }}>Value</span>
-                    <span style={{ color: props.t.text, fontWeight: 500 }}>${fmtNum(hexStakesInfo.pHexValue)}</span>
+                    <span style={{ color: props.t.textSecondary }}>Accrued Yield</span>
+                    <span style={{ color: props.t.text, fontWeight: 500 }}>+${fmtNum(hexStakesInfo.pHexYield)}</span>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: props.t.textMuted }}>
-                    <span>Principal</span>
-                    <span>${fmtNum(hexStakesInfo.pHexPrincipal)}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: props.t.textMuted }}>
-                    <span>Accrued Yield</span>
-                    <span>${fmtNum(hexStakesInfo.pHexYield)}</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', paddingTop: '8px', borderTop: `1px solid ${props.t.border}` }}>
+                    <span style={{ color: props.t.text, fontWeight: 600 }}>Total</span>
+                    <span style={{ color: '#F59E0B', fontWeight: 700 }}>{fmtNum(hexStakesInfo.pHexAmount)}</span>
                   </div>
                 </div>
               </div>
             )}
             {hexStakesInfo.eHexAmount > 0 && (
               <div>
-                <div style={{ fontSize: '13px', fontWeight: 600, color: props.t.text, marginBottom: '8px' }}>eHEX (Ethereum)</div>
-                <div className="space-y-2">
+                <div style={{ fontSize: '11px', color: '#6366F1', textTransform: 'uppercase', fontWeight: 700, marginBottom: '12px', letterSpacing: '0.5px' }}>EHEX STAKED</div>
+                <div style={{ display: 'grid', gap: '8px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-                    <span style={{ color: props.t.textSecondary }}>Amount</span>
-                    <span style={{ color: props.t.text, fontWeight: 500 }}>{fmtNum(hexStakesInfo.eHexAmount)} HEX</span>
+                    <span style={{ color: props.t.textSecondary }}>Principal</span>
+                    <span style={{ color: props.t.text, fontWeight: 500 }}>${fmtNum(hexStakesInfo.eHexPrincipal)}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-                    <span style={{ color: props.t.textSecondary }}>Value</span>
-                    <span style={{ color: props.t.text, fontWeight: 500 }}>${fmtNum(hexStakesInfo.eHexValue)}</span>
+                    <span style={{ color: props.t.textSecondary }}>Accrued Yield</span>
+                    <span style={{ color: props.t.text, fontWeight: 500 }}>+${fmtNum(hexStakesInfo.eHexYield)}</span>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: props.t.textMuted }}>
-                    <span>Principal</span>
-                    <span>${fmtNum(hexStakesInfo.eHexPrincipal)}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: props.t.textMuted }}>
-                    <span>Accrued Yield</span>
-                    <span>${fmtNum(hexStakesInfo.eHexYield)}</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', paddingTop: '8px', borderTop: `1px solid ${props.t.border}` }}>
+                    <span style={{ color: props.t.text, fontWeight: 600 }}>Total</span>
+                    <span style={{ color: '#6366F1', fontWeight: 700 }}>{fmtNum(hexStakesInfo.eHexAmount)}</span>
                   </div>
                 </div>
               </div>
@@ -289,7 +405,7 @@ export function OverviewTab(props: OverviewTabProps) {
                 fontSize: '14px',
               }}>
                 <span style={{ color: props.t.text }}>{asset.symbol}</span>
-                <span style={{ color: props.t.textSecondary }}>${asset.value.toLocaleString('en-US', { maximumFractionDigits: 2 })}</span>
+                <span style={{ color: props.t.textSecondary }}>${isFinite(asset.value) ? asset.value.toLocaleString('en-US', { maximumFractionDigits: 2 }) : '0.00'}</span>
               </div>
             ))}
           </div>

@@ -9,13 +9,16 @@ export function cn(...inputs: ClassValue[]) {
 
 /** Format a USD amount. Always positive - caller handles sign. */
 export function fmtUsd(n: number, maxFrac = 2): string {
+  if (!isFinite(n)) return '$0';
+  const safeFrac = Math.min(Math.max(maxFrac, 0), 20);
   if (n >= 1e6) return `$${(n / 1e6).toFixed(2)}M`;
   if (n >= 1e3) return `$${(n / 1e3).toFixed(1)}K`;
-  return `$${n.toLocaleString('en-US', { maximumFractionDigits: maxFrac })}`;
+  return `$${n.toLocaleString('en-US', { maximumFractionDigits: safeFrac })}`;
 }
 
 /** Format a token amount with automatic B/M/K abbreviation. */
 export function fmtTok(n: number): string {
+  if (!isFinite(n)) return '0';
   if (n >= 1e9) return `${(n / 1e9).toFixed(2)}B`;
   if (n >= 1e6) return `${(n / 1e6).toFixed(2)}M`;
   if (n >= 1e3) return `${(n / 1e3).toFixed(1)}K`;

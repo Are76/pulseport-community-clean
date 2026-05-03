@@ -74,6 +74,7 @@ import { buildInvestmentRows } from './utils/buildInvestmentRows';
 import { scheduleLocalStorageWrite, resolveBlockscoutBase, resolveEtherscanCompatBase } from './utils/localStorageDebounce';
 import { BRAND_ASSETS } from './branding/brand-assets';
 import { MyInvestmentsPage } from './pages/MyInvestmentsPage';
+import { WalletAnalyzer } from './pages/WalletAnalyzer';
 import { MyInvestmentsUtilityStrip } from './components/my-investments/MyInvestmentsUtilityStrip';
 import { usePortfolio } from './context/PortfolioContext';
 import { HistoryTab } from './tabs/HistoryTab';
@@ -91,61 +92,6 @@ export const ERC20_ABI = [
     "type": "function"
   }
 ] as const;
-
-// Mock data for demonstration when no wallets are added
-const MOCK_ASSETS: Asset[] = [
-  { id: 'pls', symbol: 'PLS', name: 'PulseChain', balance: 1250000, price: 0.000065, value: 81.25, chain: 'pulsechain', pnl24h: 5.4 },
-  { id: 'plsx', symbol: 'PLSX', name: 'PulseX', balance: 5000000, price: 0.000032, value: 160, chain: 'pulsechain', pnl24h: -2.1 },
-  { id: 'ehex', symbol: 'eHEX', name: 'HEX (from Ethereum)', balance: 250000, price: 0.004, value: 1000, chain: 'pulsechain', pnl24h: 8.2 },
-  { id: 'pdai', symbol: 'pDAI', name: 'DAI (System Copy)', balance: 10000, price: 0.00189, value: 18.9, chain: 'pulsechain', pnl24h: -1.5 },
-  { id: 'inc', symbol: 'INC', name: 'Incentive', balance: 50, price: 5.20, value: 260, chain: 'pulsechain', pnl24h: 12.4 },
-  { id: 'prvx', symbol: 'PRVX', name: 'PrivacyX', balance: 1000, price: 0.15, value: 150, chain: 'pulsechain', pnl24h: 0 },
-  { id: 'eth', symbol: 'ETH', name: 'Ethereum', balance: 1.5, price: 3450, value: 5175, chain: 'ethereum', pnl24h: 1.2 },
-  { id: 'hex-p', symbol: 'HEX', name: 'HEX (PulseChain)', balance: 100000, price: 0.004, value: 400, chain: 'pulsechain', pnl24h: 12.5 },
-  { id: 'hex-e', symbol: 'HEX', name: 'HEX (Ethereum)', balance: 50000, price: 0.0035, value: 175, chain: 'ethereum', pnl24h: -0.5 },
-  { id: 'usdc-b', symbol: 'USDC', name: 'USD Coin (Base)', balance: 2500, price: 1, value: 2500, chain: 'base', pnl24h: 0.01 },
-];
-
-const MOCK_STAKES: HexStake[] = [
-  { id: 'mock-1', stakeId: 1, stakedHearts: 100000000000n, stakeShares: 5000000000000n, lockedDay: 1500, stakedDays: 365, unlockedDay: 1865, isAutoStake: false, progress: 45, estimatedValueUsd: 1200, chain: 'pulsechain' },
-  { id: 'mock-2', stakeId: 2, stakedHearts: 500000000000n, stakeShares: 25000000000000n, lockedDay: 1200, stakedDays: 5555, unlockedDay: 6755, isAutoStake: false, progress: 12, estimatedValueUsd: 8500, chain: 'ethereum' },
-];
-
-const MOCK_HISTORY: HistoryPoint[] = Array.from({ length: 30 }, (_, i) => {
-  const date = new Date();
-  date.setDate(date.getDate() - (29 - i));
-  const baseValue = 8000;
-  const randomFluc = Math.sin(i * 0.5) * 500 + (Math.random() * 200);
-  const value = baseValue + randomFluc + (i * 50);
-
-  // Mock chain PNLs
-  const chainPnl: Record<Chain, number> = {
-    pulsechain: randomFluc * 0.6 + (Math.random() * 100 - 50),
-    ethereum: randomFluc * 0.3 + (Math.random() * 100 - 50),
-    base: randomFluc * 0.1 + (Math.random() * 50 - 25)
-  };
-
-  return {
-    timestamp: date.getTime(),
-    value: value,
-    nativeValue: value / 0.000065,
-    pnl: randomFluc,
-    chainPnl: chainPnl
-  };
-});
-
-const MOCK_WALLET = '0xdemo0000000000000000000000000000000001';
-const MOCK_TRANSACTIONS: Transaction[] = [
-  { id: 'm1', hash: '0x123...', timestamp: Date.now() - 86400000 * 2, type: 'deposit', from: '0xabc...', to: MOCK_WALLET, asset: 'ETH', amount: 1.5, chain: 'ethereum', valueUsd: 5175 },
-  { id: 'm2', hash: '0x456...', timestamp: Date.now() - 86400000 * 5, type: 'deposit', from: '0xdef...', to: MOCK_WALLET, asset: 'USDC', amount: 2500, chain: 'base', valueUsd: 2500 },
-  { id: 'm-bridge-1', hash: '0xb1d9e001...', timestamp: Date.now() - 86400000 * 1.25, type: 'deposit', from: '0xbridge...', to: MOCK_WALLET, asset: 'DAI (from Ethereum)', amount: 1250, chain: 'pulsechain', valueUsd: 1248.5, bridged: true, status: 'Confirmed' },
-  { id: 'm-bridge-2', hash: '0xb1d9e002...', timestamp: Date.now() - 86400000 * 6.5, type: 'deposit', from: '0xbridge...', to: MOCK_WALLET, asset: 'WETH (from Ethereum)', amount: 0.42, chain: 'pulsechain', valueUsd: 1449, bridged: true, status: 'Confirmed' },
-  { id: 'm3', hash: '0x789...', timestamp: Date.now() - 86400000 * 10, type: 'swap', from: MOCK_WALLET, to: MOCK_WALLET, asset: 'ETH', amount: 0.5, chain: 'ethereum', valueUsd: 1725, counterAsset: 'USDC', counterAmount: 1725 },
-  { id: 'm4', hash: '0xabc...', timestamp: Date.now() - 86400000 * 15, type: 'deposit', from: '0xghi...', to: MOCK_WALLET, asset: 'ETH', amount: 2.0, chain: 'ethereum', valueUsd: 6800 },
-  { id: 'm5', hash: '0xdef...', timestamp: Date.now() - 86400000 * 20, type: 'deposit', from: '0xjkl...', to: MOCK_WALLET, asset: 'USDC', amount: 5000, chain: 'ethereum', valueUsd: 5000 },
-  { id: 'm6', hash: '0x000...', timestamp: Date.now() - 86400000 * 1, type: 'deposit', from: '0x000...', to: MOCK_WALLET, asset: 'USDC', amount: 1000, chain: 'ethereum', valueUsd: 1000 },
-  { id: 'm7', hash: '0x999...', timestamp: Date.now() - 86400000 * 0.5, type: 'deposit', from: '0x123...', to: MOCK_WALLET, asset: 'USDC', amount: 25000, chain: 'ethereum', valueUsd: 25000 },
-];
 
 const PriceDisplay = ({ price, className }: { price: number, className?: string }) => {
   if (price === 0) return <span className={className}>$0.00</span>;
@@ -484,8 +430,8 @@ export function decodeLibertySwapInput(input: string): { dstChainId: number; ord
   }
 }
 
-type ActiveTab = 'home' | 'overview' | 'assets' | 'stakes' | 'history' | 'tracker' | 'wallets' | 'defi' | 'pulsechain-official' | 'pulsechain-community' | 'bridge';
-const ACTIVE_TABS: ActiveTab[] = ['home', 'overview', 'assets', 'stakes', 'history', 'tracker', 'defi', 'pulsechain-official', 'pulsechain-community', 'bridge'];
+type ActiveTab = 'home' | 'overview' | 'assets' | 'stakes' | 'history' | 'tracker' | 'wallets' | 'defi' | 'pulsechain-official' | 'pulsechain-community' | 'bridge' | 'wallet-analyzer';
+const ACTIVE_TABS: ActiveTab[] = ['home', 'overview', 'assets', 'stakes', 'history', 'tracker', 'defi', 'pulsechain-official', 'pulsechain-community', 'bridge', 'wallet-analyzer'];
 const ACTIVE_TAB_STORAGE_KEY = 'pulseport_active_tab';
 
 const readStoredActiveTab = (): ActiveTab => {
@@ -530,9 +476,16 @@ export default function App() {
 
 
   // -- Formatting helpers (defined once here, used throughout) ----------------
-  const fmtBigNum = (n: number) => Math.round(n).toLocaleString('en-US').replace(/,/g, ' ');
-  const fmtDec = (n: number, dp = 2) => n.toLocaleString('en-US', { minimumFractionDigits: dp, maximumFractionDigits: dp });
-  const fmtTok = (n: number) => n > 1e6 ? `${(n/1e6).toFixed(2)}M` : n > 1000 ? `${(n/1000).toFixed(2)}K` : n.toLocaleString('en-US', { maximumFractionDigits: 4 });
+  const fmtBigNum = (n: number) => !isFinite(n) ? '0' : Math.round(n).toLocaleString('en-US').replace(/,/g, ' ');
+  const fmtDec = (n: number, dp = 2) => {
+    if (!isFinite(n)) return '0';
+    const safeDp = Math.min(Math.max(Math.abs(dp), 0), 20);
+    return n.toLocaleString('en-US', { minimumFractionDigits: safeDp, maximumFractionDigits: safeDp });
+  };
+  const fmtTok = (n: number) => {
+    if (!isFinite(n)) return '0';
+    return n > 1e6 ? `${(n/1e6).toFixed(2)}M` : n > 1000 ? `${(n/1000).toFixed(2)}K` : n.toLocaleString('en-US', { maximumFractionDigits: 4 });
+  };
   // -- CSV Export helper ------------------------------------------------------
   const exportCSV = (filename: string, headers: string[], rows: (string | number)[][]) => {
     const escCell = (c: string | number) => {
@@ -779,7 +732,7 @@ export default function App() {
     const activeWalletKey = activeWallet?.toLowerCase() ?? null;
     const baseAssets = wallets.length > 0
       ? (activeWalletKey ? (walletAssets[activeWalletKey] || []) : realAssets)
-      : MOCK_ASSETS;
+      : [];
     const assetsWithCustom = [...baseAssets];
 
     customCoins.forEach(coin => {
@@ -838,7 +791,7 @@ export default function App() {
   }, [assetUniverse, manualEntries, hiddenTokens, hideDust, hideSpam, spamTokenIds, prices]);
 
   const currentStakes = useMemo(() => {
-    if (wallets.length === 0) return MOCK_STAKES;
+    if (wallets.length === 0) return [];
     const key = activeWallet?.toLowerCase() ?? null;
     return key ? realStakes.filter(s => s.walletAddress === key) : realStakes;
   }, [wallets.length, realStakes, activeWallet]);
@@ -864,9 +817,9 @@ export default function App() {
       });
   }, [manualEntries, prices]);
 
-  const currentHistory = wallets.length > 0 ? history : MOCK_HISTORY;
+  const currentHistory = wallets.length > 0 ? history : [];
   const currentTransactions = useMemo(() => {
-    const baseTransactions = wallets.length > 0 ? transactions : MOCK_TRANSACTIONS;
+    const baseTransactions = wallets.length > 0 ? transactions : [];
     return baseTransactions.map(tx => ({
       ...tx,
       asset: normalizeAssetSymbol(tx.asset, tx.chain),
@@ -1092,7 +1045,7 @@ export default function App() {
   const COLORS = [CHAINS.pulsechain.color, CHAINS.ethereum.color, CHAINS.base.color];
 
   const stakeSummary = useMemo(() => {
-    const stakes = wallets.length > 0 ? realStakes : MOCK_STAKES;
+    const stakes = wallets.length > 0 ? realStakes : [];
     const activeStakes = stakes.filter(s => (s.daysRemaining ?? 0) > 0);
     let totalStakedHex = 0;
     let totalTShares = 0;
@@ -1174,7 +1127,7 @@ export default function App() {
   }, [realAssets, manualEntries, prices]);
 
   const monthlyPnlData = useMemo(() => {
-    const pts = wallets.length > 0 ? history : MOCK_HISTORY;
+    const pts = history.length > 0 ? history : [];
     const byMonth: Record<string, { month: string; pnl: number }> = {};
     pts.forEach(p => {
       const key = format(p.timestamp, 'MMM yy');
@@ -1663,6 +1616,7 @@ export default function App() {
     { id: 'stakes', label: 'HEX Staking', icon: Lock },
     { id: 'pulsechain-official', label: 'My Investments', icon: Zap },
     { id: 'history', label: 'Transactions', icon: History },
+    { id: 'wallet-analyzer', label: 'Wallet Analyzer', icon: BarChart2 },
     { id: 'defi', label: 'DeFi', icon: Droplets },
   ] as const;
   const pageMeta: Record<ActiveTab, { title: string; subtitle: string }> = {
@@ -1709,6 +1663,10 @@ export default function App() {
     defi: {
       title: 'DeFi',
       subtitle: 'Liquidity, farms, and protocol-level PulseChain positions.',
+    },
+    'wallet-analyzer': {
+      title: 'Wallet Analyzer',
+      subtitle: 'Analytics, investments and profit planning across all wallets.',
     },
   };
   const mobilePrimaryNavItems = navItems.filter(item => ['home', 'overview', 'history'].includes(item.id));
@@ -2213,6 +2171,25 @@ export default function App() {
             t={t}
             WALLET_DOT_COLORS={WALLET_DOT_COLORS}
           />
+        )}
+
+        {activeTab === 'wallet-analyzer' && (
+          <motion.div key="wallet-analyzer" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <WalletAnalyzer
+              assets={currentAssets}
+              history={history}
+              transactions={transactions}
+              investmentRows={investmentRows}
+              investedFiat={summary.netInvestment > MIN_INVESTMENT_THRESHOLD ? Math.abs(summary.netInvestment) : 0}
+              currentValue={summary.totalValue}
+              liquidValue={summary.liquidValue}
+              stakedValue={summary.stakingValueUsd}
+              plsUsdPrice={prices['pulsechain']?.usd || 0}
+              onOpenTransactions={(row) => {
+                setActiveTab('history');
+              }}
+            />
+          </motion.div>
         )}
 
               </AnimatePresence>
