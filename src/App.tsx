@@ -2381,30 +2381,10 @@ export default function App() {
               <OverviewTab
                 wallets={wallets}
                 currentAssets={currentAssets}
-                currentStakes={currentStakes}
-                currentTransactions={currentTransactions}
                 summary={summary}
-                prices={prices}
-                tokenLogos={tokenLogos}
-                manualEntries={manualEntries}
-                setManualEntries={setManualEntries}
-                hiddenTokens={hiddenTokens}
-                hideToken={hideToken}
-                getTokenLogoUrl={getTokenLogoUrl}
-                explorerUrl={explorerUrl}
-                dexScreenerUrl={dexScreenerUrl}
-                tokenMarketData={tokenMarketData}
-                t={t}
-                theme={theme}
-                CHAIN_COLORS={CHAIN_COLORS}
-                STATIC_LOGOS={STATIC_LOGOS}
-                WALLET_DOT_COLORS={WALLET_DOT_COLORS}
-                normalizeHoldingAssets={normalizeHoldingAssets}
-                setActiveTab={setActiveTab}
-                setIsAddingWallet={setIsAddingWallet}
-                setPnlAsset={setPnlAsset}
-                MIN_INVESTMENT_THRESHOLD={MIN_INVESTMENT_THRESHOLD}
                 tokenPrices={tokenPrices}
+                setActiveTab={setActiveTab}
+                t={t}
               />
             )}
             {activeTab === 'defi' && (

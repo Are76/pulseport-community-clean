@@ -1,8 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { motion } from 'motion/react';
-import type { Asset, Wallet, Transaction, HexStake } from '../types';
-import type { HoldingDisplayAsset, HoldingSortField } from '../components/HoldingsTable';
-import { HoldingsTable } from '../components/HoldingsTable';
+import type { Asset, Wallet } from '../types';
 import { LiquidityOverviewStrip } from '../components/LiquiditySection';
 
 interface PortfolioSummary {
@@ -19,37 +17,24 @@ interface PortfolioSummary {
 interface OverviewTabProps {
   wallets: Wallet[];
   currentAssets: Asset[];
-  currentStakes: HexStake[];
-  currentTransactions: Transaction[];
   summary: PortfolioSummary;
-  prices: Record<string, any>;
-  tokenLogos: Record<string, string>;
-  manualEntries: Record<string, number>;
-  setManualEntries: (entries: Record<string, number>) => void;
-  hiddenTokens: string[];
-  hideToken: (id: string) => void;
-  getTokenLogoUrl: (asset: any) => string;
-  explorerUrl: (addr: string, chain: string) => string;
-  dexScreenerUrl: (addr: string, chain: string) => string;
-  tokenMarketData: Record<string, any>;
-  t: any;
-  theme: string;
-  CHAIN_COLORS: Record<string, string>;
-  STATIC_LOGOS: Record<string, string>;
-  WALLET_DOT_COLORS: string[];
-  normalizeHoldingAssets: (assets: Asset[]) => HoldingDisplayAsset[];
-  setActiveTab: (tab: string) => void;
-  setIsAddingWallet: (open: boolean) => void;
-  setPnlAsset: (asset: Asset | null) => void;
-  MIN_INVESTMENT_THRESHOLD: number;
   tokenPrices: Record<string, any>;
+  setActiveTab: (tab: string) => void;
+  t: {
+    green: string;
+    red: string;
+    card: string;
+    border: string;
+    cardHigh: string;
+    text: string;
+    textSecondary: string;
+    textMuted: string;
+    expandedBg: string;
+    borderLight: string;
+  };
 }
 
 export function OverviewTab(props: OverviewTabProps) {
-  const [overviewAssetSortField, setOverviewAssetSortField] = useState<HoldingSortField>('value');
-  const [overviewAssetSortDir, setOverviewAssetSortDir] = useState<'asc' | 'desc'>('desc');
-  const [overviewExpandedAssetIds, setOverviewExpandedAssetIds] = useState<Set<string>>(new Set());
-
   const MAX_HERO_HOLDINGS = 7;
   const holdingAssets = useMemo(() => [...props.currentAssets].sort((a, b) => b.value - a.value).slice(0, MAX_HERO_HOLDINGS), [props.currentAssets]);
 
@@ -92,13 +77,13 @@ export function OverviewTab(props: OverviewTabProps) {
         }}>
           <div style={{ fontSize: '16px', fontWeight: 600, color: props.t.text, marginBottom: '16px' }}>Top Holdings</div>
           <div className="space-y-2">
-            {holdingAssets.slice(0, 5).map((asset, idx) => (
-              <div key={idx} style={{
+            {holdingAssets.slice(0, 5).map((asset) => (
+              <div key={asset.id || `${asset.symbol}-${asset.chain}`} style={{
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 padding: '12px',
-                background: props.t.surface,
+                background: props.t.card,
                 borderRadius: '8px',
                 fontSize: '14px',
               }}>
