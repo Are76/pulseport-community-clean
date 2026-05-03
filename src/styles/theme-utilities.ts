@@ -182,7 +182,7 @@ export function createGridStyle(minColumnWidth: string = '150px', gap: string = 
     display: 'grid',
     gridTemplateColumns: `repeat(auto-fit, minmax(${minColumnWidth}, 1fr))`,
     gap,
-  } as const;
+  };
 }
 
 /**
@@ -195,10 +195,10 @@ export function createFlexStyle(
 ) {
   return {
     display: 'flex',
-    flexDirection: direction as const,
+    flexDirection: direction,
     gap,
     alignItems: align,
-  } as const;
+  };
 }
 
 /**
@@ -215,5 +215,5 @@ export function mergeColors(overrides: Record<string, string>) {
     green: 'var(--positive)',
     red: 'var(--negative)',
     ...overrides,
-  } as const;
+  };
 }
