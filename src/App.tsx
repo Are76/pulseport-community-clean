@@ -582,6 +582,7 @@ export default function App() {
   };
   const [sidebarWalletsOpen, setSidebarWalletsOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [mobileMoreOpen, setMobileMoreOpen] = useState(false);
   const [frontMarketPeriod, setFrontMarketPeriod] = useState<FrontMarketPeriod>('24h');
   // tokenLogos is seeded from the module-level STATIC_LOGOS map so overrides are
   // available before any remote fetch completes.
