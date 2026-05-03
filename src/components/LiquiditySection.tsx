@@ -488,9 +488,6 @@ export function LiquidityOverviewStrip({
   const { positions, loading, error, refetch } = useLiquidityPositions(walletAddresses, tokenPrices);
   useAutoFetch(walletAddresses, refetch, tokenPrices);
 
-  // Render null only when definitively empty (not loading)
-  if (!loading && positions.length === 0 && !error) return null;
-
   const displayPositions = positions.slice(0, 4);
   const remaining        = positions.length - 4;
 
@@ -529,6 +526,13 @@ export function LiquidityOverviewStrip({
       <div style={{ padding: '12px 18px 16px', display: 'flex', flexDirection: 'column', gap: 6 }}>
         {loading && positions.length === 0 ? (
           <><SkeletonRow /><SkeletonRow /><SkeletonRow /></>
+        ) : positions.length === 0 ? (
+          <div style={{
+            textAlign: 'center', padding: '16px 12px',
+            color: 'var(--fg-muted)', fontSize: 13,
+          }}>
+            No active positions · Start earning on PulseX
+          </div>
         ) : (
           <>
             {displayPositions.map(pos => (
