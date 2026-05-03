@@ -207,26 +207,59 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
       // 1. Fetch Prices with 1h, 24h, 7d changes
       const coinIds = Array.from(new Set(Object.values(TOKENS).flat().map(t => t.coinGeckoId))).join(',');
       const fetchedPrices: Record<string, any> = {};
-      try {
-        const priceRes = await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${coinIds}&price_change_percentage=1h,24h,7d&per_page=250&order=market_cap_desc`);
-        const priceArray = await priceRes.json();
-        if (Array.isArray(priceArray) && priceArray.length > 0) {
-          const newLogos: Record<string, string> = {};
-          priceArray.forEach((coin: any) => {
-            fetchedPrices[coin.id] = {
-              usd: coin.current_price,
-              usd_24h_change: coin.price_change_percentage_24h_in_currency,
-              usd_1h_change: coin.price_change_percentage_1h_in_currency,
-              usd_7d_change: coin.price_change_percentage_7d_in_currency,
-              image: coin.image
-            };
-            if (coin.image) newLogos[coin.id] = coin.image;
+
+      // 1b. Parallelize CoinGecko prices + PulseChain LP reserves fetches
+      const GET_RESERVES = '0x0902f1ac';
+      const pcRpc = CHAINS.pulsechain.rpc;
+      const lpKeys = Object.keys(PULSEX_LP_PAIRS) as (keyof typeof PULSEX_LP_PAIRS)[];
+
+      const [cgMarketsResult, pcLpResult] = await Promise.allSettled([
+        // Fetch CoinGecko markets data
+        (async () => {
+          const priceRes = await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${coinIds}&price_change_percentage=1h,24h,7d&per_page=250&order=market_cap_desc`);
+          const priceArray = await priceRes.json();
+          if (Array.isArray(priceArray) && priceArray.length > 0) {
+            const newLogos: Record<string, string> = {};
+            priceArray.forEach((coin: any) => {
+              fetchedPrices[coin.id] = {
+                usd: coin.current_price,
+                usd_24h_change: coin.price_change_percentage_24h_in_currency,
+                usd_1h_change: coin.price_change_percentage_1h_in_currency,
+                usd_7d_change: coin.price_change_percentage_7d_in_currency,
+                image: coin.image
+              };
+              if (coin.image) newLogos[coin.id] = coin.image;
+            });
+            setTokenLogos(prev => ({ ...prev, ...newLogos }));
+            return { success: true, pricedCount: Object.keys(fetchedPrices).length };
+          }
+          return { success: false };
+        })(),
+        // Fetch PulseChain prices from on-chain LP reserves (authoritative source per skill doc)
+        // Uses getReserves() on PulseX V2 LP pairs - more reliable than subgraph which can lag/rate-limit
+        (async () => {
+          const batchReq = lpKeys.map((key, i) => ({
+            jsonrpc: '2.0',
+            id: i,
+            method: 'eth_call',
+            params: [{ to: PULSEX_LP_PAIRS[key], data: GET_RESERVES }, 'latest']
+          }));
+
+          const batchRes = await fetch(pcRpc, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(batchReq)
           });
-          setTokenLogos(prev => ({ ...prev, ...newLogos }));
-        }
-      } catch (e) {
+          const batchData: any[] = await batchRes.json();
+          return batchData;
+        })()
+      ]);
+
+      // Process CoinGecko results
+      if (cgMarketsResult.status === 'rejected') {
         console.warn('coins/markets failed, will try simple/price fallback');
       }
+
       // Fallback: if markets API returned nothing (rate limit etc), use simple/price
       if (Object.keys(fetchedPrices).length === 0) {
         try {
@@ -240,26 +273,19 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
         }
       }
 
-      // 1b. Fetch PulseChain prices from on-chain LP reserves (authoritative source per skill doc)
-      // Uses getReserves() on PulseX V2 LP pairs - more reliable than subgraph which can lag/rate-limit
+      // Process PulseChain LP results
+      let batchData: any[] = [];
       try {
-        const GET_RESERVES = '0x0902f1ac';
-        const pcRpc = CHAINS.pulsechain.rpc;
+        if (pcLpResult.status === 'fulfilled') {
+          batchData = pcLpResult.value;
+        } else {
+          console.warn('Could not fetch PulseChain on-chain LP prices');
+        }
+      } catch (e) {
+        console.warn('Could not fetch PulseChain on-chain LP prices:', e);
+      }
 
-        const lpKeys = Object.keys(PULSEX_LP_PAIRS) as (keyof typeof PULSEX_LP_PAIRS)[];
-        const batchReq = lpKeys.map((key, i) => ({
-          jsonrpc: '2.0',
-          id: i,
-          method: 'eth_call',
-          params: [{ to: PULSEX_LP_PAIRS[key], data: GET_RESERVES }, 'latest']
-        }));
-
-        const batchRes = await fetch(pcRpc, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(batchReq)
-        });
-        const batchData: any[] = await batchRes.json();
+      if (batchData.length > 0) {
         batchData.sort((a, b) => a.id - b.id);
 
         const parseRes = (hex: string): [number, number] => {
@@ -395,8 +421,6 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
           if (prvxR0 > 0 && prvxR1 > 0)
             setTokenPrice('0xf6f8db0aba00007681f8faf16a0fda1c9b030b11', (prvxR0 / 1e6) / (prvxR1 / 1e18));
         }
-      } catch (e) {
-        console.warn('Could not fetch PulseChain on-chain LP prices:', e);
       }
 
       setPrices(prev => ({ ...prev, ...fetchedPrices }));
@@ -946,71 +970,76 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
             console.warn(`Could not fetch transactions for ${address} on ${chainKey}:`, e);
           }
 
-          // 2a. Fetch DexScreener metadata for discovered PulseChain wallet tokens.
-          // Per pricing rules, DexScreener is not used as a USD price source here.
-          if (chainKey === 'pulsechain' && discoveredTokens.length > 0) {
-            try {
-              const discoveredByAddr = new Map(
-                discoveredTokens
-                  .filter(t => t.address && t.address !== 'native')
-                  .map(t => [t.address.toLowerCase(), t])
-              );
-              const unpricedAddrs = Array.from(discoveredByAddr.keys())
-                .filter(addr => !fetchedPrices[`pulsechain:${addr}`]?.usd);
+          // 2a. Parallelize DexScreener (PulseChain) + DefiLlama (Ethereum) price fetches
+          await Promise.allSettled([
+            // DexScreener metadata for discovered PulseChain wallet tokens
+            (async () => {
+              if (chainKey !== 'pulsechain' || discoveredTokens.length === 0) return;
+              try {
+                const discoveredByAddr = new Map(
+                  discoveredTokens
+                    .filter(t => t.address && t.address !== 'native')
+                    .map(t => [t.address.toLowerCase(), t])
+                );
+                const unpricedAddrs = Array.from(discoveredByAddr.keys())
+                  .filter(addr => !fetchedPrices[`pulsechain:${addr}`]?.usd);
 
-              const chunks: string[][] = [];
-              for (let i = 0; i < unpricedAddrs.length; i += 30) {
-                chunks.push(unpricedAddrs.slice(i, i + 30));
-              }
+                if (unpricedAddrs.length === 0) return;
 
-              const bestPairs = new Map<string, any>();
-              await Promise.all(chunks.map(async (chunk) => {
-                const res = await fetch(`https://api.dexscreener.com/tokens/v1/pulsechain/${chunk.join(',')}`);
-                if (!res.ok) return;
-                const pairs = await res.json();
-                if (!Array.isArray(pairs)) return;
+                const chunks: string[][] = [];
+                for (let i = 0; i < unpricedAddrs.length; i += 30) {
+                  chunks.push(unpricedAddrs.slice(i, i + 30));
+                }
 
-                pairs.forEach((pair: any) => {
+                const bestPairs = new Map<string, any>();
+                await Promise.all(chunks.map(async (chunk) => {
+                  const res = await fetch(`https://api.dexscreener.com/tokens/v1/pulsechain/${chunk.join(',')}`);
+                  if (!res.ok) return;
+                  const pairs = await res.json();
+                  if (!Array.isArray(pairs)) return;
+
+                  pairs.forEach((pair: any) => {
+                    const baseAddr = pair?.baseToken?.address?.toLowerCase?.();
+                    const quoteAddr = pair?.quoteToken?.address?.toLowerCase?.();
+                    const matchedAddr = discoveredByAddr.has(baseAddr) ? baseAddr : discoveredByAddr.has(quoteAddr) ? quoteAddr : null;
+                    if (!matchedAddr) return;
+
+                    const current = bestPairs.get(matchedAddr);
+                    const currentLiquidity = Number(current?.liquidity?.usd ?? 0);
+                    const nextLiquidity = Number(pair?.liquidity?.usd ?? 0);
+                    if (!current || nextLiquidity > currentLiquidity) bestPairs.set(matchedAddr, pair);
+                  });
+                }));
+
+                const newLogos: Record<string, string> = {};
+                bestPairs.forEach((pair, addr) => {
+                  const token = discoveredByAddr.get(addr);
+                  if (!token) return;
+
                   const baseAddr = pair?.baseToken?.address?.toLowerCase?.();
-                  const quoteAddr = pair?.quoteToken?.address?.toLowerCase?.();
-                  const matchedAddr = discoveredByAddr.has(baseAddr) ? baseAddr : discoveredByAddr.has(quoteAddr) ? quoteAddr : null;
-                  if (!matchedAddr) return;
 
-                  const current = bestPairs.get(matchedAddr);
-                  const currentLiquidity = Number(current?.liquidity?.usd ?? 0);
-                  const nextLiquidity = Number(pair?.liquidity?.usd ?? 0);
-                  if (!current || nextLiquidity > currentLiquidity) bestPairs.set(matchedAddr, pair);
+                  const pairToken = baseAddr === addr ? pair?.baseToken : pair?.quoteToken;
+                  if (pairToken?.symbol && token.symbol === 'TOKEN') token.symbol = pairToken.symbol;
+                  if (pairToken?.name && (!token.name || token.name === token.symbol)) token.name = pairToken.name;
+                  if (pair?.info?.imageUrl) newLogos[addr] = pair.info.imageUrl;
                 });
-              }));
 
-              const newLogos: Record<string, string> = {};
-              bestPairs.forEach((pair, addr) => {
-                const token = discoveredByAddr.get(addr);
-                if (!token) return;
-
-                const baseAddr = pair?.baseToken?.address?.toLowerCase?.();
-
-                const pairToken = baseAddr === addr ? pair?.baseToken : pair?.quoteToken;
-                if (pairToken?.symbol && token.symbol === 'TOKEN') token.symbol = pairToken.symbol;
-                if (pairToken?.name && (!token.name || token.name === token.symbol)) token.name = pairToken.name;
-                if (pair?.info?.imageUrl) newLogos[addr] = pair.info.imageUrl;
-              });
-
-              if (Object.keys(newLogos).length > 0) {
-                setTokenLogos(prev => ({ ...prev, ...newLogos }));
+                if (Object.keys(newLogos).length > 0) {
+                  setTokenLogos(prev => ({ ...prev, ...newLogos }));
+                }
+              } catch (e) {
+                console.warn('DexScreener PulseChain token lookup failed:', e);
               }
-            } catch (e) {
-              console.warn('DexScreener PulseChain token lookup failed:', e);
-            }
-          }
+            })(),
+            // DeFi Llama prices for discovered Ethereum tokens
+            (async () => {
+              if (chainKey !== 'ethereum' || discoveredTokens.length === 0) return;
+              try {
+                const unpricedAddrs = discoveredTokens
+                  .filter(t => t.address && t.address !== 'native' && !fetchedPrices[t.address.toLowerCase()])
+                  .map(t => `ethereum:${t.address.toLowerCase()}`);
+                if (unpricedAddrs.length === 0) return;
 
-          // 2a. Fetch DeFi Llama prices for discovered Ethereum tokens without a known price
-          if (chainKey === 'ethereum' && discoveredTokens.length > 0) {
-            try {
-              const unpricedAddrs = discoveredTokens
-                .filter(t => t.address && t.address !== 'native' && !fetchedPrices[t.address.toLowerCase()])
-                .map(t => `ethereum:${t.address.toLowerCase()}`);
-              if (unpricedAddrs.length > 0) {
                 const llamaRes = await fetch(`https://coins.llama.fi/prices/current/${unpricedAddrs.join(',')}`);
                 if (llamaRes.ok) {
                   const llamaData = await llamaRes.json();
@@ -1023,9 +1052,9 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
                   });
                   if (Object.keys(newLogos).length > 0) setTokenLogos(prev => ({ ...prev, ...newLogos }));
                 }
-              }
-            } catch { /* ignore */ }
-          }
+              } catch { /* ignore */ }
+            })()
+          ]);
 
           // 2. Fetch all token balances in parallel
           const tokensToFetch = [...TOKENS[chainKey], ...discoveredTokens];
