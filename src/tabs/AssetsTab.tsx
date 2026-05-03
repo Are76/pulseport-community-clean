@@ -210,7 +210,7 @@ export function AssetsTab({
   const hiddenChainAssets = walletChainFilter === 'all' ? hiddenAssetRows : hiddenAssetRows.filter(a => a.chain === walletChainFilter);
 
   return (
-    <motion.div key="assets" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="portfolio-page-shell space-y-4" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+    <motion.div key="assets" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="page-shell page-shell--spaced">
       {/* -- Wallet scope + management banner -- */}
       <div className="portfolio-wallet-banner portfolio-wallet-banner--premium">
         <div className="portfolio-wallet-head">

@@ -226,11 +226,11 @@ export function HistoryTab({
 
   // ── RENDER ─────────────────────────────────────────────────────────────────
   return (
-    <motion.div key="history" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="transaction-page-shell transaction-page-shell--reset space-y-4">
-      <div className="transaction-page-head transaction-page-head--premium">
+    <motion.div key="history" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="page-shell page-shell--spaced">
+      <div className="card">
         <div className="transaction-page-head-main">
-          <span className="transaction-page-kicker">Transactions</span>
-          <h1 className="transaction-page-title">
+          <span className="page-kicker">Transactions</span>
+          <h1 className="page-title">
             {txAssetFilter === 'all' ? 'PulseChain Swap Ledger' : `${txAssetFilter} Swap Ledger`}
           </h1>
           <p className="transaction-page-subtitle">

@@ -78,27 +78,14 @@ export function OverviewTab(props: OverviewTabProps) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="overview-page-shell"
-        style={{ width: '100%', minWidth: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '400px' }}
+        className="page-shell"
+        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '400px' }}
       >
-        <div style={{
-          textAlign: 'center',
-          padding: '40px 20px',
-        }}>
-          <div style={{
-            fontSize: '20px',
-            fontWeight: 600,
-            color: props.t.text,
-            marginBottom: '12px',
-          }}>
+        <div style={{ textAlign: 'center', padding: '40px 20px', maxWidth: '500px' }}>
+          <div style={{ fontSize: '20px', fontWeight: 600, color: props.t.text, marginBottom: '12px' }}>
             No Wallets Connected
           </div>
-          <div style={{
-            fontSize: '14px',
-            color: props.t.textMuted,
-            marginBottom: '24px',
-            maxWidth: '400px',
-          }}>
+          <div style={{ fontSize: '14px', color: props.t.textMuted }}>
             Add a wallet from the sidebar to view your portfolio, holdings, and performance metrics.
           </div>
         </div>
@@ -176,8 +163,7 @@ export function OverviewTab(props: OverviewTabProps) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="overview-page-shell space-y-4"
-      style={{ width: '100%', minWidth: 1 }}
+      className="page-shell page-shell--spaced"
     >
       {/* Hero Card - MY NET WORTH */}
       <div style={{
