@@ -158,7 +158,7 @@ describe('MyInvestmentsPage', () => {
     expect(screen.getByText('Invested Fiat')).toBeInTheDocument();
     expect(screen.getByText('Holdings')).toBeInTheDocument();
     expect(screen.getByLabelText(/chain filters/i)).toBeInTheDocument();
-    expect(document.querySelector('.ws-table-surface')).not.toBeNull();
+    expect(document.querySelector('.table-wrapper')).not.toBeNull();
     expect(screen.queryByRole('button', { name: /profit planner/i })).not.toBeInTheDocument();
     expect(screen.queryByText('24H Swap P&L')).not.toBeInTheDocument();
     expect(screen.getByText('Holdings Attribution')).toBeInTheDocument();
