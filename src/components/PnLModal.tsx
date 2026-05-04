@@ -126,10 +126,24 @@ export function PnLModal({ asset, transactions, prices, logoUrl, onClose, wallet
   const totalBought = filteredBuys.reduce((s, tx) => s + tx.amount, 0);
   const totalSold   = filteredSells.reduce((s, tx) => s + (tx.counterAmount ?? 0), 0);
 
-  // Sum tx.valueUsd for cost so both cost and proceeds use the same valuation basis
-  // (both are priced at most-recent data refresh - historical prices are unavailable)
-  const costUsd         = filteredBuys.reduce((s, tx) => s + (tx.valueUsd ?? 0), 0);
-  const proceedsUsd     = filteredSells.reduce((s, tx) => s + (tx.valueUsd ?? 0), 0);
+  // Sum tx.valueUsd or tx.assetPriceUsdAtTx (historic) for cost and proceeds
+  // Historic prices are now available from Task 5; use them for accurate P&L
+  const costUsd         = filteredBuys.reduce((s, tx) => {
+    // Use historic price if available, otherwise fall back to valueUsd
+    const priceAtTime = tx.assetPriceUsdAtTx ?? null;
+    if (priceAtTime !== null && priceAtTime > 0) {
+      return s + (tx.amount * priceAtTime);
+    }
+    return s + (tx.valueUsd ?? 0);
+  }, 0);
+  const proceedsUsd     = filteredSells.reduce((s, tx) => {
+    // Use historic price if available, otherwise fall back to valueUsd
+    const priceAtTime = tx.counterPriceUsdAtTx ?? null;
+    if (priceAtTime !== null && priceAtTime > 0) {
+      return s + ((tx.counterAmount ?? 0) * priceAtTime);
+    }
+    return s + (tx.valueUsd ?? 0);
+  }, 0);
   const avgCostUsd      = totalBought > 0 ? costUsd / totalBought : 0;
   const realizedCostUsd = Math.min(costUsd, totalSold * avgCostUsd);
   const realizedPnl     = proceedsUsd - realizedCostUsd;
@@ -573,9 +587,9 @@ export function PnLModal({ asset, transactions, prices, logoUrl, onClose, wallet
             </div>
           )}
 
-          {/* Disclaimer */}
+          {/* Information text */}
           <div style={{ padding: '0 20px 16px', fontSize: 10, color: 'var(--fg-subtle)', textAlign: 'center', lineHeight: 1.5 }}>
-            P&amp;L is estimated using current token prices applied to on-chain amounts - historical prices are not stored.
+            P&amp;L calculated with historic prices at transaction time.
             Cost = USD value of acquisitions · Proceeds = USD value of disposals.
           </div>
         </div>

@@ -11,6 +11,7 @@
  */
 
 import type { Transaction } from '../types';
+import { enrichTransactionsWithHistoricPrices } from '../services/transactionEnrichmentPipeline';
 
 /** Native gas token symbol per chain. Used to filter out zero-value router invocations. */
 const NATIVE_TOKEN: Record<string, string> = {
@@ -28,13 +29,15 @@ const isOwnAddress = (addr: string | undefined, walletAddrs: Set<string>): boole
 const normalizeSymbol = (symbol: string | undefined): string =>
   (symbol ?? '').trim().toUpperCase();
 
-export function normalizeTransactions(
+export async function normalizeTransactions(
   rawTxs: Transaction[],
   walletAddrs: Set<string>,
-): Transaction[] {
-  // Group all raw transactions by their on-chain hash
+): Promise<Transaction[]> {
+  // Enrich transactions with historic prices before normalization
+  const enrichedTxs = await enrichTransactionsWithHistoricPrices(rawTxs);
+  // Group all enriched transactions by their on-chain hash
   const byHash: Record<string, Transaction[]> = {};
-  rawTxs.forEach(tx => {
+  enrichedTxs.forEach(tx => {
     if (!byHash[tx.hash]) byHash[tx.hash] = [];
     byHash[tx.hash].push(tx);
   });

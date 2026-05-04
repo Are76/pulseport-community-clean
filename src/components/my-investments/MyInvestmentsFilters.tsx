@@ -13,29 +13,29 @@ const FILTERS = [
 
 export function MyInvestmentsFilters({ activeFilter, counts, onChange }: MyInvestmentsFiltersProps) {
   return (
-    <div className="mi-filters-wrap">
-      <div className="mi-section-heading">
-        <div>
-          <p className="mi-section-kicker">Current Bag</p>
-          <h2>Holdings Attribution</h2>
+    <section className="control-bar">
+      <div className="control-bar-header">
+        <div className="control-bar-title">
+          <p className="control-bar-title-label">Current Bag</p>
+          <h2 className="control-bar-title-heading">Holdings Attribution</h2>
         </div>
-        <p>Filter the live bag by chain, then open a row for source capital, P&amp;L, and route context.</p>
+        <p style={{ fontSize: '14px', color: 'var(--fg-muted)', margin: 0 }}>Filter the live bag by chain, then open a row for source capital, P&amp;L, and route context.</p>
       </div>
-      <div className="mi-filters" aria-label="Chain filters">
+      <div className="control-bar-actions" aria-label="Chain filters" style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
         {FILTERS.map((filter) => (
           <button
             key={filter.id}
             type="button"
-            className={activeFilter === filter.id ? 'is-active' : ''}
+            className={`filter-pill ${activeFilter === filter.id ? 'active' : ''}`}
             aria-pressed={activeFilter === filter.id}
             onClick={() => onChange(filter.id)}
           >
             <span>{filter.label}</span>
-            <small>{counts[filter.id]}</small>
+            <small style={{ marginLeft: '0.25rem', opacity: 0.7 }}>({counts[filter.id]})</small>
           </button>
         ))}
       </div>
-    </div>
+    </section>
   );
 }
 

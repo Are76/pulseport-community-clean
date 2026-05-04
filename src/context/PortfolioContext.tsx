@@ -1661,8 +1661,9 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
       }
 
       // Normalize raw transactions: group by hash, collapse in+out pairs into swaps.
+      // Enriches with historic prices before normalization.
       const walletAddrs = new Set<string>(wallets.map(w => w.address.toLowerCase()));
-      const processedTransactions = normalizeTransactions(allTransactions, walletAddrs);
+      const processedTransactions = await normalizeTransactions(allTransactions, walletAddrs);
 
       setTransactions(processedTransactions);
       setLastUpdated(Date.now());

@@ -47,8 +47,8 @@ export function MyInvestmentsPage(props: MyInvestmentsPageProps) {
   }, [filteredRows, selectedAsset]);
 
   return (
-    <div className="mi-page ws-portfolio-page">
-      <div className="ws-wallet-header ws-wallet-header--portfolio">
+    <div className="page-shell page-shell--spaced">
+      <div>
         <MyInvestmentsHero
           investedFiat={props.investedFiat}
           currentValue={props.currentValue}
@@ -58,10 +58,10 @@ export function MyInvestmentsPage(props: MyInvestmentsPageProps) {
           stakedValue={props.stakedValue}
         />
       </div>
-      <section className="ws-control-bar" aria-label="Portfolio holdings controls">
-        <div className="ws-control-bar__title">
-          <p className="mi-label">Portfolio</p>
-          <h2>Holdings</h2>
+      <section className="control-bar" aria-label="Portfolio holdings controls">
+        <div className="control-bar-title">
+          <p className="control-bar-title-label">Portfolio</p>
+          <h2 className="control-bar-title-heading">Holdings</h2>
         </div>
         <MyInvestmentsFilters
           activeFilter={chainFilter}
@@ -69,7 +69,7 @@ export function MyInvestmentsPage(props: MyInvestmentsPageProps) {
           onChange={setChainFilter}
         />
       </section>
-      <section className="ws-table-surface" aria-label="Portfolio holdings workspace">
+      <section className="table-wrapper" aria-label="Portfolio holdings workspace">
         <MyInvestmentsTable
           rows={filteredRows}
           plsUsdPrice={props.plsUsdPrice}

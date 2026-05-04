@@ -69,7 +69,6 @@ import { HoldingsTable } from './components/HoldingsTable';
 import type { HoldingDisplayAsset, HoldingSortField } from './components/HoldingsTable';
 import { CoinList, type CoinListItem } from './components/CoinList';
 import { PulseBoardFeed } from './components/PulseBoardFeed';
-import { normalizeTransactions } from './utils/normalizeTransactions';
 import { buildInvestmentRows } from './utils/buildInvestmentRows';
 import { scheduleLocalStorageWrite, resolveBlockscoutBase, resolveEtherscanCompatBase } from './utils/localStorageDebounce';
 import { BRAND_ASSETS } from './branding/brand-assets';
@@ -1616,6 +1615,7 @@ export default function App() {
     { id: 'stakes', label: 'HEX Staking', icon: Lock },
     { id: 'pulsechain-official', label: 'My Investments', icon: Zap },
     { id: 'history', label: 'Transactions', icon: History },
+    { id: 'assets', label: 'Wallets & Bridges', icon: WalletIcon },
     { id: 'wallet-analyzer', label: 'Wallet Analyzer', icon: BarChart2 },
     { id: 'defi', label: 'DeFi', icon: Droplets },
   ] as const;

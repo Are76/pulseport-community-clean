@@ -35,7 +35,7 @@ export function WalletAnalyzer({
   const totalValue = assets.reduce((s, a) => s + (a.value ?? 0), 0);
 
   return (
-    <div className="page-shell page-shell--with-header" style={{ padding: '1.5rem', maxWidth: 1100, margin: '0 auto' }}>
+    <div className="page-shell page-shell--with-header">
 
       {/* Header */}
       <div className="page-header-content">
