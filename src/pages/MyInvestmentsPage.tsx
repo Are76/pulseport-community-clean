@@ -47,29 +47,39 @@ export function MyInvestmentsPage(props: MyInvestmentsPageProps) {
   }, [filteredRows, selectedAsset]);
 
   return (
-    <div className="mi-page">
-      <MyInvestmentsHero
-        investedFiat={props.investedFiat}
-        currentValue={props.currentValue}
-        pnlUsd={pnlUsd}
-        pnlPercent={pnlPercent}
-        liquidValue={props.liquidValue}
-        stakedValue={props.stakedValue}
-      />
-      <MyInvestmentsFilters
-        activeFilter={chainFilter}
-        counts={chainCounts}
-        onChange={setChainFilter}
-      />
-      <MyInvestmentsTable
-        rows={filteredRows}
-        plsUsdPrice={props.plsUsdPrice}
-        portfolioValue={props.currentValue}
-        expandedId={expandedId}
-        onToggleRow={(id) => setExpandedId((current) => current === id ? null : id)}
-        onOpenAsset={setSelectedAsset}
-        onOpenTransactions={props.onOpenTransactions}
-      />
+    <div className="page-shell page-shell--spaced">
+      <div>
+        <MyInvestmentsHero
+          investedFiat={props.investedFiat}
+          currentValue={props.currentValue}
+          pnlUsd={pnlUsd}
+          pnlPercent={pnlPercent}
+          liquidValue={props.liquidValue}
+          stakedValue={props.stakedValue}
+        />
+      </div>
+      <section className="control-bar" aria-label="Portfolio holdings controls">
+        <div className="control-bar-title">
+          <p className="control-bar-title-label">Portfolio</p>
+          <h2 className="control-bar-title-heading">Holdings</h2>
+        </div>
+        <MyInvestmentsFilters
+          activeFilter={chainFilter}
+          counts={chainCounts}
+          onChange={setChainFilter}
+        />
+      </section>
+      <section className="table-wrapper" aria-label="Portfolio holdings workspace">
+        <MyInvestmentsTable
+          rows={filteredRows}
+          plsUsdPrice={props.plsUsdPrice}
+          portfolioValue={props.currentValue}
+          expandedId={expandedId}
+          onToggleRow={(id) => setExpandedId((current) => current === id ? null : id)}
+          onOpenAsset={setSelectedAsset}
+          onOpenTransactions={props.onOpenTransactions}
+        />
+      </section>
       {selectedAsset ? (
         <MyInvestmentsAssetPanel
           row={selectedAsset}

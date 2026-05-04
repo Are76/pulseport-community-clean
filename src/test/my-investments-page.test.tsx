@@ -142,7 +142,7 @@ describe('MyInvestmentsAssetPanel', () => {
 });
 
 describe('MyInvestmentsPage', () => {
-  it('renders the hero, filters, and holdings table without the old utility strip', () => {
+  it('renders portfolio as a workstation holdings surface', () => {
     render(
       <MyInvestmentsPage
         investedFiat={27465}
@@ -156,7 +156,9 @@ describe('MyInvestmentsPage', () => {
     );
 
     expect(screen.getByText('Invested Fiat')).toBeInTheDocument();
-    expect(screen.getByRole('tablist', { name: /chain filters/i })).toBeInTheDocument();
+    expect(screen.getByText('Holdings')).toBeInTheDocument();
+    expect(screen.getByLabelText(/chain filters/i)).toBeInTheDocument();
+    expect(document.querySelector('.ws-table-surface')).not.toBeNull();
     expect(screen.queryByRole('button', { name: /profit planner/i })).not.toBeInTheDocument();
     expect(screen.queryByText('24H Swap P&L')).not.toBeInTheDocument();
     expect(screen.getByText('Holdings Attribution')).toBeInTheDocument();

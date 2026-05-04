@@ -105,6 +105,7 @@ function txVisual(type: Transaction['type']) {
     case 'deposit':  return { Icon: ArrowDownLeft, bg: 'rgba(0,255,159,.10)', color: 'var(--accent)',  label: 'Received' } as const;
     case 'withdraw': return { Icon: ArrowUpRight,  bg: 'rgba(239,68,68,.10)',  color: '#ef4444',        label: 'Sent'     } as const;
     case 'swap':     return { Icon: RefreshCcw,    bg: 'rgba(139,92,246,.10)', color: '#8b5cf6',        label: 'Swap'     } as const;
+    default: return { Icon: ArrowLeftRight, bg: 'rgba(148,163,184,.10)', color: '#94a3b8', label: 'Transaction' } as const;
   }
 }
 
@@ -195,8 +196,23 @@ function LibertySwapPanel({ dstChainId, orderId }: { dstChainId: number; orderId
   );
 }
 
+// -- Exported pure helpers -----------------------------------------------------
+/** Maps lowercase address → wallet name (or '' if no name). */
+export function buildWalletMap(wallets: Wallet[]): Map<string, string> {
+  const m = new Map<string, string>();
+  for (const w of wallets) m.set(w.address.toLowerCase(), w.name ?? '');
+  return m;
+}
+
+/** Maps "chain:normalizedSymbol" → Asset. */
+export function buildAssetMap(assets: Asset[]): Map<string, Asset> {
+  const m = new Map<string, Asset>();
+  for (const a of assets) m.set(`${a.chain}:${normalizeSymbol(a.symbol, a.chain)}`, a);
+  return m;
+}
+
 // --- Component ----------------------------------------------------------------
-export function TransactionList({
+export const TransactionList = React.memo(function TransactionList({
   transactions,
   viewAsYou = false,
   wallets = [],
@@ -213,15 +229,12 @@ export function TransactionList({
   // Internal expansion state - no parent needed
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
 
-  const walletSet = useMemo(
-    () => new Set(wallets.map(w => w.address.toLowerCase())),
-    [wallets],
-  );
+  const walletMap = useMemo(() => buildWalletMap(wallets), [wallets]);
 
   const isOwn = useCallback(
     (addr: string | undefined): boolean =>
-      viewAsYou && !!addr && walletSet.has(addr.toLowerCase()),
-    [viewAsYou, walletSet],
+      viewAsYou && !!addr && walletMap.has(addr.toLowerCase()),
+    [viewAsYou, walletMap],
   );
 
   const displayAddr = useCallback(
@@ -229,28 +242,22 @@ export function TransactionList({
       if (!addr) return '?';
       if (!viewAsYou) return shortAddr(addr);
       const lower = addr.toLowerCase();
-      if (walletSet.has(lower)) {
-        const w = wallets.find(w => w.address.toLowerCase() === lower);
-        return w?.name || 'You';
-      }
+      const name = walletMap.get(lower);
+      if (name !== undefined) return name || 'You';
       return shortAddr(addr);
     },
-    [viewAsYou, wallets, walletSet],
+    [viewAsYou, walletMap],
   );
 
-  const findAsset = useCallback(
-    (symbol: string, chain: string): Asset | undefined =>
-      assets.find(a => normalizeSymbol(a.symbol, a.chain) === normalizeSymbol(symbol, chain) && a.chain === chain),
-    [assets],
-  );
+  const assetMap = useMemo(() => buildAssetMap(assets), [assets]);
 
   const getLogoUrl = useCallback(
     (symbol: string, chain: string): string => {
-      const asset = findAsset(symbol, chain);
+      const asset = assetMap.get(`${chain}:${normalizeSymbol(symbol, chain)}`);
       if (asset && getTokenLogoUrl) return getTokenLogoUrl(asset);
       return tokenLogos[symbol.toLowerCase()] ?? tokenLogos[symbol] ?? '';
     },
-    [findAsset, getTokenLogoUrl, tokenLogos],
+    [assetMap, getTokenLogoUrl, tokenLogos],
   );
 
   const toggleExpand = useCallback((id: string) => {
@@ -280,8 +287,8 @@ export function TransactionList({
         const isSwap      = tx.type === 'swap';
         const { Icon, bg, color, label } = txVisual(isSwapLegOnly ? 'swap' : tx.type);
 
-        const coinAsset = findAsset(tx.asset, tx.chain);
-        const counterAsset = tx.counterAsset ? findAsset(tx.counterAsset, tx.chain) : undefined;
+        const coinAsset = assetMap.get(`${tx.chain}:${normalizeSymbol(tx.asset, tx.chain)}`);
+        const counterAsset = tx.counterAsset ? assetMap.get(`${tx.chain}:${normalizeSymbol(tx.counterAsset, tx.chain)}`) : undefined;
         const resolvedUsdValue = resolveTransactionUsdValue(tx, coinAsset, counterAsset);
         const coinLogo  = getLogoUrl(tx.asset, tx.chain);
         const explorerBase = EXPLORER[tx.chain] ?? 'https://scan.pulsechain.com';
@@ -445,7 +452,7 @@ export function TransactionList({
       })}
     </div>
   );
-}
+});
 
 // -- Swap detail panel ---------------------------------------------------------
 interface SwapDetailProps {

@@ -129,10 +129,15 @@ export interface LpPositionEnriched extends LpPosition {
 
 export interface PortfolioSummary {
   totalValue: number;
+  liquidValue: number;
+  stakingValueUsd: number;
   pnl24h: number;
   pnl24hPercent: number;
   chainDistribution: Record<Chain, number>;
   nativeValue: number;
+  nativePlsBalance?: number;
+  stakedPlsValue?: number;
+  tokenPlsValue?: number;
   netInvestment: number;
   unifiedPnl: number;
   realizedPnl: number;
@@ -185,6 +190,12 @@ export interface Transaction {
   assetPriceUsdAtTx?: number;
   /** Estimated USD price per spent asset at swap time or last sync. */
   counterPriceUsdAtTx?: number;
+  /** Historic price of asset in native token (PLS/WPLS) at time of tx. Used for enrichment. */
+  assetPriceNativeAtTx?: number;
+  /** Historic price of counter asset in native token (PLS/WPLS) at time of tx. Used for enrichment. */
+  counterPriceNativeAtTx?: number;
+  /** Date transaction occurred. Used for historic price lookups during enrichment. */
+  txDate?: Date;
   /** True when only the spent side of an on-chain swap was available from the explorer. */
   swapLegOnly?: boolean;
   bridged?: boolean;
@@ -194,4 +205,8 @@ export interface Transaction {
     dstChainId: number;
     orderId: string;
   };
+  /** Token contract address for the asset (for CoinGecko lookup). */
+  assetTokenAddress?: string;
+  /** Token contract address for the counter asset (for CoinGecko lookup). */
+  counterTokenAddress?: string;
 }

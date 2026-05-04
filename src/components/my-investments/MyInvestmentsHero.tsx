@@ -12,34 +12,34 @@ const formatSignedUsd = (value: number) => `${value >= 0 ? '+' : '-'}$${Math.abs
 const formatSignedPercent = (value: number) => `${value >= 0 ? '+' : ''}${value.toFixed(1)}%`;
 
 export function MyInvestmentsHero(props: MyInvestmentsHeroProps) {
-  const pnlTone = props.pnlUsd >= 0 ? 'is-positive' : 'is-negative';
+  const pnlTone = props.pnlUsd >= 0 ? 'stat-value--positive' : 'stat-value--negative';
 
   return (
-    <section className="mi-hero">
-      <div className="mi-hero-copy">
-        <p className="mi-label">Invested Fiat</p>
-        <h1 className="mi-hero-value">{formatUsd(props.investedFiat)}</h1>
-        <p className="mi-hero-caption">Historical entry pricing from Ethereum and Base inflows.</p>
+    <section className="card card--spacious" style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '2rem', alignItems: 'start' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+        <p className="stat-label">Invested Fiat</p>
+        <h1 style={{ fontSize: '32px', fontWeight: 700, color: 'var(--fg)', margin: 0 }}>{formatUsd(props.investedFiat)}</h1>
+        <p style={{ fontSize: '14px', color: 'var(--fg-muted)', margin: 0 }}>Historical entry pricing from Ethereum and Base inflows.</p>
       </div>
 
-      <div className="mi-hero-side">
-        <div className="mi-hero-metrics">
-          <article className="mi-stat-card">
-            <span className="mi-stat-label">Current Value</span>
-            <strong className="mi-stat-value">{formatUsd(props.currentValue)}</strong>
+      <div style={{ display: 'flex', gap: '1rem' }}>
+        <div className="stats-grid" style={{ minWidth: '300px' }}>
+          <article className="stat">
+            <span className="stat-label">Current Value</span>
+            <strong className="stat-value">{formatUsd(props.currentValue)}</strong>
           </article>
-          <article className={`mi-stat-card ${pnlTone}`}>
-            <span className="mi-stat-label">Net P&amp;L</span>
-            <strong className="mi-stat-value">{formatSignedUsd(props.pnlUsd)}</strong>
-            <span className="mi-stat-meta">{formatSignedPercent(props.pnlPercent)}</span>
+          <article className="stat">
+            <span className="stat-label">Net P&amp;L</span>
+            <strong className={`stat-value ${pnlTone}`}>{formatSignedUsd(props.pnlUsd)}</strong>
+            <span className="stat-subtext">{formatSignedPercent(props.pnlPercent)}</span>
           </article>
-          <article className="mi-stat-card mi-stat-card--compact">
-            <span className="mi-stat-label">Liquid</span>
-            <strong className="mi-stat-value">{formatUsd(props.liquidValue)}</strong>
+          <article className="stat">
+            <span className="stat-label">Liquid</span>
+            <strong className="stat-value">{formatUsd(props.liquidValue)}</strong>
           </article>
-          <article className="mi-stat-card mi-stat-card--compact">
-            <span className="mi-stat-label">Staked</span>
-            <strong className="mi-stat-value">{formatUsd(props.stakedValue)}</strong>
+          <article className="stat">
+            <span className="stat-label">Staked</span>
+            <strong className="stat-value">{formatUsd(props.stakedValue)}</strong>
           </article>
         </div>
       </div>

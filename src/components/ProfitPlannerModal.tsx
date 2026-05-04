@@ -15,6 +15,7 @@ export interface ProfitPlannerModalProps {
   onClose: () => void;
   assets: Asset[];
   totalValue: number;
+  inline?: boolean;
 }
 
 // --- Helpers -----------------------------------------------------------------
