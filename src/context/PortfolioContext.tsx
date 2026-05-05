@@ -4,7 +4,8 @@ import type { Asset, Wallet, HexStake, LpPosition, FarmPosition, HistoryPoint, T
 import { scheduleLocalStorageWrite, resolveBlockscoutBase, resolveEtherscanCompatBase } from '../utils/localStorageDebounce';
 import { normalizeTransactions } from '../utils/normalizeTransactions';
 import { CHAINS, HEX_ABI, TOKENS, PULSEX_LP_PAIRS, PHEX_YIELD_PER_TSHARE, EHEX_YIELD_PER_TSHARE, PHEX_YIELD_BI_NUM, PHEX_YIELD_BI_DEN, EHEX_YIELD_BI_NUM, EHEX_YIELD_BI_DEN } from '../constants';
-import { bigIntReplacer, ETH_HEX_ADDR, EHEX_PULSECHAIN_ADDR, ERC20_ABI, STATIC_LOGOS, LIBERTY_SWAP_ROUTERS, decodeLibertySwapInput, isNoContractDataError } from '../App';
+import { bigIntReplacer, decodeLibertySwapInput, isNoContractDataError } from '../utils/appHelpers';
+import { ERC20_ABI, STATIC_LOGOS, LIBERTY_SWAP_ROUTERS, ETH_HEX_ADDR, EHEX_PULSECHAIN_ADDR } from '../utils/appConstants';
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
