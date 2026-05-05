@@ -344,27 +344,36 @@ export default function App() {
     setTheme, setTransactions, fetchPortfolio
   } = usePortfolio();
 
+
   const {
     activeTab,
     setActiveTab,
     sidebarOpen,
     setSidebarOpen,
-    sidebarWalletsOpen,
-    setSidebarWalletsOpen,
     mobileMoreOpen,
     setMobileMoreOpen,
-    selectedWalletAddr,
-    setSelectedWalletAddr,
-    priceDisplayCurrency,
-    setPriceDisplayCurrency,
+    mobileHistoryOpen,
+    setMobileHistoryOpen,
+    selectedInvestment,
+    setSelectedInvestment,
+    selectedStake,
+    setSelectedStake,
+    selectedLpPosition,
+    setSelectedLpPosition,
+    selectedFarmPosition,
+    setSelectedFarmPosition,
+    priceCardFilter,
+    setPriceCardFilter,
+    priceCardSearch,
+    setPriceCardSearch,
+    showDustFilter,
+    setShowDustFilter,
     yieldUnit,
     setYieldUnit,
-    showMarketWatch,
-    setShowMarketWatch,
-    tokenCardModal,
-    setTokenCardModal,
-    tokenCardModalLoading,
-    setTokenCardModalLoading,
+    priceChartPeriod,
+    setPriceChartPeriod,
+    gainLossView,
+    setGainLossView,
   } = useAppUI();
 
   const [newWalletAddress, setNewWalletAddress] = useState('');

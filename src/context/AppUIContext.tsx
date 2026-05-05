@@ -5,45 +5,64 @@ import type { Asset } from '../types';
 interface AppUIState {
   activeTab: string;
   sidebarOpen: boolean;
-  sidebarWalletsOpen: boolean;
   mobileMoreOpen: boolean;
-  selectedWalletAddr: string;
-  priceDisplayCurrency: 'usd' | 'pls';
+  mobileHistoryOpen: boolean;
+  selectedInvestment: string | null;
+  selectedStake: string | null;
+  selectedLpPosition: string | null;
+  selectedFarmPosition: string | null;
+  priceCardFilter: string;
+  priceCardSearch: string;
+  showDustFilter: boolean;
   yieldUnit: 'hex' | 'usd';
-  showMarketWatch: boolean;
-  tokenCardModal: Asset | null;
-  tokenCardModalLoading: boolean;
+  priceChartPeriod: string;
+  gainLossView: 'absolute' | 'percentage';
 }
 
 interface AppUIContextType extends AppUIState {
   setActiveTab: (tab: string) => void;
   setSidebarOpen: (open: boolean) => void;
-  setSidebarWalletsOpen: (open: boolean) => void;
   setMobileMoreOpen: (open: boolean) => void;
-  setSelectedWalletAddr: (addr: string) => void;
-  setPriceDisplayCurrency: (currency: 'usd' | 'pls') => void;
+  setMobileHistoryOpen: (open: boolean) => void;
+  setSelectedInvestment: (id: string | null) => void;
+  setSelectedStake: (id: string | null) => void;
+  setSelectedLpPosition: (id: string | null) => void;
+  setSelectedFarmPosition: (id: string | null) => void;
+  setPriceCardFilter: (filter: string) => void;
+  setPriceCardSearch: (search: string) => void;
+  setShowDustFilter: (show: boolean) => void;
   setYieldUnit: (unit: 'hex' | 'usd') => void;
-  setShowMarketWatch: (show: boolean) => void;
-  setTokenCardModal: (asset: Asset | null) => void;
-  setTokenCardModalLoading: (loading: boolean) => void;
+  setPriceChartPeriod: (period: string) => void;
+  setGainLossView: (view: 'absolute' | 'percentage') => void;
 }
 
 const AppUIContext = createContext<AppUIContextType | undefined>(undefined);
 
 export function AppUIProvider({ children }: { children: ReactNode }) {
   // Load persisted state from localStorage
+  const storedActiveTab = readStoredJSON<string>('pulseport_active_tab', 'overview');
   const storedYieldUnit = readStoredJSON<'hex' | 'usd'>('pulseport_yield_unit', 'usd');
 
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState(storedActiveTab);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [sidebarWalletsOpen, setSidebarWalletsOpen] = useState(false);
   const [mobileMoreOpen, setMobileMoreOpen] = useState(false);
-  const [selectedWalletAddr, setSelectedWalletAddr] = useState<string>('all');
-  const [priceDisplayCurrency, setPriceDisplayCurrency] = useState<'usd' | 'pls'>('usd');
+  const [mobileHistoryOpen, setMobileHistoryOpen] = useState(false);
+  const [selectedInvestment, setSelectedInvestment] = useState<string | null>(null);
+  const [selectedStake, setSelectedStake] = useState<string | null>(null);
+  const [selectedLpPosition, setSelectedLpPosition] = useState<string | null>(null);
+  const [selectedFarmPosition, setSelectedFarmPosition] = useState<string | null>(null);
+  const [priceCardFilter, setPriceCardFilter] = useState('all');
+  const [priceCardSearch, setPriceCardSearch] = useState('');
+  const [showDustFilter, setShowDustFilter] = useState(false);
   const [yieldUnit, setYieldUnit] = useState<'hex' | 'usd'>(storedYieldUnit);
-  const [showMarketWatch, setShowMarketWatch] = useState(false);
-  const [tokenCardModal, setTokenCardModal] = useState<Asset | null>(null);
-  const [tokenCardModalLoading, setTokenCardModalLoading] = useState(false);
+  const [priceChartPeriod, setPriceChartPeriod] = useState('1d');
+  const [gainLossView, setGainLossView] = useState<'absolute' | 'percentage'>('percentage');
+
+  // Persist activeTab when it changes
+  const handleSetActiveTab = useCallback((tab: string) => {
+    setActiveTab(tab);
+    localStorage.setItem('pulseport_active_tab', tab);
+  }, []);
 
   // Persist yieldUnit when it changes
   const handleSetYieldUnit = useCallback((unit: 'hex' | 'usd') => {
@@ -51,34 +70,35 @@ export function AppUIProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('pulseport_yield_unit', JSON.stringify(unit));
   }, []);
 
-  // Persist activeTab when it changes
-  const handleSetActiveTab = useCallback((tab: string) => {
-    setActiveTab(tab);
-    const ACTIVE_TAB_STORAGE_KEY = 'pulseport_active_tab';
-    localStorage.setItem(ACTIVE_TAB_STORAGE_KEY, tab);
-  }, []);
-
   const value: AppUIContextType = {
     activeTab,
     sidebarOpen,
-    sidebarWalletsOpen,
     mobileMoreOpen,
-    selectedWalletAddr,
-    priceDisplayCurrency,
+    mobileHistoryOpen,
+    selectedInvestment,
+    selectedStake,
+    selectedLpPosition,
+    selectedFarmPosition,
+    priceCardFilter,
+    priceCardSearch,
+    showDustFilter,
     yieldUnit,
-    showMarketWatch,
-    tokenCardModal,
-    tokenCardModalLoading,
+    priceChartPeriod,
+    gainLossView,
     setActiveTab: handleSetActiveTab,
     setSidebarOpen,
-    setSidebarWalletsOpen,
     setMobileMoreOpen,
-    setSelectedWalletAddr,
-    setPriceDisplayCurrency,
+    setMobileHistoryOpen,
+    setSelectedInvestment,
+    setSelectedStake,
+    setSelectedLpPosition,
+    setSelectedFarmPosition,
+    setPriceCardFilter,
+    setPriceCardSearch,
+    setShowDustFilter,
     setYieldUnit: handleSetYieldUnit,
-    setShowMarketWatch,
-    setTokenCardModal,
-    setTokenCardModalLoading,
+    setPriceChartPeriod,
+    setGainLossView,
   };
 
   return (
