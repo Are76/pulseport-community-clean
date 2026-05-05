@@ -740,21 +740,30 @@ export function MarketWatchModal({ theme, onClose, initialSearch = '' }: Props) 
 
         {/* -- Toolbar -- */}
         <div className="mwm-toolbar">
-          {/* Sort pills */}
-          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          {/* Sort pills and filters */}
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
             {SORT_OPTS.map(({ key, label }) => (
               <button key={key} className={`mwm-sort-btn${sortBy === key ? ' active' : ''}`}
                 onClick={() => setSortBy(key)}>
                 {label}
               </button>
             ))}
+            {/* Dust filter toggle */}
+            <button
+              className={`mwm-sort-btn${hideDust ? ' active' : ''}`}
+              onClick={() => setHideDust(v => !v)}
+              title="Hide tokens below $10 (dust filter)"
+              style={{ fontSize: 12, opacity: hideDust ? 1 : 0.6 }}
+            >
+              No dust
+            </button>
           </div>
           {/* Search */}
           <div style={{ position: 'relative', flex: '1 1 180px', maxWidth: 260 }}>
             <Search size={12} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--fg-subtle)', pointerEvents: 'none' }} />
             <input
               className="mwm-search"
-              placeholder="Search token..."
+              placeholder="Search by name, symbol, or 0x contract address..."
               value={search}
               onChange={e => setSearch(e.target.value)}
             />
@@ -852,7 +861,32 @@ export function MarketWatchModal({ theme, onClose, initialSearch = '' }: Props) 
                         {fmtUsd(p.liquidityUsd)}
                       </td>
                       <td className="mwm-td-mono mwm-td-right mwm-col-hide-xs">{fmtUsd(p.marketCap)}</td>
-                      <td style={{ textAlign: 'center' }}>
+                      <td style={{ textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                        {!watchlistPairs && (
+                          <button
+                            onClick={() => {
+                              const isInCustom = customPairs.some(cp => cp.pairAddress === p.pairAddress);
+                              if (isInCustom) {
+                                setCustomPairs(cp => cp.filter(c => c.pairAddress !== p.pairAddress));
+                              } else {
+                                setCustomPairs(cp => [...cp, p]);
+                              }
+                            }}
+                            title={customPairs.some(cp => cp.pairAddress === p.pairAddress) ? 'Remove from watchlist' : 'Add to watchlist'}
+                            style={{
+                              background: 'none',
+                              border: 'none',
+                              cursor: 'pointer',
+                              color: customPairs.some(cp => cp.pairAddress === p.pairAddress) ? 'var(--accent)' : 'var(--fg-subtle)',
+                              padding: 0,
+                              display: 'flex',
+                              alignItems: 'center',
+                              fontSize: 16
+                            }}
+                          >
+                            {customPairs.some(cp => cp.pairAddress === p.pairAddress) ? '−' : '+'}
+                          </button>
+                        )}
                         <a href={p.dexScreenerUrl} target="_blank" rel="noopener noreferrer"
                           className="mwm-ds-link" title="Open on DexScreener">
                           <ExternalLink size={13} />
