@@ -2,6 +2,8 @@ import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts';
 import type { HexStake } from '../types';
 
+const INITIAL_BUCKET_SHARES = 0.001;
+
 interface StakingLadderProps {
   stakes: HexStake[];
 }
@@ -16,9 +18,9 @@ export function StakingLadder({ stakes }: StakingLadderProps) {
     const bucketIdx = Math.floor(days / bucketSize);
     if (!buckets[bucketIdx]) {
       const start = bucketIdx * bucketSize;
-      buckets[bucketIdx] = { totalShares: 0.001, stakeCount: 0, bucketRange: `${start}-${start + bucketSize - 1}` };
+      buckets[bucketIdx] = { totalShares: INITIAL_BUCKET_SHARES, stakeCount: 0, bucketRange: `${start}-${start + bucketSize - 1}` };
     }
-    buckets[bucketIdx].totalShares = (buckets[bucketIdx].totalShares === 0.001 ? 0 : buckets[bucketIdx].totalShares) + (stake.tShares ?? 0);
+    buckets[bucketIdx].totalShares = (buckets[bucketIdx].totalShares === INITIAL_BUCKET_SHARES ? 0 : buckets[bucketIdx].totalShares) + (stake.tShares ?? 0);
     buckets[bucketIdx].stakeCount += 1;
   });
 

@@ -30,23 +30,19 @@ export function WalletSelector({ wallets, activeWallet, onSelect, onAdd, onRemov
         const dotColor = WALLET_DOT_COLORS[idx % WALLET_DOT_COLORS.length];
         const isActive = activeWallet === addr;
         return (
-          <span
+          <button
             key={addr}
             className={`wallet-pill${isActive ? ' active' : ''}`}
             title={addr}
+            onClick={() => onSelect(addr)}
             style={isActive ? {
               background: `${dotColor}1a`,
               borderColor: `${dotColor}55`,
               color: dotColor,
             } : undefined}
           >
-            <span
-              onClick={() => onSelect(addr)}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}
-            >
-              <span className="wallet-dot" style={{ background: dotColor, boxShadow: `0 0 5px ${dotColor}bb` }} />
-              {label}
-            </span>
+            <span className="wallet-dot" style={{ background: dotColor, boxShadow: `0 0 5px ${dotColor}bb` }} />
+            {label}
             {onRemove && (
               <button
                 className="wallet-pill-x"
@@ -57,7 +53,7 @@ export function WalletSelector({ wallets, activeWallet, onSelect, onAdd, onRemov
                 x
               </button>
             )}
-          </span>
+          </button>
         );
       })}
       <button

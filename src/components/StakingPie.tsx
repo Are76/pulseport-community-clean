@@ -7,11 +7,21 @@ interface StakingPieProps {
   hexUsdPrice: number;
 }
 
+interface WalletStakingData {
+  label: string;
+  tShares: number;
+  stakedHex: number;
+  yieldHex: number;
+  totalHex: number;
+  totalUsd: number;
+  count: number;
+}
+
 export function StakingPie({ stakes, hexUsdPrice }: StakingPieProps) {
   const [activeIndex, setActiveIndex] = React.useState(0);
   if (!stakes || stakes.length === 0) return null;
 
-  const byWallet: Record<string, { label: string; tShares: number; stakedHex: number; yieldHex: number; totalHex: number; totalUsd: number; count: number }> = {};
+  const byWallet: Record<string, WalletStakingData> = {};
   stakes.forEach(s => {
     const key = s.walletAddress ?? s.id;
     const label = s.walletLabel ?? key.slice(0, 8) + '...';
