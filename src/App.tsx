@@ -85,6 +85,7 @@ import { OverviewTab } from './tabs/OverviewTab';
 import { shortenAddr, normalizeAssetSymbol, sameAssetSymbol, tryReadCache, readStoredJSON, bigIntReviver, bigIntReplacer, isNoContractDataError, decodeLibertySwapInput } from './utils/appHelpers';
 import { ERC20_ABI, WALLET_DOT_COLORS, CHAIN_COLORS, CHAIN_LABELS, STATIC_LOGOS, LIBERTY_SWAP_ROUTERS, LIBERTY_SWAP_SELECTOR, MIN_INVESTMENT_THRESHOLD, CORE_TOKENS, ACTIVE_TABS, ACTIVE_TAB_STORAGE_KEY, type ActiveTab } from './utils/appConstants';
 import { useAppUI } from './context/AppUIContext';
+import { useAppModals } from './context/AppModalsContext';
 
 const PriceDisplay = ({ price, className }: { price: number, className?: string }) => {
   if (price === 0) return <span className={className}>$0.00</span>;
@@ -375,6 +376,43 @@ export default function App() {
     gainLossView,
     setGainLossView,
   } = useAppUI();
+
+  const {
+    showAddWallet,
+    setShowAddWallet,
+    showRemoveWallet,
+    setShowRemoveWallet,
+    showMarketWatch,
+    setShowMarketWatch,
+    showPriceCard,
+    setShowPriceCard,
+    showInvestmentDetail,
+    setShowInvestmentDetail,
+    showStakeDetail,
+    setShowStakeDetail,
+    showLpDetail,
+    setShowLpDetail,
+    showFarmDetail,
+    setShowFarmDetail,
+    showConfirmAction,
+    setShowConfirmAction,
+    showSettings,
+    setShowSettings,
+    showHelp,
+    setShowHelp,
+    showAbout,
+    setShowAbout,
+    selectedModalId,
+    setSelectedModalId,
+    confirmActionMessage,
+    setConfirmActionMessage,
+    confirmActionCallback,
+    setConfirmActionCallback,
+    isLoadingModal,
+    setIsLoadingModal,
+    modalError,
+    setModalError,
+  } = useAppModals();
 
   const [newWalletAddress, setNewWalletAddress] = useState('');
   const [newWalletName, setNewWalletName] = useState('');
