@@ -1,32 +1,9 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { motion } from 'motion/react';
 import { ArrowRight, History, TrendingUp } from 'lucide-react';
-import type { Asset, Wallet } from '../types';
+import type { Asset, Wallet, PortfolioSummary, PortfolioPriceCard } from '../types';
+import { fmtCompact, fmtPrice, fmtMarket } from '../utils/formatting';
 import { PulseBoardFeed } from '../components/PulseBoardFeed';
-
-interface PortfolioSummary {
-  totalValue: number;
-  nativeValue: number;
-  liquidValue: number;
-  stakingValueUsd: number;
-  pnl24h: number;
-  pnl24hPercent: number;
-  netInvestment: number;
-  unifiedPnl: number;
-  chainDistribution: Record<string, number>;
-}
-
-interface PortfolioPriceCard {
-  id: string;
-  symbol: string;
-  name: string;
-  price: number;
-  change24h: number | null;
-  marketCap: number | null;
-  volume24h: number | null;
-  accent: string;
-  logo?: string;
-}
 
 type FrontMarketPeriod = '5m' | '1h' | '6h' | '24h' | '7d';
 
@@ -71,25 +48,6 @@ export function HomeTab(props: HomeTabProps) {
     if (frontMarketPeriod === '30d') return marketData?.priceChange30d ?? null;
     return null;
   }, [frontMarketPeriod]);
-
-  const fmtCompact = (n: number) =>
-    n >= 1e9 ? `${(n / 1e9).toFixed(2)}B` :
-    n >= 1e6 ? `${(n / 1e6).toFixed(2)}M` :
-    n >= 1e3 ? `${(n / 1e3).toFixed(1)}K` :
-    n.toLocaleString('en-US', { maximumFractionDigits: 0 });
-
-  const fmtPrice = (p: number) => {
-    if (p >= 1) return p.toLocaleString('en-US', { maximumFractionDigits: 2, minimumFractionDigits: 2 });
-    if (p >= 0.01) return p.toLocaleString('en-US', { maximumFractionDigits: 4, minimumFractionDigits: 4 });
-    if (p >= 0.0001) return p.toLocaleString('en-US', { maximumFractionDigits: 6, minimumFractionDigits: 6 });
-    if (p >= 0.00000001) return p.toLocaleString('en-US', { maximumFractionDigits: 8, minimumFractionDigits: 8 });
-    return p.toExponential(2);
-  };
-
-  const fmtMarket = (v?: number | null) =>
-    v != null && v > 0
-      ? v >= 1e9 ? `$${(v / 1e9).toFixed(2)}B` : v >= 1e6 ? `$${(v / 1e6).toFixed(1)}M` : `$${v.toLocaleString('en-US', { maximumFractionDigits: 0 })}`
-      : 'N/A';
 
   const frontPageGridTokens = useMemo<PortfolioPriceCard[]>(() => {
     const cards = new Map<string, PortfolioPriceCard>();

@@ -1,20 +1,8 @@
 import React, { useMemo } from 'react';
 import { motion } from 'motion/react';
-import type { Asset, Wallet, HexStake } from '../types';
+import type { Asset, Wallet, HexStake, PortfolioSummary, ThemeColors } from '../types';
+import { fmtPrice, fmtNum, fmtAmount } from '../utils/formatting';
 import { LiquidityOverviewStrip } from '../components/LiquiditySection';
-
-interface PortfolioSummary {
-  totalValue: number;
-  nativeValue: number;
-  liquidValue: number;
-  stakingValueUsd: number;
-  pnl24h: number;
-  pnl24hPercent: number;
-  netInvestment: number;
-  unifiedPnl: number;
-  realizedPnl: number;
-  chainDistribution: Record<string, number>;
-}
 
 interface OverviewTabProps {
   wallets: Wallet[];
@@ -23,47 +11,7 @@ interface OverviewTabProps {
   summary: PortfolioSummary;
   tokenPrices: Record<string, any>;
   setActiveTab: (tab: string) => void;
-  t: {
-    green: string;
-    red: string;
-    card: string;
-    border: string;
-    cardHigh: string;
-    text: string;
-    textSecondary: string;
-    textMuted: string;
-    expandedBg: string;
-    borderLight: string;
-  };
-}
-
-function fmtPrice(val: number, decimals = 2): string {
-  if (!isFinite(val)) return '0.00';
-  if (val === 0) return '0.00';
-  const abs = Math.abs(val);
-  const safeDecimals = Math.min(Math.max(decimals, 0), 20);
-  const minDecimals = Math.min(2, safeDecimals);
-  if (abs >= 1) {
-    return val.toLocaleString('en-US', { maximumFractionDigits: safeDecimals, minimumFractionDigits: minDecimals });
-  } else if (abs >= 0.01) {
-    return val.toLocaleString('en-US', { maximumFractionDigits: safeDecimals, minimumFractionDigits: minDecimals });
-  } else if (abs >= 0.0001) {
-    return val.toLocaleString('en-US', { maximumFractionDigits: 6, minimumFractionDigits: 4 });
-  } else {
-    return val.toLocaleString('en-US', { maximumFractionDigits: 8, minimumFractionDigits: 6 });
-  }
-}
-
-function fmtNum(val: number): string {
-  if (!isFinite(val)) return '0';
-  return val.toLocaleString('en-US', { maximumFractionDigits: 0 });
-}
-
-function fmtAmount(val: number): string {
-  if (!isFinite(val)) return '0';
-  if (val >= 1e6) return (val / 1e6).toFixed(1) + 'M';
-  if (val >= 1e3) return (val / 1e3).toFixed(1) + 'K';
-  return val.toFixed(0);
+  t: ThemeColors;
 }
 
 export function OverviewTab(props: OverviewTabProps) {

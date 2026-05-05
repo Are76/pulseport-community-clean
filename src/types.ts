@@ -210,3 +210,30 @@ export interface Transaction {
   /** Token contract address for the counter asset (for CoinGecko lookup). */
   counterTokenAddress?: string;
 }
+
+/** Displayed portfolio price card in frontend (markets view). */
+export interface PortfolioPriceCard {
+  id: string;
+  symbol: string;
+  name: string;
+  price: number;
+  change24h: number | null;
+  marketCap: number | null;
+  volume24h: number | null;
+  accent: string;
+  logo?: string;
+}
+
+/** Theme/color palette for UI components. */
+export interface ThemeColors {
+  green: string;
+  red: string;
+  card: string;
+  border: string;
+  cardHigh: string;
+  text: string;
+  textSecondary: string;
+  textMuted: string;
+  expandedBg: string;
+  borderLight: string;
+}
