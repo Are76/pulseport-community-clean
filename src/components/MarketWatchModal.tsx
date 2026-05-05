@@ -198,6 +198,7 @@ export function MarketWatchModal({ theme, onClose, initialSearch = '' }: Props) 
   const [searchError, setSearchError] = useState<string | null>(null);
   const [sortBy, setSortBy]     = useState<SortKey>('volume');
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
+  const [hideDust, setHideDust] = useState(false);  // New: dust filter toggle
 
   // Watchlist import state
   const [showImport, setShowImport]         = useState(false);
@@ -206,6 +207,7 @@ export function MarketWatchModal({ theme, onClose, initialSearch = '' }: Props) 
   const [importError, setImportError]       = useState<string | null>(null);
   const [importShareId, setImportShareId]   = useState<string | null>(null); // original share ID for "Open in DexScreener"
   const [watchlistPairs, setWatchlistPairs] = useState<WatchPair[] | null>(null);
+  const [customPairs, setCustomPairs]       = useState<WatchPair[]>([]);  // New: custom added pairs
 
   const green = theme === 'dark' ? '#00FF9F' : '#059669';
   const red   = theme === 'dark' ? '#f43f5e' : '#dc2626';
@@ -302,6 +304,58 @@ export function MarketWatchModal({ theme, onClose, initialSearch = '' }: Props) 
     return raw;
   }
 
+  // New: Helper to detect and search by contract address
+  function isContractAddress(query: string): { chainId: string; address: string } | null {
+    const q = query.trim().toLowerCase();
+    if (!q.startsWith('0x') || q.length < 40) return null;
+    // Try to match chain:address format or just address (default to pulsechain)
+    const parts = q.split(':');
+    if (parts.length === 2) {
+      const [chain, addr] = parts;
+      if (SUPPORTED_MARKET_CHAINS.has(chain) && addr.match(/^0x[a-f0-9]{40}$/)) {
+        return { chainId: chain, address: addr };
+      }
+    }
+    // Single address - try all supported chains
+    if (q.match(/^0x[a-f0-9]{40}$/)) {
+      return { chainId: 'pulsechain', address: q }; // Default to PulseChain first
+    }
+    return null;
+  }
+
+  async function searchByContractAddress(chainId: string, address: string): Promise<WatchPair[]> {
+    const result: WatchPair[] = [];
+    try {
+      const tokenV1 = await fetch(`https://api.dexscreener.com/tokens/v1/${chainId}/${address}`);
+      if (tokenV1.ok) {
+        const data = await tokenV1.json();
+        const pairs = Array.isArray(data) ? data : Array.isArray(data.pairs) ? data.pairs : [];
+        for (const pair of pairs) {
+          if (pair.chainId && pair.pairAddress && pair.baseToken) {
+            result.push(rawPairToWatchPair(pair, address));
+          }
+        }
+        return result;
+      }
+    } catch (e) {
+      // Fall back to legacy endpoint
+      try {
+        const legacy = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${address}`);
+        if (legacy.ok) {
+          const data = await legacy.json();
+          if (Array.isArray(data.pairs)) {
+            for (const pair of data.pairs) {
+              if (pair.chainId === chainId && pair.pairAddress && pair.baseToken) {
+                result.push(rawPairToWatchPair(pair, address));
+              }
+            }
+          }
+        }
+      } catch { /* ignore */ }
+    }
+    return result;
+  }
+
   const fetchData = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -338,12 +392,24 @@ export function MarketWatchModal({ theme, onClose, initialSearch = '' }: Props) 
       setSearchLoading(true);
       setSearchError(null);
       try {
+        let marketPairs: any[] = [];
+
+        // Check if this is a contract address search
+        const contractMatch = isContractAddress(q);
+        if (contractMatch) {
+          const pairs = await searchByContractAddress(contractMatch.chainId, contractMatch.address);
+          setSearchPairs(pairs);
+          setSearchLoading(false);
+          return;
+        }
+
+        // Otherwise, use DexScreener search
         const res = await fetch(`https://api.dexscreener.com/latest/dex/search?q=${encodeURIComponent(q)}`, {
           signal: controller.signal,
         });
         if (!res.ok) throw new Error(`DexScreener HTTP ${res.status}`);
         const data = await res.json();
-        const marketPairs = (Array.isArray(data.pairs) ? data.pairs : [])
+        marketPairs = (Array.isArray(data.pairs) ? data.pairs : [])
           .filter((p: any) => SUPPORTED_MARKET_CHAINS.has(p.chainId) && p.pairAddress && p.baseToken?.symbol)
           .sort((a: any, b: any) => ((b.liquidity?.usd ?? 0) + (b.volume?.h24 ?? 0) * 0.35) - ((a.liquidity?.usd ?? 0) + (a.volume?.h24 ?? 0) * 0.35));
 
@@ -497,12 +563,22 @@ export function MarketWatchModal({ theme, onClose, initialSearch = '' }: Props) 
     setSearch('');
   }
 
-  // Source list - either the imported watchlist or the default PulseChain pairs
-  const activePairs = watchlistPairs ?? (search.trim().length >= 2 ? searchPairs : pairs);
+  // Source list - either the imported watchlist, search results, default pairs, or custom pairs
+  const activePairs = watchlistPairs ?? (search.trim().length >= 2 ? searchPairs : [...pairs, ...customPairs]);
 
   // Filter + sort
   const displayed = React.useMemo(() => {
     let list = activePairs;
+
+    // Apply dust filter (hide tokens < $10)
+    if (hideDust) {
+      const dustThreshold = 10;
+      list = list.filter(p => {
+        const price = p.priceUsd ? parseFloat(p.priceUsd) : 0;
+        return price >= dustThreshold;
+      });
+    }
+
     if (search.trim() && (watchlistPairs || search.trim().length < 2)) {
       const q = search.trim().toUpperCase();
       list = list.filter(p =>
@@ -517,7 +593,7 @@ export function MarketWatchModal({ theme, onClose, initialSearch = '' }: Props) 
       if (sortBy === 'change24h') return (b.priceChange.h24 ?? -Infinity) - (a.priceChange.h24 ?? -Infinity);
       return 0;
     });
-  }, [activePairs, search, sortBy, watchlistPairs]);
+  }, [activePairs, search, sortBy, watchlistPairs, hideDust, customPairs]);
 
   const SORT_OPTS: { key: SortKey; label: string }[] = [
     { key: 'volume',    label: 'Volume' },
