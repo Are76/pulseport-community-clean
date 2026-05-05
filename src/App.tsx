@@ -84,6 +84,7 @@ import { HomeTab } from './tabs/HomeTab';
 import { OverviewTab } from './tabs/OverviewTab';
 import { shortenAddr, normalizeAssetSymbol, sameAssetSymbol, tryReadCache, readStoredJSON, bigIntReviver, bigIntReplacer, isNoContractDataError, decodeLibertySwapInput } from './utils/appHelpers';
 import { ERC20_ABI, WALLET_DOT_COLORS, CHAIN_COLORS, CHAIN_LABELS, STATIC_LOGOS, LIBERTY_SWAP_ROUTERS, LIBERTY_SWAP_SELECTOR, MIN_INVESTMENT_THRESHOLD, CORE_TOKENS, ACTIVE_TABS, ACTIVE_TAB_STORAGE_KEY, type ActiveTab } from './utils/appConstants';
+import { useAppUI } from './context/AppUIContext';
 
 const PriceDisplay = ({ price, className }: { price: number, className?: string }) => {
   if (price === 0) return <span className={className}>$0.00</span>;
@@ -343,6 +344,29 @@ export default function App() {
     setTheme, setTransactions, fetchPortfolio
   } = usePortfolio();
 
+  const {
+    activeTab,
+    setActiveTab,
+    sidebarOpen,
+    setSidebarOpen,
+    sidebarWalletsOpen,
+    setSidebarWalletsOpen,
+    mobileMoreOpen,
+    setMobileMoreOpen,
+    selectedWalletAddr,
+    setSelectedWalletAddr,
+    priceDisplayCurrency,
+    setPriceDisplayCurrency,
+    yieldUnit,
+    setYieldUnit,
+    showMarketWatch,
+    setShowMarketWatch,
+    tokenCardModal,
+    setTokenCardModal,
+    tokenCardModalLoading,
+    setTokenCardModalLoading,
+  } = useAppUI();
+
   const [newWalletAddress, setNewWalletAddress] = useState('');
   const [newWalletName, setNewWalletName] = useState('');
   const [walletFormError, setWalletFormError] = useState('');
@@ -351,14 +375,10 @@ export default function App() {
   const [editWalletName, setEditWalletName] = useState('');
   const [isCustomCoinsModalOpen, setIsCustomCoinsModalOpen] = useState(false);
   const [customCoinDraft, setCustomCoinDraft] = useState({ symbol: '', name: '', balance: '', price: '' });
-  const [activeTab, setActiveTab] = useState<ActiveTab>(readStoredActiveTab);
-  const [selectedWalletAddr, setSelectedWalletAddr] = useState<string>('all');
   const [receivedCoinFilter, setReceivedCoinFilter] = useState<string>('all');
   const [receivedChainFilter, setReceivedChainFilter] = useState<string>('all');
   const [timeSinceLastUpdate, setTimeSinceLastUpdate] = useState<number>(0);
-  const [yieldUnit, setYieldUnit] = useState<'hex' | 'usd'>(() => {
-    return (localStorage.getItem('pulseport_yield_unit') as 'hex' | 'usd') || 'usd';
-  });
+
   const [marketWatchInitialSearch, setMarketWatchInitialSearch] = useState('');
   const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState(false);
   const [apiKeyInput, setApiKeyInput] = useState('');
@@ -413,12 +433,6 @@ export default function App() {
     setIsCustomCoinsModalOpen(false);
     setActiveTab('overview');
   };
-  const [sidebarWalletsOpen, setSidebarWalletsOpen] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [mobileMoreOpen, setMobileMoreOpen] = useState(false);
-  // tokenLogos is seeded from the module-level STATIC_LOGOS map so overrides are
-  // available before any remote fetch completes.
-  const [priceDisplayCurrency, setPriceDisplayCurrency] = useState<'usd' | 'pls'>('usd');
   const [pnlAsset, setPnlAsset] = useState<Asset | null>(null);
   const [selectedBridgeTxId, setSelectedBridgeTxId] = useState<string | null>(null);
   const [profitPlannerOpen, setProfitPlannerOpen] = useState(false);
@@ -426,13 +440,6 @@ export default function App() {
   const [showRecentActivity, setShowRecentActivity] = useState(true);
   const [isScanning, setIsScanning] = useState(false);
   const [scanResult, setScanResult] = useState<number | null>(null);
-  const [tokenCardModal, setTokenCardModal] = useState<Asset | null>(null);
-  const [tokenCardModalLoading, setTokenCardModalLoading] = useState(false);
-  const [showMarketWatch, setShowMarketWatch] = useState(false);
-
-  useEffect(() => {
-    localStorage.setItem(ACTIVE_TAB_STORAGE_KEY, activeTab);
-  }, [activeTab]);
 
   useEffect(() => {
     if (selectedWalletAddr === 'all') return;
