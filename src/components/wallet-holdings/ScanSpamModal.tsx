@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { X, AlertTriangle } from 'lucide-react';
 
 interface ScanSpamModalProps {
@@ -17,6 +17,7 @@ export function ScanSpamModal({
   onConfirmRemove,
 }: ScanSpamModalProps) {
   const [progress, setProgress] = useState(0);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (isOpen && isScanning) {
@@ -37,14 +38,26 @@ export function ScanSpamModal({
     }
   }, [isOpen, isScanning]);
 
+  useEffect(() => {
+    if (isOpen) {
+      closeButtonRef.current?.focus();
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') onClose();
+      };
+      document.addEventListener('keydown', handleKeyDown);
+      return () => document.removeEventListener('keydown', handleKeyDown);
+    }
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+      <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md" role="dialog" aria-modal="true">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold">Scan for Spam</h2>
           <button
+            ref={closeButtonRef}
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700"
             disabled={isScanning}

@@ -140,6 +140,7 @@ export function CoinList({
                 onClick={() => onHideToggle(coin.id)}
                 className="p-2 hover:bg-gray-200 rounded-lg transition-colors text-gray-600 hover:text-gray-900"
                 title={hidden ? 'Show coin' : 'Hide coin'}
+                aria-label={hidden ? `Show ${coin.symbol}` : `Hide ${coin.symbol}`}
               >
                 {hidden ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
@@ -147,6 +148,7 @@ export function CoinList({
                 onClick={() => onRemove(coin.id)}
                 className="p-2 hover:bg-red-100 rounded-lg transition-colors text-gray-600 hover:text-red-600"
                 title="Remove coin"
+                aria-label={`Remove ${coin.symbol}`}
               >
                 <Trash2 size={18} />
               </button>

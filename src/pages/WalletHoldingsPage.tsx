@@ -4,6 +4,8 @@ import { CoinList, type CoinData } from '../components/wallet-holdings/CoinList'
 import { CoinFilters } from '../components/wallet-holdings/CoinFilters';
 import { AddCoinModal } from '../components/wallet-holdings/AddCoinModal';
 import { ScanSpamModal } from '../components/wallet-holdings/ScanSpamModal';
+import { DUST_THRESHOLD } from '../utils/appConstants';
+import { fmtMarket } from '../utils/formatting';
 import type { Asset, Wallet } from '../types';
 
 interface WalletHoldingsPageProps {
@@ -59,9 +61,9 @@ export function WalletHoldingsPage({
   const { totalValue, visibleValue, dustCount, hiddenCount } = useMemo(() => {
     const total = coins.reduce((sum, coin) => sum + coin.value, 0);
     const visible = coins
-      .filter((coin) => !coin.isHidden && !(showDustFilter && coin.value < 10))
+      .filter((coin) => !coin.isHidden && !(showDustFilter && coin.value < DUST_THRESHOLD))
       .reduce((sum, coin) => sum + coin.value, 0);
-    const dust = coins.filter((coin) => coin.value < 10).length;
+    const dust = coins.filter((coin) => coin.value < DUST_THRESHOLD).length;
     const hidden = hiddenTokens.length;
 
     return {
@@ -98,13 +100,6 @@ export function WalletHoldingsPage({
 
   const handleRemoveSpam = () => {
     setIsScanSpamModalOpen(false);
-  };
-
-  const formatValue = (value: number): string => {
-    if (value >= 1e9) return `$${(value / 1e9).toFixed(2)}B`;
-    if (value >= 1e6) return `$${(value / 1e6).toFixed(2)}M`;
-    if (value >= 1e3) return `$${(value / 1e3).toFixed(2)}K`;
-    return `$${value.toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
   };
 
   return (
@@ -159,7 +154,7 @@ export function WalletHoldingsPage({
           <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
             <p className="text-gray-600 text-sm font-medium">Total Value</p>
             <p className="text-2xl font-bold text-gray-900 mt-2">
-              {formatValue(totalValue)}
+              {fmtMarket(totalValue)}
             </p>
           </div>
 
@@ -169,7 +164,7 @@ export function WalletHoldingsPage({
               {showDustFilter && ' (excluding dust)'}
             </p>
             <p className="text-2xl font-bold text-gray-900 mt-2">
-              {formatValue(visibleValue)}
+              {fmtMarket(visibleValue)}
             </p>
           </div>
 
