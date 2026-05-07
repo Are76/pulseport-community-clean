@@ -17,7 +17,7 @@ export interface CoinData {
 interface CoinListProps {
   coins: CoinData[];
   hiddenCoins: string[];
-  showDustFilter: boolean;
+  showDust: boolean;
   onHideToggle: (id: string) => void;
   onRemove: (id: string) => void;
 }
@@ -47,7 +47,7 @@ function formatPrice(price: number): string {
 export function CoinList({
   coins,
   hiddenCoins,
-  showDustFilter,
+  showDust,
   onHideToggle,
   onRemove,
 }: CoinListProps) {
@@ -61,7 +61,7 @@ export function CoinList({
     // Always show non-hidden coins
     if (!hidden) {
       // If dust filter is on, hide dust coins
-      if (showDustFilter && dust) {
+      if (showDust && dust) {
         return false;
       }
       return true;

@@ -218,7 +218,7 @@ export function WalletHoldingsPage({
           <CoinList
             coins={coins}
             hiddenCoins={hiddenTokens}
-            showDustFilter={showDustFilter}
+            showDust={showDustFilter}
             onHideToggle={onHideToken}
             onRemove={onRemoveToken}
           />
