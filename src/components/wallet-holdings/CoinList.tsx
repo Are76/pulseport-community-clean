@@ -16,10 +16,10 @@ export interface CoinData {
 
 interface CoinListProps {
   coins: CoinData[];
-  showHiddenCoins: boolean;
+  hiddenCoins: string[];
   showDustFilter: boolean;
-  onToggleVisibility: (id: string) => void;
-  onRemoveCoin: (id: string) => void;
+  onHideToggle: (id: string) => void;
+  onRemove: (id: string) => void;
 }
 
 function formatValue(value: number): string {
@@ -46,13 +46,13 @@ function formatPrice(price: number): string {
 
 export function CoinList({
   coins,
-  showHiddenCoins,
+  hiddenCoins,
   showDustFilter,
-  onToggleVisibility,
-  onRemoveCoin,
+  onHideToggle,
+  onRemove,
 }: CoinListProps) {
   const isDust = (coin: CoinData) => coin.value < DUST_THRESHOLD;
-  const isHidden = (coin: CoinData) => coin.isHidden === true;
+  const isHidden = (coin: CoinData) => hiddenCoins.includes(coin.id);
 
   const filtered = coins.filter((coin) => {
     const hidden = isHidden(coin);
@@ -67,8 +67,9 @@ export function CoinList({
       return true;
     }
 
-    // For hidden coins, only show if showHiddenCoins is true
-    return showHiddenCoins;
+    // For hidden coins, only show if they should be visible
+    // (This will be determined by the parent component)
+    return false;
   });
 
   if (filtered.length === 0) {
@@ -136,14 +137,14 @@ export function CoinList({
             {/* Actions */}
             <div className="flex gap-2 flex-shrink-0">
               <button
-                onClick={() => onToggleVisibility(coin.id)}
+                onClick={() => onHideToggle(coin.id)}
                 className="p-2 hover:bg-gray-200 rounded-lg transition-colors text-gray-600 hover:text-gray-900"
                 title={hidden ? 'Show coin' : 'Hide coin'}
               >
                 {hidden ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
               <button
-                onClick={() => onRemoveCoin(coin.id)}
+                onClick={() => onRemove(coin.id)}
                 className="p-2 hover:bg-red-100 rounded-lg transition-colors text-gray-600 hover:text-red-600"
                 title="Remove coin"
               >

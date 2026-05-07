@@ -11,6 +11,7 @@ interface AddCoinModalProps {
     chain: Chain;
     contractAddress: string;
   }) => void;
+  theme?: 'light' | 'dark';
 }
 
 const CHAINS: { id: Chain; label: string }[] = [
@@ -19,7 +20,7 @@ const CHAINS: { id: Chain; label: string }[] = [
   { id: 'base', label: 'Base' },
 ];
 
-export function AddCoinModal({ isOpen, onClose, onAdd }: AddCoinModalProps) {
+export function AddCoinModal({ isOpen, onClose, onAdd, theme = 'light' }: AddCoinModalProps) {
   const [symbol, setSymbol] = useState('');
   const [name, setName] = useState('');
   const [chain, setChain] = useState<Chain>('pulsechain');

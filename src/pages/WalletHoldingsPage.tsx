@@ -9,28 +9,34 @@ import type { Asset, Wallet } from '../types';
 interface WalletHoldingsPageProps {
   assets: Asset[];
   wallets: Wallet[];
-  selectedWallet: string;
+  selectedWalletAddr: string;
   onSelectWallet: (address: string) => void;
-  onHideAsset?: (id: string) => void;
-  onRemoveAsset?: (id: string) => void;
-  onAddAsset?: (asset: Asset) => void;
+  hiddenTokens: string[];
+  onHideToken: (id: string) => void;
+  onRemoveToken: (id: string) => void;
+  isScanning: boolean;
+  scanResult: number | null;
+  onScan: () => void;
+  onAddCoin?: (asset: Asset) => void;
 }
 
 export function WalletHoldingsPage({
   assets,
   wallets,
-  selectedWallet,
+  selectedWalletAddr,
   onSelectWallet,
-  onHideAsset = () => {},
-  onRemoveAsset = () => {},
-  onAddAsset = () => {},
+  hiddenTokens,
+  onHideToken,
+  onRemoveToken,
+  isScanning,
+  scanResult,
+  onScan,
+  onAddCoin = () => {},
 }: WalletHoldingsPageProps) {
   const [showHiddenCoins, setShowHiddenCoins] = useState(false);
   const [showDustFilter, setShowDustFilter] = useState(true);
   const [isAddCoinModalOpen, setIsAddCoinModalOpen] = useState(false);
   const [isScanSpamModalOpen, setIsScanSpamModalOpen] = useState(false);
-  const [hiddenAssetIds, setHiddenAssetIds] = useState<Set<string>>(new Set());
-  const [detectedSpamIds, setDetectedSpamIds] = useState<string[]>([]);
 
   // Convert assets to CoinData format
   const coins = useMemo<CoinData[]>(
@@ -43,10 +49,10 @@ export function WalletHoldingsPage({
         value: asset.value,
         price: asset.price,
         chain: asset.chain,
-        isHidden: hiddenAssetIds.has(asset.id),
+        isHidden: hiddenTokens.includes(asset.id),
         logoUrl: asset.logoUrl,
       })),
-    [assets, hiddenAssetIds]
+    [assets, hiddenTokens]
   );
 
   // Calculate totals
@@ -56,7 +62,7 @@ export function WalletHoldingsPage({
       .filter((coin) => !coin.isHidden && !(showDustFilter && coin.value < 10))
       .reduce((sum, coin) => sum + coin.value, 0);
     const dust = coins.filter((coin) => coin.value < 10).length;
-    const hidden = hiddenAssetIds.size;
+    const hidden = hiddenTokens.length;
 
     return {
       totalValue: total,
@@ -64,18 +70,7 @@ export function WalletHoldingsPage({
       dustCount: dust,
       hiddenCount: hidden,
     };
-  }, [coins, hiddenAssetIds, showDustFilter]);
-
-  const handleToggleVisibility = (id: string) => {
-    const newHidden = new Set(hiddenAssetIds);
-    if (newHidden.has(id)) {
-      newHidden.delete(id);
-    } else {
-      newHidden.add(id);
-    }
-    setHiddenAssetIds(newHidden);
-    onHideAsset(id);
-  };
+  }, [coins, hiddenTokens, showDustFilter]);
 
   const handleAddCoin = (coinData: {
     symbol: string;
@@ -93,28 +88,15 @@ export function WalletHoldingsPage({
       value: 0,
       chain: coinData.chain as any,
     };
-    onAddAsset(newAsset);
+    onAddCoin(newAsset);
   };
 
   const handleScanSpam = () => {
-    // Simulate spam detection - in real app this would be more sophisticated
-    // For demo, we'll flag coins with suspicious patterns
-    const suspiciousIds = coins
-      .filter((coin) => {
-        const isSuspicious =
-          coin.name.toLowerCase().includes('test') ||
-          coin.name.toLowerCase().includes('fake') ||
-          coin.symbol.length > 10;
-        return isSuspicious;
-      })
-      .map((coin) => coin.id);
-
-    setDetectedSpamIds(suspiciousIds);
     setIsScanSpamModalOpen(true);
+    onScan();
   };
 
-  const handleRemoveSpam = (spamIds: string[]) => {
-    spamIds.forEach((id) => onRemoveAsset(id));
+  const handleRemoveSpam = () => {
     setIsScanSpamModalOpen(false);
   };
 
@@ -144,17 +126,31 @@ export function WalletHoldingsPage({
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Select Wallet
             </label>
-            <select
-              value={selectedWallet}
-              onChange={(e) => onSelectWallet(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-            >
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => onSelectWallet('')}
+                className={`px-4 py-2 rounded-lg border transition-colors filter-pill ${
+                  selectedWalletAddr === ''
+                    ? 'bg-purple-500 border-purple-500 text-white'
+                    : 'bg-gray-100 border-gray-300 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                All Wallets
+              </button>
               {wallets.map((wallet) => (
-                <option key={wallet.address} value={wallet.address}>
-                  {wallet.name} ({wallet.address.slice(0, 6)}...)
-                </option>
+                <button
+                  key={wallet.address}
+                  onClick={() => onSelectWallet(wallet.address)}
+                  className={`px-4 py-2 rounded-lg border transition-colors filter-pill ${
+                    selectedWalletAddr === wallet.address
+                      ? 'bg-purple-500 border-purple-500 text-white'
+                      : 'bg-gray-100 border-gray-300 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  {wallet.name}
+                </button>
               ))}
-            </select>
+            </div>
           </div>
         )}
 
@@ -221,10 +217,10 @@ export function WalletHoldingsPage({
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <CoinList
             coins={coins}
-            showHiddenCoins={showHiddenCoins}
+            hiddenCoins={hiddenTokens}
             showDustFilter={showDustFilter}
-            onToggleVisibility={handleToggleVisibility}
-            onRemoveCoin={onRemoveAsset}
+            onHideToggle={onHideToken}
+            onRemove={onRemoveToken}
           />
         </div>
 
@@ -238,9 +234,9 @@ export function WalletHoldingsPage({
         <ScanSpamModal
           isOpen={isScanSpamModalOpen}
           onClose={() => setIsScanSpamModalOpen(false)}
-          onKeepSpam={() => setIsScanSpamModalOpen(false)}
-          onRemoveSpam={handleRemoveSpam}
-          detectedSpamIds={detectedSpamIds}
+          isScanning={isScanning}
+          scanResult={scanResult}
+          onConfirmRemove={handleRemoveSpam}
         />
       </div>
     </div>

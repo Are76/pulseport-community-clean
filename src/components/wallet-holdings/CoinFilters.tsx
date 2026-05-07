@@ -1,5 +1,5 @@
 import React from 'react';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Zap } from 'lucide-react';
 
 interface CoinFiltersProps {
   showHiddenCoins: boolean;
@@ -40,6 +40,7 @@ export function CoinFilters({
             : 'bg-gray-100 border-gray-300 text-gray-700 hover:bg-gray-200'
         }`}
       >
+        <Zap size={14} />
         Dust ({dustCount})
       </button>
     </div>

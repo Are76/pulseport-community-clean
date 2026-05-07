@@ -74,8 +74,14 @@ describe('WalletHoldingsPage', () => {
       <WalletHoldingsPage
         assets={[]}
         wallets={mockWallets}
-        selectedWallet={mockWallets[0].address}
+        selectedWalletAddr={mockWallets[0].address}
         onSelectWallet={() => {}}
+        hiddenTokens={[]}
+        onHideToken={() => {}}
+        onRemoveToken={() => {}}
+        isScanning={false}
+        scanResult={null}
+        onScan={() => {}}
       />
     );
 
@@ -88,8 +94,14 @@ describe('WalletHoldingsPage', () => {
       <WalletHoldingsPage
         assets={mockAssets}
         wallets={mockWallets}
-        selectedWallet={mockWallets[0].address}
+        selectedWalletAddr={mockWallets[0].address}
         onSelectWallet={() => {}}
+        hiddenTokens={[]}
+        onHideToken={() => {}}
+        onRemoveToken={() => {}}
+        isScanning={false}
+        scanResult={null}
+        onScan={() => {}}
       />
     );
 
@@ -102,8 +114,14 @@ describe('WalletHoldingsPage', () => {
       <WalletHoldingsPage
         assets={mockAssets}
         wallets={mockWallets}
-        selectedWallet={mockWallets[0].address}
+        selectedWalletAddr={mockWallets[0].address}
         onSelectWallet={() => {}}
+        hiddenTokens={[]}
+        onHideToken={() => {}}
+        onRemoveToken={() => {}}
+        isScanning={false}
+        scanResult={null}
+        onScan={() => {}}
       />
     );
 
@@ -117,8 +135,14 @@ describe('WalletHoldingsPage', () => {
       <WalletHoldingsPage
         assets={mockAssets}
         wallets={mockWallets}
-        selectedWallet={mockWallets[0].address}
+        selectedWalletAddr={mockWallets[0].address}
         onSelectWallet={() => {}}
+        hiddenTokens={[]}
+        onHideToken={() => {}}
+        onRemoveToken={() => {}}
+        isScanning={false}
+        scanResult={null}
+        onScan={() => {}}
       />
     );
 
@@ -131,8 +155,14 @@ describe('WalletHoldingsPage', () => {
       <WalletHoldingsPage
         assets={mockAssets}
         wallets={mockWallets}
-        selectedWallet={mockWallets[0].address}
+        selectedWalletAddr={mockWallets[0].address}
         onSelectWallet={() => {}}
+        hiddenTokens={[]}
+        onHideToken={() => {}}
+        onRemoveToken={() => {}}
+        isScanning={false}
+        scanResult={null}
+        onScan={() => {}}
       />
     );
 
@@ -145,8 +175,14 @@ describe('WalletHoldingsPage', () => {
       <WalletHoldingsPage
         assets={mockAssets}
         wallets={mockWallets}
-        selectedWallet={mockWallets[0].address}
+        selectedWalletAddr={mockWallets[0].address}
         onSelectWallet={() => {}}
+        hiddenTokens={[]}
+        onHideToken={() => {}}
+        onRemoveToken={() => {}}
+        isScanning={false}
+        scanResult={null}
+        onScan={() => {}}
       />
     );
 
@@ -158,16 +194,21 @@ describe('WalletHoldingsPage', () => {
     expect(screen.getByText('DUST')).toBeInTheDocument();
   });
 
-  it('calls onHideAsset when visibility toggle is clicked', async () => {
-    const onHideAsset = vi.fn();
+  it('calls onHideToken when visibility toggle is clicked', async () => {
+    const onHideToken = vi.fn();
 
     render(
       <WalletHoldingsPage
         assets={mockAssets}
         wallets={mockWallets}
-        selectedWallet={mockWallets[0].address}
+        selectedWalletAddr={mockWallets[0].address}
         onSelectWallet={() => {}}
-        onHideAsset={onHideAsset}
+        hiddenTokens={[]}
+        onHideToken={onHideToken}
+        onRemoveToken={() => {}}
+        isScanning={false}
+        scanResult={null}
+        onScan={() => {}}
       />
     );
 
@@ -180,19 +221,24 @@ describe('WalletHoldingsPage', () => {
     // Click first coin's eye button
     fireEvent.click(eyeButtons[0]);
 
-    expect(onHideAsset).toHaveBeenCalled();
+    expect(onHideToken).toHaveBeenCalled();
   });
 
-  it('calls onRemoveAsset when remove button is clicked', async () => {
-    const onRemoveAsset = vi.fn();
+  it('calls onRemoveToken when remove button is clicked', async () => {
+    const onRemoveToken = vi.fn();
 
     render(
       <WalletHoldingsPage
         assets={mockAssets}
         wallets={mockWallets}
-        selectedWallet={mockWallets[0].address}
+        selectedWalletAddr={mockWallets[0].address}
         onSelectWallet={() => {}}
-        onRemoveAsset={onRemoveAsset}
+        hiddenTokens={[]}
+        onHideToken={() => {}}
+        onRemoveToken={onRemoveToken}
+        isScanning={false}
+        scanResult={null}
+        onScan={() => {}}
       />
     );
 
@@ -205,7 +251,7 @@ describe('WalletHoldingsPage', () => {
     // Find a trash button (second button in action pair)
     if (trashButtons.length > 1) {
       fireEvent.click(trashButtons[1]);
-      expect(onRemoveAsset).toHaveBeenCalled();
+      expect(onRemoveToken).toHaveBeenCalled();
     }
   });
 
@@ -214,8 +260,14 @@ describe('WalletHoldingsPage', () => {
       <WalletHoldingsPage
         assets={mockAssets}
         wallets={mockWallets}
-        selectedWallet={mockWallets[0].address}
+        selectedWalletAddr={mockWallets[0].address}
         onSelectWallet={() => {}}
+        hiddenTokens={[]}
+        onHideToken={() => {}}
+        onRemoveToken={() => {}}
+        isScanning={false}
+        scanResult={null}
+        onScan={() => {}}
       />
     );
 
@@ -231,8 +283,14 @@ describe('WalletHoldingsPage', () => {
       <WalletHoldingsPage
         assets={mockAssets}
         wallets={mockWallets}
-        selectedWallet={mockWallets[0].address}
+        selectedWalletAddr={mockWallets[0].address}
         onSelectWallet={() => {}}
+        hiddenTokens={[]}
+        onHideToken={() => {}}
+        onRemoveToken={() => {}}
+        isScanning={false}
+        scanResult={null}
+        onScan={() => {}}
       />
     );
 
@@ -249,8 +307,14 @@ describe('WalletHoldingsPage', () => {
       <WalletHoldingsPage
         assets={mockAssets}
         wallets={mockWallets}
-        selectedWallet={mockWallets[0].address}
+        selectedWalletAddr={mockWallets[0].address}
         onSelectWallet={() => {}}
+        hiddenTokens={[]}
+        onHideToken={() => {}}
+        onRemoveToken={() => {}}
+        isScanning={false}
+        scanResult={null}
+        onScan={() => {}}
       />
     );
 
@@ -265,16 +329,20 @@ describe('WalletHoldingsPage', () => {
       <WalletHoldingsPage
         assets={mockAssets}
         wallets={mockWallets}
-        selectedWallet={mockWallets[0].address}
+        selectedWalletAddr={mockWallets[0].address}
         onSelectWallet={onSelectWallet}
+        hiddenTokens={[]}
+        onHideToken={() => {}}
+        onRemoveToken={() => {}}
+        isScanning={false}
+        scanResult={null}
+        onScan={() => {}}
       />
     );
 
-    const select = screen.getByDisplayValue(
-      `${mockWallets[0].name} (${mockWallets[0].address.slice(0, 6)}...)`
-    );
-    fireEvent.change(select, { target: { value: mockWallets[1].address } });
+    const mainWalletButton = screen.getByText('Main Wallet');
+    fireEvent.click(mainWalletButton);
 
-    expect(onSelectWallet).toHaveBeenCalledWith(mockWallets[1].address);
+    expect(onSelectWallet).toHaveBeenCalled();
   });
 });

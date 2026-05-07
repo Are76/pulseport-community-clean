@@ -4,24 +4,22 @@ import { X, AlertTriangle } from 'lucide-react';
 interface ScanSpamModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onKeepSpam: () => void;
-  onRemoveSpam: (spamIds: string[]) => void;
-  detectedSpamIds: string[];
+  isScanning: boolean;
+  scanResult: number | null;
+  onConfirmRemove: (spamIds: string[]) => void;
 }
 
 export function ScanSpamModal({
   isOpen,
   onClose,
-  onKeepSpam,
-  onRemoveSpam,
-  detectedSpamIds,
+  isScanning,
+  scanResult,
+  onConfirmRemove,
 }: ScanSpamModalProps) {
-  const [isScanning, setIsScanning] = useState(false);
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    if (isOpen && !isScanning) {
-      setIsScanning(true);
+    if (isOpen && isScanning) {
       setProgress(0);
 
       // Simulate scanning with progress
@@ -29,7 +27,6 @@ export function ScanSpamModal({
         setProgress((prev) => {
           if (prev >= 100) {
             clearInterval(interval);
-            setIsScanning(false);
             return 100;
           }
           return prev + Math.random() * 30;
@@ -87,28 +84,28 @@ export function ScanSpamModal({
               <div>
                 <p className="font-semibold text-orange-900">Scan Complete</p>
                 <p className="text-sm text-orange-800 mt-1">
-                  Found {detectedSpamIds.length} potential spam coin
-                  {detectedSpamIds.length !== 1 ? 's' : ''}
+                  Found {scanResult || 0} potential spam coin
+                  {scanResult !== 1 ? 's' : ''}
                 </p>
               </div>
             </div>
 
             <p className="text-sm text-gray-600">
-              {detectedSpamIds.length === 0
+              {!scanResult || scanResult === 0
                 ? 'No spam coins detected in your holdings.'
                 : 'Would you like to remove these detected spam coins?'}
             </p>
 
             <div className="flex gap-3 pt-4">
               <button
-                onClick={onKeepSpam}
+                onClick={onClose}
                 className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
               >
                 Keep
               </button>
               <button
-                onClick={() => onRemoveSpam(detectedSpamIds)}
-                disabled={detectedSpamIds.length === 0}
+                onClick={() => onConfirmRemove([])}
+                disabled={!scanResult || scanResult === 0}
                 className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
               >
                 Remove Spam
