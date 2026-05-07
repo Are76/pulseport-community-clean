@@ -83,7 +83,7 @@ import { WalletsTab } from './tabs/WalletsTab';
 import { HomeTab } from './tabs/HomeTab';
 import { OverviewTab } from './tabs/OverviewTab';
 import { shortenAddr, normalizeAssetSymbol, sameAssetSymbol, tryReadCache, readStoredJSON, bigIntReviver, bigIntReplacer, isNoContractDataError, decodeLibertySwapInput } from './utils/appHelpers';
-import { ERC20_ABI, WALLET_DOT_COLORS, CHAIN_COLORS, CHAIN_LABELS, STATIC_LOGOS, LIBERTY_SWAP_ROUTERS, LIBERTY_SWAP_SELECTOR, MIN_INVESTMENT_THRESHOLD, CORE_TOKENS, ACTIVE_TABS, ACTIVE_TAB_STORAGE_KEY, type ActiveTab } from './utils/appConstants';
+import { ERC20_ABI, WALLET_DOT_COLORS, CHAIN_COLORS, CHAIN_LABELS, STATIC_LOGOS, LIBERTY_SWAP_ROUTERS, LIBERTY_SWAP_SELECTOR, MIN_INVESTMENT_THRESHOLD, CORE_TOKENS, ACTIVE_TABS, ACTIVE_TAB_STORAGE_KEY, ETH_HEX_ADDR, EHEX_PULSECHAIN_ADDR, type ActiveTab } from './utils/appConstants';
 import { useAppUI } from './context/AppUIContext';
 import { useAppModals } from './context/AppModalsContext';
 import { PriceDisplay } from './components/PriceDisplay';
@@ -199,6 +199,10 @@ export default function App() {
   const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState(false);
   const [apiKeyInput, setApiKeyInput] = useState('');
   const [activeWallet, setActiveWallet] = useState<string | null>(null);
+  const [selectedWalletAddr, setSelectedWalletAddr] = useState('all');
+  const [sidebarWalletsOpen, setSidebarWalletsOpen] = useState(false);
+  const [tokenCardModal, setTokenCardModal] = useState<any>(null);
+  const [tokenCardModalLoading, setTokenCardModalLoading] = useState(false);
 
 
   // -- Formatting helpers (defined once here, used throughout) ----------------
@@ -1940,7 +1944,7 @@ export default function App() {
         ))}
           <button
             type="button"
-            onClick={() => setMobileMoreOpen(v => !v)}
+            onClick={() => setMobileMoreOpen(!mobileMoreOpen)}
             className="mobile-nav-tab-btn"
             style={{
               color: mobileMoreOpen || mobileMoreActive ? 'var(--accent)' : 'var(--fg-muted)',

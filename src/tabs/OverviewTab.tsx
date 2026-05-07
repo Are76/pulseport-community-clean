@@ -127,7 +127,7 @@ export function OverviewTab(props: OverviewTabProps) {
               ${fmtNum(props.summary.totalValue)}
             </div>
             <div style={{ fontSize: '16px', fontWeight: 500, color: pnl24hChangeColor }}>
-              {props.summary.pnl24h >= 0 ? '+' : ''}{fmtPrice(props.summary.pnl24h, 2)} / {props.summary.pnl24hPercent >= 0 ? '+' : ''}{props.summary.pnl24hPercent.toFixed(2)}%
+              {props.summary.pnl24h >= 0 ? '+' : ''}{fmtPrice(props.summary.pnl24h)} / {props.summary.pnl24hPercent >= 0 ? '+' : ''}{props.summary.pnl24hPercent.toFixed(2)}%
             </div>
           </div>
           <div style={{ fontSize: '14px', color: props.t.textSecondary }}>
@@ -193,7 +193,7 @@ export function OverviewTab(props: OverviewTabProps) {
         }}>
           <div style={{ fontSize: '12px', color: props.t.textSecondary, marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>TOTAL PnL</div>
           <div style={{ fontSize: '32px', fontWeight: 700, color: pnlChangeColor, marginBottom: '8px' }}>
-            {props.summary.unifiedPnl >= 0 ? '+' : ''}{fmtPrice(props.summary.unifiedPnl, 0)}
+            {props.summary.unifiedPnl >= 0 ? '+' : ''}{fmtPrice(props.summary.unifiedPnl)}
           </div>
           <div style={{ fontSize: '13px', color: props.t.textMuted }}>
             {props.summary.netInvestment > 0 ? ((props.summary.unifiedPnl / props.summary.netInvestment) * 100).toFixed(1) : '0.0'}% vs invested
