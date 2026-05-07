@@ -76,8 +76,12 @@ export const CORE_TOKENS = [
 
 // -- Active tabs (for navigation) ---------------------------------------------
 
-export type ActiveTab = 'home' | 'overview' | 'assets' | 'stakes' | 'history' | 'tracker' | 'wallets' | 'defi' | 'pulsechain-official' | 'pulsechain-community' | 'bridge' | 'wallet-analyzer';
+export type ActiveTab = 'home' | 'overview' | 'assets' | 'stakes' | 'history' | 'tracker' | 'wallets' | 'defi' | 'pulsechain-official' | 'pulsechain-community' | 'bridge' | 'wallet-analyzer' | 'holdings';
 
-export const ACTIVE_TABS: ActiveTab[] = ['home', 'overview', 'assets', 'stakes', 'history', 'tracker', 'defi', 'pulsechain-official', 'pulsechain-community', 'bridge', 'wallet-analyzer'];
+export const ACTIVE_TABS: ActiveTab[] = ['home', 'overview', 'assets', 'stakes', 'history', 'tracker', 'defi', 'pulsechain-official', 'pulsechain-community', 'bridge', 'wallet-analyzer', 'holdings'];
 
 export const ACTIVE_TAB_STORAGE_KEY = 'pulseport_active_tab';
+
+// -- Portfolio management constants -------------------------------------------
+
+export const DUST_THRESHOLD = 10; // coins below $10 USD

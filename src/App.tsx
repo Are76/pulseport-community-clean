@@ -90,6 +90,7 @@ import { PriceDisplay } from './components/PriceDisplay';
 import { StakingLadder } from './components/StakingLadder';
 import { StakingPie } from './components/StakingPie';
 import { WalletSelector } from './components/WalletSelector';
+import { WalletHoldingsPage } from './pages/WalletHoldingsPage';
 
 // Note: STATIC_LOGOS, EHEX_PULSECHAIN_ADDR, ETH_HEX_ADDR, normalizeAssetSymbol, sameAssetSymbol,
 // MIN_INVESTMENT_THRESHOLD, LIBERTY_SWAP_ROUTERS, LIBERTY_SWAP_SELECTOR, decodeLibertySwapInput,
@@ -1893,6 +1894,20 @@ export default function App() {
               onOpenTransactions={(row) => {
                 setActiveTab('history');
               }}
+            />
+          </motion.div>
+        )}
+
+        {activeTab === 'holdings' && (
+          <motion.div key="holdings" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <WalletHoldingsPage
+              assets={currentAssets}
+              wallets={wallets}
+              selectedWallet={selectedWalletAddr}
+              onSelectWallet={setSelectedWalletAddr}
+              onHideAsset={() => {}}
+              onRemoveAsset={() => {}}
+              onAddAsset={() => {}}
             />
           </motion.div>
         )}
