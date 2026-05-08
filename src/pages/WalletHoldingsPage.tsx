@@ -11,9 +11,6 @@ interface WalletHoldingsPageProps {
   hiddenTokens: Set<string>;
   onHideToken: (id: string) => void;
   onRemoveToken: (id: string) => void;
-  isScanning: boolean;
-  scanResult: { spam: string[], legitimate: string[] } | null;
-  onScan: () => void;
   onAddCoin: (asset: Asset) => void;
 }
 
@@ -97,48 +94,6 @@ export function WalletHoldingsPage(props: WalletHoldingsPageProps) {
         )}
       </section>
 
-      {/* Action Buttons */}
-      <section
-        style={{
-          display: 'flex',
-          gap: 8,
-          marginBottom: 16,
-          flexWrap: 'wrap',
-        }}
-      >
-        <button
-          onClick={() => props.onScan()}
-          disabled={props.isScanning}
-          style={{
-            padding: '8px 16px',
-            background: props.isScanning ? 'var(--fg-muted)' : 'var(--accent)',
-            color: props.isScanning ? 'var(--fg-muted)' : 'white',
-            border: 'none',
-            borderRadius: 6,
-            cursor: props.isScanning ? 'not-allowed' : 'pointer',
-            fontSize: 13,
-            fontWeight: 600,
-            opacity: props.isScanning ? 0.5 : 1,
-          }}
-        >
-          {props.isScanning ? 'Scanning...' : 'Scan for Spam'}
-        </button>
-
-        {props.scanResult && (
-          <div
-            style={{
-              padding: '8px 12px',
-              background: 'var(--bg-elevated)',
-              border: '1px solid var(--border)',
-              borderRadius: 6,
-              fontSize: 12,
-              color: 'var(--fg-muted)',
-            }}
-          >
-            Found {props.scanResult.spam.length} spam tokens
-          </div>
-        )}
-      </section>
 
       {/* Holdings List */}
       <section className="table-wrapper" aria-label="Holdings workspace">
