@@ -2,10 +2,7 @@ import { useMemo } from 'react';
 import type { Asset, HexStake } from '../types';
 import { TOKENS, PHEX_YIELD_PER_TSHARE, EHEX_YIELD_PER_TSHARE, PHEX_YIELD_BI_NUM, PHEX_YIELD_BI_DEN, EHEX_YIELD_BI_NUM, EHEX_YIELD_BI_DEN } from '../constants';
 import { normalizeAssetSymbol } from '../utils/assetHelpers';
-
-const ETH_HEX_ADDR = '0x2b591e99afe9f32eaa6214f7b7629768c40eeb39';
-const EHEX_PULSECHAIN_ADDR = '0x167d87a906da361a10061fe42eba8c8fddea12b1';
-const MIN_INVESTMENT_THRESHOLD = 50;
+import { ETH_HEX_ADDR, EHEX_PULSECHAIN_ADDR, MIN_INVESTMENT_THRESHOLD, TIME_WINDOWS } from '../utils/appConstants';
 
 interface PortfolioComputeInput {
   wallets: any[];
@@ -126,7 +123,7 @@ export function usePortfolioCompute(input: PortfolioComputeInput) {
   }, [currentAssets]);
 
   const swapTransactions24h = useMemo(() => {
-    const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+    const cutoff = Date.now() - TIME_WINDOWS.HOURS_24;
     return currentTransactions.filter((tx) => {
       if (tx.chain !== 'pulsechain') return false;
       if (tx.timestamp < cutoff) return false;

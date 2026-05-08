@@ -608,7 +608,6 @@ export function StakesSection({
                     <React.Fragment key={stake.id}>
                     <tr
                       className={`stake-summary-row${isExpanded ? ' is-expanded' : ''}`}
-                      role="button"
                       tabIndex={0}
                       aria-expanded={isExpanded}
                       onClick={() => toggleStakeDetails(stake.id)}

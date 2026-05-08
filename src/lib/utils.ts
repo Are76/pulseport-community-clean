@@ -5,25 +5,9 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-// --- Shared number formatters (used across LP/DeFi components) ---------------
-
-/** Format a USD amount. Always positive - caller handles sign. */
-export function fmtUsd(n: number, maxFrac = 2): string {
-  if (!isFinite(n)) return '$0';
-  const safeFrac = Math.min(Math.max(maxFrac, 0), 20);
-  if (n >= 1e6) return `$${(n / 1e6).toFixed(2)}M`;
-  if (n >= 1e3) return `$${(n / 1e3).toFixed(1)}K`;
-  return `$${n.toLocaleString('en-US', { maximumFractionDigits: safeFrac })}`;
-}
-
-/** Format a token amount with automatic B/M/K abbreviation. */
-export function fmtTok(n: number): string {
-  if (!isFinite(n)) return '0';
-  if (n >= 1e9) return `${(n / 1e9).toFixed(2)}B`;
-  if (n >= 1e6) return `${(n / 1e6).toFixed(2)}M`;
-  if (n >= 1e3) return `${(n / 1e3).toFixed(1)}K`;
-  return n.toLocaleString('en-US', { maximumFractionDigits: 4 });
-}
+// Re-export formatting utilities from centralized formatting module
+// to maintain backward compatibility with existing imports
+export { fmtUsd, fmtTok } from '../utils/formatting';
 
 // --- RPC Fallback Utility ----------------------------------------------------
 

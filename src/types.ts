@@ -1,10 +1,28 @@
-export type Chain = 'pulsechain' | 'ethereum' | 'base';
+import type React from 'react';
 
+// ============================================================================
+// CORE DOMAIN TYPES
+// ============================================================================
+
+/** Supported blockchain networks. */
+export type Chain = 'pulsechain' | 'ethereum' | 'base' | 'arbitrum';
+
+/** Wallet address type (lowercase). */
+export type Address = string & { readonly __brand: 'Address' };
+
+/** Helper to create branded Address type. */
+export const brandAddress = (addr: string): Address => addr.toLowerCase() as Address;
+
+/** Percentage type (0-100). */
+export type Percentage = number & { readonly __brand: 'Percentage' };
+
+/** Portfolio holder/account information. */
 export interface Wallet {
   address: string;
   name: string;
 }
 
+/** Asset holdings with pricing and performance data. */
 export interface Asset {
   id: string;
   symbol: string;
@@ -21,10 +39,22 @@ export interface Asset {
   priceChange24h?: number;
   priceChange1h?: number;
   priceChange7d?: number;
+  priceChange6h?: number;
   isCore?: boolean;
   isBridged?: boolean;
   entryPls?: number;
+  isSpam?: boolean;
 }
+
+/** Asset with guaranteed address field (token contract). */
+export interface AssetWithAddress extends Asset {
+  address: string;
+}
+
+/** Type guard to check if asset has an address. */
+export const isAssetWithAddress = (asset: Asset): asset is AssetWithAddress => {
+  return !!asset.address;
+};
 
 export interface InvestmentSourceAttribution {
   asset: 'ETH' | 'USDC' | 'DAI' | 'USDT' | string;
@@ -236,4 +266,387 @@ export interface ThemeColors {
   textMuted: string;
   expandedBg: string;
   borderLight: string;
+}
+
+// ============================================================================
+// API RESPONSE TYPES
+// ============================================================================
+
+/** DexScreener pair data for token pricing and trading metrics. */
+export interface DexScreenerPair {
+  chainId?: string;
+  pairAddress?: string;
+  address?: string;
+  dexId?: string;
+  url?: string;
+  baseToken?: {
+    address: string;
+    name: string;
+    symbol: string;
+  };
+  quoteToken?: {
+    address: string;
+    name: string;
+    symbol: string;
+  };
+  priceNative?: string;
+  priceUsd?: string;
+  txns?: {
+    m5?: { buys: number; sells: number };
+    h1?: { buys: number; sells: number };
+    h24?: { buys: number; sells: number };
+  };
+  volume?: {
+    m5?: number;
+    h1?: number;
+    h24?: number;
+  };
+  priceChange?: {
+    m5?: number;
+    h1?: number;
+    h24?: number;
+  };
+  liquidity?: {
+    usd?: number;
+    base?: number;
+    quote?: number;
+  };
+  fdv?: number;
+  marketCap?: number;
+  info?: {
+    imageUrl?: string;
+    websites?: Array<{ label?: string; url: string }>;
+    socials?: Array<{ type: string; url: string }>;
+  };
+}
+
+/** DexScreener API response wrapper. */
+export interface DexScreenerResponse {
+  pairs?: DexScreenerPair[];
+  schemaVersion?: string;
+  pair?: DexScreenerPair;
+}
+
+/** CoinGecko token market data. */
+export interface CoinGeckoTokenData {
+  id?: string;
+  symbol?: string;
+  name?: string;
+  image?: string;
+  current_price?: number;
+  market_cap?: number;
+  market_cap_rank?: number;
+  fully_diluted_valuation?: number;
+  total_volume?: number;
+  high_24h?: number;
+  low_24h?: number;
+  price_change_24h?: number;
+  price_change_percentage_24h?: number;
+  circulating_supply?: number;
+  total_supply?: number;
+  max_supply?: number;
+  ath?: number;
+  atl?: number;
+  last_updated?: string;
+}
+
+/** Blockscout transaction data from blockchain explorers. */
+export interface BlockscoutTransaction {
+  hash: string;
+  from?: { hash: string };
+  to?: { hash: string } | null;
+  value?: string;
+  gas?: string;
+  gasPrice?: string;
+  input?: string;
+  blockNumber?: number;
+  timestamp?: number;
+  transactionIndex?: number;
+  status?: 'success' | 'failed' | 'pending';
+}
+
+// ============================================================================
+// COMPONENT PROP TYPES
+// ============================================================================
+
+/** Props for coin list items in market views. */
+export interface CoinListItem {
+  id: string;
+  symbol: string;
+  name: string;
+  chain: Chain;
+  address?: string;
+  logoUrl?: string;
+  priceUsd: number;
+  change24h: number;
+  valueUsd: number;
+}
+
+/** Modal visibility and control props. */
+export interface ModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+/** Add coin modal specific props. */
+export interface AddCoinModalProps extends ModalProps {
+  onAdd: (coin: { symbol: string; name: string; chain: Chain; contractAddress: string }) => void;
+  theme?: 'dark' | 'light';
+}
+
+/** Page header props. */
+export interface PageHeaderProps {
+  title: string;
+  subtitle?: string;
+  children?: React.ReactNode;
+}
+
+/** Stat grid item configuration. */
+export interface StatGridItem {
+  label: React.ReactNode;
+  value: React.ReactNode;
+  sub?: React.ReactNode;
+  color?: string;
+}
+
+/** Stat grid props. */
+export interface StatGridProps {
+  cols?: 2 | 3 | 4;
+  items: StatGridItem[];
+}
+
+/** TX type pills filter props. */
+export interface TxTypePillsProps {
+  value: string;
+  onChange: (value: string) => void;
+}
+
+/** Holdings table display props. */
+export interface HoldingsTableProps {
+  assets: Asset[];
+  allAssets: Asset[];
+  wallets: Wallet[];
+  totalValueUsd: number;
+  priceChangePeriod: '1h' | '6h' | '24h' | '7d';
+}
+
+/** Liquidity position card props. */
+export interface LiquidityPositionCardProps {
+  position: LpPositionEnriched;
+  selectedWallet?: string;
+  onStakeClick?: () => void;
+  onUnstakeClick?: () => void;
+}
+
+/** Staking section display props. */
+export interface StakesSectionProps {
+  stakes: HexStake[];
+  totalValue: number;
+  onStakeClick?: (stake: HexStake) => void;
+}
+
+/** P&L modal props. */
+export interface PnLModalProps extends ModalProps {
+  asset: Asset;
+}
+
+/** Profit planner modal props. */
+export interface ProfitPlannerModalProps extends ModalProps {
+  asset: Asset;
+}
+
+/** Holdings table display asset extends base Asset with extra fields. */
+export interface HoldingDisplayAsset extends Asset {
+  change: number;
+}
+
+/** P&L Card display props. */
+export interface TokenPnLCardProps {
+  asset: Asset;
+  isSelected?: boolean;
+  onClick?: () => void;
+}
+
+/** Transaction list props. */
+export interface TransactionListProps {
+  transactions: Transaction[];
+  wallets: Wallet[];
+}
+
+/** DexScreener watchlist pair in MarketWatch. */
+export interface WatchPair {
+  chainId: string;
+  pairAddress: string;
+  dexScreenerUrl: string;
+}
+
+// ============================================================================
+// CONTEXT & STATE TYPES
+// ============================================================================
+
+/** Modal state reducer action. */
+export interface ModalAction {
+  type: 'OPEN' | 'CLOSE' | 'REPLACE';
+  modal?: ModalType;
+  payload?: {
+    selectedModalId?: string | null;
+    confirmActionMessage?: string;
+    confirmActionCallback?: (() => void) | null;
+    isLoadingModal?: boolean;
+    modalError?: string | null;
+    tokenCardModalLoading?: boolean;
+  };
+}
+
+/** Complete modal state. */
+export interface ModalState {
+  openModal: ModalType | null;
+  previousModal: ModalType | null;
+  selectedModalId: string | null;
+  confirmActionMessage: string;
+  confirmActionCallback: (() => void) | null;
+  isLoadingModal: boolean;
+  modalError: string | null;
+  tokenCardModalLoading: boolean;
+}
+
+/** Modal types handled by the app. */
+export type ModalType =
+  | 'addWallet'
+  | 'removeWallet'
+  | 'marketWatch'
+  | 'priceCard'
+  | 'investmentDetail'
+  | 'stakeDetail'
+  | 'lpDetail'
+  | 'farmDetail'
+  | 'confirmAction'
+  | 'settings'
+  | 'help'
+  | 'about'
+  | 'customCoins'
+  | 'apiKey'
+  | 'tokenCard';
+
+/** AppModals context state and setters. */
+export interface AppModalsContextType {
+  showAddWallet: boolean;
+  showRemoveWallet: boolean;
+  showMarketWatch: boolean;
+  showPriceCard: boolean;
+  showInvestmentDetail: boolean;
+  showStakeDetail: boolean;
+  showLpDetail: boolean;
+  showFarmDetail: boolean;
+  showConfirmAction: boolean;
+  showSettings: boolean;
+  showHelp: boolean;
+  showAbout: boolean;
+  selectedModalId: string | null;
+  confirmActionMessage: string;
+  confirmActionCallback: (() => void) | null;
+  isLoadingModal: boolean;
+  modalError: string | null;
+  setShowAddWallet: (show: boolean) => void;
+  setShowRemoveWallet: (show: boolean) => void;
+  setShowMarketWatch: (show: boolean) => void;
+  setShowPriceCard: (show: boolean) => void;
+  setShowInvestmentDetail: (show: boolean) => void;
+  setShowStakeDetail: (show: boolean) => void;
+  setShowLpDetail: (show: boolean) => void;
+  setShowFarmDetail: (show: boolean) => void;
+  setShowConfirmAction: (show: boolean) => void;
+  setShowSettings: (show: boolean) => void;
+  setShowHelp: (show: boolean) => void;
+  setShowAbout: (show: boolean) => void;
+  setSelectedModalId: (id: string | null) => void;
+  setConfirmActionMessage: (message: string) => void;
+  setConfirmActionCallback: (callback: (() => void) | null) => void;
+  setIsLoadingModal: (loading: boolean) => void;
+  setModalError: (error: string | null) => void;
+}
+
+// ============================================================================
+// UTILITY & ASYNC TYPES
+// ============================================================================
+
+/** Async operation state wrapper. */
+export interface AsyncState<T> {
+  data: T | null;
+  loading: boolean;
+  error: Error | null;
+}
+
+/** Paginated API response. */
+export interface PagedResponse<T> {
+  items: T[];
+  total: number;
+  page: number;
+  pageSize: number;
+  hasMore: boolean;
+}
+
+/** DexScreener search result. */
+export interface DexScreenerSearchResult {
+  chainId: string;
+  pairAddress: string;
+  dexScreenerUrl: string;
+}
+
+/** Market watch pair with enriched data. */
+export interface WatchPairEnriched {
+  chainId: string;
+  pairAddress: string;
+  baseToken: { address: string; symbol: string; name: string };
+  quoteToken: { address: string; symbol: string };
+  priceUsd: string | null;
+  priceChange: { h1: number | null; h24: number | null };
+  volume24h: number;
+  liquidityUsd: number;
+  marketCap: number | null;
+  fdv: number | null;
+  txns24h: number;
+  imageUrl: string | null;
+  dexScreenerUrl: string;
+}
+
+/** Holdings sort field options. */
+export type HoldingSortField = 'value' | 'change';
+
+/** Holdings sort direction. */
+export type HoldingSortDir = 'asc' | 'desc';
+
+/** Market watch sort options. */
+export type MarketWatchSortKey = 'volume' | 'liquidity' | 'mcap' | 'change24h';
+
+/** Swap detail data in transaction list. */
+export interface SwapDetail {
+  counterAsset: string;
+  counterAmount: number;
+  assetPriceUsd: number;
+  counterPriceUsd: number;
+}
+
+/** Filter configuration for transaction display. */
+export interface TxFilterConfig {
+  type?: TransactionType;
+  chain?: Chain;
+  wallet?: string;
+}
+
+/** Bridge activity with transaction details. */
+export type BridgeActivityChain = Chain | 'external';
+
+export type BridgeActivity = Transaction & {
+  fromChain: BridgeActivityChain;
+  toChain: BridgeActivityChain;
+  fromAsset: string;
+  toAsset: string;
+};
+
+/** Grouped bridge activities by date. */
+export interface BridgeActivityGroup {
+  date: string;
+  timestamp: number;
+  events: BridgeActivity[];
 }

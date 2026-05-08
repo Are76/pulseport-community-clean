@@ -2,20 +2,40 @@ import React from 'react';
 import { Calculator, ChevronDown, ChevronUp, Copy, ExternalLink, Trash2, X } from 'lucide-react';
 import type { Asset, Transaction, Wallet } from '../types';
 import { TransactionList } from './TransactionList';
+import { COLOR_SCHEME } from '../utils/appConstants';
 
 export type HoldingSortField = 'value' | 'change';
 export type HoldingSortDir = 'asc' | 'desc';
 
+/**
+ * Asset display data with calculated price and value fields.
+ */
 export interface HoldingDisplayAsset extends Asset {
+  /** Price in USD */
   priceUsd: number;
+
+  /** Price in PLS */
   pricePls: number;
+
+  /** Total portfolio value in USD */
   valueUsd: number;
+
+  /** Total portfolio value in PLS */
   valuePls: number;
+
+  /** League/rank label for display */
   leagueLabel: string;
+
+  /** Optional league rank number */
   leagueRank?: number | null;
+
+  /** Optional league data source */
   leagueSource?: string | null;
 }
 
+/**
+ * Props for the HoldingsTable component.
+ */
 interface HoldingsTableProps {
   assets: HoldingDisplayAsset[];
   allAssets: Asset[];
@@ -80,6 +100,37 @@ const pctForPeriod = (asset: HoldingDisplayAsset, period: HoldingsTableProps['pr
   return asset.priceChange24h ?? asset.pnl24h ?? 0;
 };
 
+/**
+ * Holdings table component for displaying portfolio assets with detailed information.
+ *
+ * Shows a table of assets with prices, values, price changes, and P&L data.
+ * Supports sorting by value or change percentage, expanding rows for transaction details,
+ * and inline cost basis entry. Includes actions for opening P&L calculator, hiding assets,
+ * copying addresses, and opening external explorers.
+ *
+ * @param props - The component props
+ * @param props.assets - Array of holdings to display
+ * @param props.allAssets - All available assets (for filtering)
+ * @param props.wallets - Wallet data for transaction display
+ * @param props.totalValueUsd - Total portfolio value in USD
+ * @param props.plsUsdPrice - Current PLS/USD exchange rate
+ * @param props.priceChangePeriod - Period for price change display ('1h', '6h', '24h', '7d')
+ * @param props.sortField - Current sort field ('value' or 'change')
+ * @param props.sortDir - Sort direction ('asc' or 'desc')
+ * @param props.expandedIds - Set of expanded asset IDs
+ * @param props.tokenLogos - Mapping of token symbols to logo URLs
+ * @param props.emptyMessage - Message when table is empty
+ * @param props.currentTransactions - Transactions for expanded rows
+ * @param props.manualEntries - Manual cost basis entries by asset ID
+ * @param props.chainColors - Colors for different blockchains
+ * @param props.onSort - Callback when sort field is clicked
+ * @param props.onToggleExpanded - Callback to expand/collapse row
+ * @param props.onOpenPnl - Callback to open P&L calculator
+ * @param props.onHide - Optional callback to hide an asset
+ * @param props.onSetEntry - Callback to set manual cost basis entry
+ * @param props.onClearEntry - Callback to clear cost basis entry
+ * @returns The holdings table component
+ */
 export function HoldingsTable({
   assets,
   allAssets,
@@ -253,7 +304,7 @@ export function HoldingsTable({
                   </td>
                   <td style={{ padding: '15px 16px', textAlign: 'right', whiteSpace: 'nowrap' }}>
                     <div className="holding-number-main" style={{ fontSize: 16, fontWeight: 800, color: 'var(--fg)', fontFamily: 'var(--font-shell-display)' }}>{fmtPrice(asset.priceUsd)}</div>
-                    <div className="holding-number-sub" style={{ fontSize: 14, color: '#f739ff', marginTop: 3, fontWeight: 700 }}>{fmtCompact(asset.pricePls)} PLS</div>
+                    <div className="holding-number-sub" style={{ fontSize: 14, color: COLOR_SCHEME.pulseChainAccent, marginTop: 3, fontWeight: 700 }}>{fmtCompact(asset.pricePls)} PLS</div>
                   </td>
                   <td className="holding-change-cell" style={{ padding: '15px 16px', textAlign: 'right', whiteSpace: 'nowrap', fontSize: 15, fontWeight: 800, color: pct >= 0 ? 'var(--accent)' : '#ef4444' }}>
                     {pct >= 0 ? '+' : '-'} {Math.abs(pct).toFixed(2)}%
@@ -266,7 +317,7 @@ export function HoldingsTable({
                     {fmtUsd(asset.valueUsd)}
                   </td>
                   <td style={{ padding: '15px 16px', textAlign: 'right', whiteSpace: 'nowrap' }}>
-                    <div className="holding-number-main holding-number-main--pls" style={{ fontSize: 18, fontWeight: 900, color: '#f739ff', fontFamily: 'var(--font-shell-display)' }}>{fmtCompact(asset.valuePls)}</div>
+                    <div className="holding-number-main holding-number-main--pls" style={{ fontSize: 18, fontWeight: 900, color: COLOR_SCHEME.pulseChainAccent, fontFamily: 'var(--font-shell-display)' }}>{fmtCompact(asset.valuePls)}</div>
                     <div className="holding-number-sub" style={{ fontSize: 13, color: 'var(--fg-muted)', marginTop: 3, fontWeight: 700 }}>PLS</div>
                   </td>
                   <td style={{ padding: '15px 16px', textAlign: 'right', whiteSpace: 'nowrap' }}>
@@ -381,7 +432,7 @@ export function HoldingsTable({
             <tr style={{ borderTop: '1px solid var(--border)' }}>
               <td colSpan={4} style={{ padding: '10px 16px', fontSize: 13, color: 'var(--fg-muted)', fontWeight: 700 }}>{footerLabel}</td>
               <td style={{ padding: '10px 16px', textAlign: 'right', fontSize: 13, fontWeight: 800, color: 'var(--fg)' }}>{fmtUsd(tableTotalUsd, 0)}</td>
-              <td style={{ padding: '10px 16px', textAlign: 'right', fontSize: 13, fontWeight: 800, color: '#f739ff' }}>{fmtCompact(tableTotalPls)} PLS</td>
+              <td style={{ padding: '10px 16px', textAlign: 'right', fontSize: 13, fontWeight: 800, color: COLOR_SCHEME.pulseChainAccent }}>{fmtCompact(tableTotalPls)} PLS</td>
               <td colSpan={3} />
             </tr>
           </tfoot>
@@ -404,7 +455,7 @@ function DetailRow({ label, value, accent, valueColor }: { label: string; value:
   return (
     <div className="asset-detail-row" style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
       <span className="asset-detail-label" style={{ fontSize: 12, color: 'var(--fg-subtle)' }}>{label}</span>
-      <span className="asset-detail-value" style={{ fontSize: 13, fontWeight: 700, color: valueColor || (accent ? '#f739ff' : 'var(--fg)'), textAlign: 'right' }}>{value}</span>
+      <span className="asset-detail-value" style={{ fontSize: 13, fontWeight: 700, color: valueColor || (accent ? COLOR_SCHEME.pulseChainAccent : 'var(--fg)'), textAlign: 'right' }}>{value}</span>
     </div>
   );
 }

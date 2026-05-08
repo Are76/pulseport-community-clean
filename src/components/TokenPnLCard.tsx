@@ -12,23 +12,32 @@ import {
 import type { Transaction, Asset } from '../types';
 
 // --- Props --------------------------------------------------------------------
+/**
+ * Props for the TokenPnLCard component.
+ */
 export interface TokenPnLCardProps {
-  /** The single token being analysed (= txAssetFilter value, never 'all') */
+  /** The token symbol being analyzed */
   symbol: string;
-  /** All transactions already filtered to this symbol (type + chain filters
-   *  may still be applied externally, but asset filter MUST match symbol) */
+
+  /** All transactions for this token (filtered externally) */
   transactions: Transaction[];
-  /** Live asset record for this token (for current balance + price) */
+
+  /** Live asset record with current balance and metadata */
   asset: Asset | undefined;
+
   /** Current USD price per token */
   priceUsd: number;
-  /** Native PLS price (to convert gas fees) */
+
+  /** PLS to USD conversion rate for gas fee calculations */
   plsPriceUsd: number;
-  /** Token logo URL (optional) */
+
+  /** Optional token logo URL for display */
   logoUrl?: string;
-  /** Optional action to refresh full swap/transaction data for more accurate P&L. */
+
+  /** Optional callback to refresh and resync swap transaction data */
   onSyncSwaps?: () => void;
-  /** Loading state for the sync action. */
+
+  /** Loading state for the sync operation */
   isSyncing?: boolean;
 }
 
@@ -105,6 +114,41 @@ function TokenLogo({ symbol, logoUrl, size = 36 }: { symbol: string; logoUrl?: s
 }
 
 // --- Main component -----------------------------------------------------------
+/**
+ * Token P&L (Profit & Loss) card component.
+ *
+ * Displays detailed P&L analysis for a single token including:
+ * - Cost basis and current value
+ * - Realized and unrealized profit/loss
+ * - Transaction breakdown (buys, sells, transfers)
+ * - Gas fee accounting
+ * - Option to sync/refresh transaction data for accuracy
+ *
+ * @example
+ * ```tsx
+ * <TokenPnLCard
+ *   symbol="HEX"
+ *   transactions={hexTransactions}
+ *   asset={hexAsset}
+ *   priceUsd={0.25}
+ *   plsPriceUsd={0.0008}
+ *   logoUrl={hexLogo}
+ *   onSyncSwaps={handleSync}
+ *   isSyncing={syncing}
+ * />
+ * ```
+ *
+ * @param props - The component props
+ * @param props.symbol - Token symbol to analyze
+ * @param props.transactions - Token transactions for P&L calculation
+ * @param props.asset - Current asset record with balance
+ * @param props.priceUsd - Current token price in USD
+ * @param props.plsPriceUsd - PLS to USD rate for gas fees
+ * @param props.logoUrl - Optional token logo URL
+ * @param props.onSyncSwaps - Optional callback to refresh swap data
+ * @param props.isSyncing - Whether sync operation is in progress
+ * @returns The P&L analysis card component
+ */
 export function TokenPnLCard({
   symbol,
   transactions,

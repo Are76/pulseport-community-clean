@@ -8,21 +8,11 @@
  * Ported from GitLab pulsechain-dashboard/useHex.jsx and converted to TypeScript.
  */
 import { useState, useEffect, useRef } from 'react';
+import { PHEX_ADDRESS, RPC_ENDPOINTS, CACHE_TTL } from '../utils/appConstants';
 
-// --- HEX contract config ------------------------------------------------------
+// --- HEX contract config & cache keys -----------------------------------------
 
-const HEX_ADDRESS = '0x2b591e99afe9f32eaa6214f7b7629768c40eeb39'; // same on both chains
-
-const PULSECHAIN_RPC_PRIMARY  = 'https://rpc-pulsechain.g4mm4.io';
-const PULSECHAIN_RPC_FALLBACK = 'https://rpc.pulsechain.com';
-const ETHEREUM_RPC_PRIMARY    = 'https://cloudflare-eth.com';
-const ETHEREUM_RPC_FALLBACK   = 'https://eth.llamarpc.com';
-
-/** How many recent days of daily data to fetch (enough for a rolling average). */
-const FETCH_DAYS = 30;
-
-/** Cache TTL in milliseconds - re-fetch once per hour. */
-const CACHE_TTL_MS = 60 * 60 * 1000;
+const FETCH_DAYS = 30; // How many recent days of daily data to fetch
 
 const CACHE_KEY_PULSE = 'hex_daily_data_pulse';
 const CACHE_KEY_ETH   = 'hex_daily_data_eth';
@@ -58,7 +48,7 @@ async function fetchCurrentDay(rpcUrl: string): Promise<number> {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       jsonrpc: '2.0', id: 1, method: 'eth_call',
-      params: [{ to: HEX_ADDRESS, data: '0x5c9302c9' }, 'latest'],
+      params: [{ to: PHEX_ADDRESS, data: '0x5c9302c9' }, 'latest'],
     }),
     signal: AbortSignal.timeout(10_000),
   });
@@ -88,7 +78,7 @@ async function fetchDailyDataRange(
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       jsonrpc: '2.0', id: 2, method: 'eth_call',
-      params: [{ to: HEX_ADDRESS, data }, 'latest'],
+      params: [{ to: PHEX_ADDRESS, data }, 'latest'],
     }),
     signal: AbortSignal.timeout(15_000),
   });
@@ -156,7 +146,7 @@ function tryLoadCache(key: string): HexDayData[] | null {
     const raw = localStorage.getItem(key);
     if (!raw) return null;
     const parsed: CachedData = JSON.parse(raw);
-    if (Date.now() - parsed.ts > CACHE_TTL_MS) return null;
+    if (Date.now() - parsed.ts > CACHE_TTL.HEX_DAILY_DATA) return null;
     return parsed.days;
   } catch {
     return null;
@@ -227,8 +217,8 @@ export function useHexDailyData(): HexDailyDataResult {
     setError(null);
 
     Promise.allSettled([
-      fetchChainDailyData(PULSECHAIN_RPC_PRIMARY, PULSECHAIN_RPC_FALLBACK),
-      fetchChainDailyData(ETHEREUM_RPC_PRIMARY,   ETHEREUM_RPC_FALLBACK),
+      fetchChainDailyData(RPC_ENDPOINTS.PULSECHAIN_PRIMARY, RPC_ENDPOINTS.PULSECHAIN_FALLBACK),
+      fetchChainDailyData(RPC_ENDPOINTS.ETHEREUM_PRIMARY,   RPC_ENDPOINTS.ETHEREUM_FALLBACK),
     ]).then(([pulseRes, ethRes]) => {
       // Use a local variable to track whether an error was already set,
       // avoiding reliance on the stale `error` state value from closure.

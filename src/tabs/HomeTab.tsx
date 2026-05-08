@@ -4,6 +4,7 @@ import { ArrowRight, History, TrendingUp } from 'lucide-react';
 import type { Asset, Wallet, PortfolioSummary, PortfolioPriceCard } from '../types';
 import { fmtCompact, fmtPrice, fmtMarket } from '../utils/formatting';
 import { PulseBoardFeed } from '../components/PulseBoardFeed';
+import { MIN_INVESTMENT_THRESHOLD, STATIC_LOGOS, TIME_WINDOWS } from '../utils/appConstants';
 
 type FrontMarketPeriod = '5m' | '1h' | '6h' | '24h' | '7d';
 
@@ -19,15 +20,6 @@ interface HomeTabProps {
   openMarketWatch: (initialSearch: string) => void;
   getTokenLogoUrl: (asset: Asset) => string;
 }
-
-const MIN_INVESTMENT_THRESHOLD = 100;
-const STATIC_LOGOS: Record<string, string> = {
-  '0x2fa878ab3f87cc1c9737fc071108f904c0b0c95d': 'https://tokens.app.pulsex.com/images/tokens/0x2fa878Ab3F87CC1C9737Fc071108F904c0B0C95d.png', // INC
-  '0xf6f8db0aba00007681f8faf16a0fda1c9b030b11': 'https://cdn.dexscreener.com/cms/images/ODHYYN7yppDHnd6u?width=64&height=64&fit=crop&quality=95&format=auto', // PRVX
-  '0xe33a5ae21f93acec5cfc0b7b0fdbb65a0f0be5cc': 'https://tokens.app.pulsex.com/images/tokens/0xE33A5AE21F93aceC5CfC0b7b0FDBB65A0f0Be5cC.png', // MOST
-  '0xefd766ccb38eaf1dfd701853bfce31359239f305': 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0x6B175474E89094C44Da98b954EedeAC495271d0F/logo.png', // pDAI (bridged DAI) - never use golden CoinGecko DAI coin here
-  '0x6b175474e89094c44da98b954eedeac495271d0f': 'https://tokens.app.pulsex.com/images/tokens/0x6B175474E89094C44Da98b954EedeAC495271d0F.png', // pDAI system copy (fork of Ethereum DAI) - prevents CoinGecko golden-coin from replacing this on reload
-};
 
 const CHAIN_COLORS: Record<string, string> = {
   pulsechain: '#00FF9F',

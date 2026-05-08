@@ -568,13 +568,14 @@ export function MarketWatchModal({ theme, onClose, initialSearch = '' }: Props) 
             <button
               className={`mwm-icon-btn${showImport ? ' mwm-icon-btn-active' : ''}`}
               onClick={() => { setShowImport(v => !v); setImportError(null); }}
+              aria-label="Import DexScreener watchlist link"
               title="Import DexScreener watchlist link"
             >
-              <Link2 size={15} />
+              <Link2 size={15} aria-hidden="true" />
             </button>
             {!watchlistPairs && (
-              <button className="mwm-icon-btn" onClick={fetchData} disabled={loading} title="Refresh">
-                <RefreshCw size={15} className={loading ? 'mwm-spin' : ''} />
+              <button className="mwm-icon-btn" onClick={fetchData} disabled={loading} aria-label="Refresh watchlist data" title="Refresh">
+                <RefreshCw size={15} className={loading ? 'mwm-spin' : ''} aria-hidden="true" />
               </button>
             )}
             <button className="mwm-close-btn" onClick={onClose} aria-label="Close">

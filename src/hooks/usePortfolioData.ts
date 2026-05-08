@@ -18,13 +18,41 @@ export function buildAssetByKey(assets: Asset[]): Map<string, Asset> {
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
+/**
+ * Processed portfolio data including filtered assets, transactions, and lookup map.
+ */
 export interface PortfolioData {
+  /** Filtered and enriched assets after applying user preferences */
   currentAssets: Asset[];
+
+  /** Transactions with normalized asset symbols for matching */
   currentTransactions: (Transaction & { assetUpper: string; counterAssetUpper?: string })[];
+
+  /** Map of "chain:symbol" to Asset for quick lookups */
   assetByKey: Map<string, Asset>;
 }
 
 // ── Hook ──────────────────────────────────────────────────────────────────────
+
+/**
+ * Hook for accessing processed portfolio data from context.
+ *
+ * Retrieves and filters portfolio assets and transactions based on user preferences
+ * (hidden tokens, dust threshold, spam filtering, manual entries).
+ * Handles special cases like eHEX pricing and custom coins.
+ * Provides indexed asset lookup for performance.
+ *
+ * @example
+ * ```tsx
+ * const { currentAssets, currentTransactions, assetByKey } = usePortfolioData();
+ * const asset = assetByKey.get('pulsechain:HEX');
+ * ```
+ *
+ * @returns Portfolio data with filtered assets and transactions
+ * @returns {Asset[]} returns.currentAssets - Filtered assets with manual entries
+ * @returns {Transaction[]} returns.currentTransactions - Transactions with normalized symbols
+ * @returns {Map<string, Asset>} returns.assetByKey - Index map for asset lookups
+ */
 
 const MOCK_ASSETS: Asset[] = [];
 const MOCK_TRANSACTIONS: Transaction[] = [];

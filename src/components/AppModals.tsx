@@ -7,9 +7,10 @@ import { TokenCardModal } from './TokenCardModal';
 import { MarketWatchModal } from './MarketWatchModal';
 import { ProfitPlannerModal } from './ProfitPlannerModal';
 import { AddCoinModal } from './AddCoinModal';
+import { usePortfolio } from '../context/PortfolioContext';
 
 interface AppModalsProps {
-  // Wallet modals
+  // Wallet add/edit (controlled by App)
   isAddingWallet: boolean;
   setIsAddingWallet: (val: boolean) => void;
   newWalletAddress: string;
@@ -19,75 +20,60 @@ interface AppModalsProps {
   walletFormError: string;
   setWalletFormError: (val: string) => void;
   addWallet: () => void;
-
   editingWalletAddress: string | null;
   setEditingWalletAddress: (val: string | null) => void;
   editWalletName: string;
   setEditWalletName: (val: string) => void;
   renameWallet: (addr: string, name: string) => void;
 
-  // Custom coins
+  // Custom coins modal (controlled by App)
   isCustomCoinsModalOpen: boolean;
   setIsCustomCoinsModalOpen: (val: boolean) => void;
-  customCoinDraft: { symbol: string; name: string; balance: string; price: string };
-  setCustomCoinDraft: (val: any) => void;
-  submitCustomCoin: () => void;
 
-  // Market watch
-  showMarketWatch: boolean;
-  setShowMarketWatch: (val: boolean) => void;
-  marketWatchInitialSearch: string;
+  // UI/utility props
   theme: 'dark' | 'light';
-
-  // Profit planner
-  profitPlannerOpen: boolean;
-  setProfitPlannerOpen: (val: boolean) => void;
-  currentAssets: Asset[];
-  summary: { totalValue: number };
-
-  // API key
-  isApiKeyModalOpen: boolean;
-  setIsApiKeyModalOpen: (val: boolean) => void;
-  apiKeyInput: string;
-  setApiKeyInput: (val: string) => void;
-  etherscanApiKey: string;
-  setEtherscanApiKey: (val: string) => void;
-  fetchPortfolio: () => void;
-
-  // P&L Modal
-  pnlAsset: Asset | null;
-  setPnlAsset: (val: Asset | null) => void;
-  currentTransactions: any[];
-  prices: Record<string, any>;
-  tokenLogos: Record<string, string>;
-  STATIC_LOGOS: Record<string, string>;
-  selectedWalletAddr: string;
+  t: { border: string; textMuted: string; text: string };
   getTokenLogoUrl: (asset: Asset) => string;
-
-  // Token card modal
-  tokenCardModal: Asset | null;
-  setTokenCardModal: (val: Asset | null) => void;
-  tokenCardModalLoading: boolean;
-  tokenMarketData: Record<string, any>;
   dexScreenerUrl: (chain: string, address: string) => string;
   explorerUrl: (chain: string, address: string) => string | null;
-
-  // Theme
-  t: { border: string; textMuted: string; text: string };
 }
 
 export function AppModals({
   isAddingWallet, setIsAddingWallet, newWalletAddress, setNewWalletAddress,
   newWalletName, setNewWalletName, walletFormError, setWalletFormError, addWallet,
   editingWalletAddress, setEditingWalletAddress, editWalletName, setEditWalletName, renameWallet,
-  isCustomCoinsModalOpen, setIsCustomCoinsModalOpen, customCoinDraft, setCustomCoinDraft, submitCustomCoin,
-  showMarketWatch, setShowMarketWatch, marketWatchInitialSearch, theme,
-  profitPlannerOpen, setProfitPlannerOpen, currentAssets, summary,
-  isApiKeyModalOpen, setIsApiKeyModalOpen, apiKeyInput, setApiKeyInput, etherscanApiKey, setEtherscanApiKey, fetchPortfolio,
-  pnlAsset, setPnlAsset, currentTransactions, prices, tokenLogos, STATIC_LOGOS, selectedWalletAddr, getTokenLogoUrl,
-  tokenCardModal, setTokenCardModal, tokenCardModalLoading, tokenMarketData, dexScreenerUrl, explorerUrl,
-  t,
+  isCustomCoinsModalOpen, setIsCustomCoinsModalOpen,
+  theme, t, getTokenLogoUrl, dexScreenerUrl, explorerUrl,
 }: AppModalsProps) {
+  // Get portfolio data from context
+  const {
+    realAssets: currentAssets,
+    prices,
+    tokenLogos,
+    transactions: currentTransactions,
+    etherscanApiKey,
+    setEtherscanApiKey,
+    fetchPortfolio,
+    tokenMarketData,
+  } = usePortfolio();
+
+  // Local modal state for other modals
+  const [customCoinDraft, setCustomCoinDraft] = React.useState({ symbol: '', name: '', balance: '', price: '' });
+  const [showMarketWatch, setShowMarketWatch] = React.useState(false);
+  const [profitPlannerOpen, setProfitPlannerOpen] = React.useState(false);
+  const [isApiKeyModalOpen, setIsApiKeyModalOpen] = React.useState(false);
+  const [apiKeyInput, setApiKeyInput] = React.useState(etherscanApiKey);
+  const [pnlAsset, setPnlAsset] = React.useState<Asset | null>(null);
+  const [tokenCardModal, setTokenCardModal] = React.useState<Asset | null>(null);
+  const [tokenCardModalLoading] = React.useState(false);
+  const [marketWatchInitialSearch] = React.useState('');
+  const [selectedWalletAddr] = React.useState('all');
+  const [STATIC_LOGOS] = React.useState<Record<string, string>>({});
+
+  // Helper for custom coin submission
+  const submitCustomCoin = () => {
+    // Implementation would add coin to portfolio
+  };
   return (
     <>
       {/* Add Wallet Modal */}

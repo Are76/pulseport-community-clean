@@ -1,6 +1,7 @@
 import React, { useEffect, useCallback } from 'react';
 import { X, Copy, ExternalLink, TrendingUp, TrendingDown, Globe, Twitter, Send } from 'lucide-react';
 import type { Asset } from '../types';
+import { TOAST_DURATIONS } from '../utils/appConstants';
 
 // -- helpers -----------------------------------------------------------------
 
@@ -133,7 +134,7 @@ export function TokenCardModal({
     if (!addr) return;
     navigator.clipboard.writeText(addr);
     setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
+    setTimeout(() => setCopied(false), TOAST_DURATIONS.COPY_FEEDBACK);
   };
 
   const shortAddr = addr && addr !== 'native'
@@ -191,19 +192,19 @@ export function TokenCardModal({
           <div className="tcm-ca-row">
             <span style={{ fontSize: 12, color: 'var(--fg-subtle)', fontFamily: 'var(--font-shell-display)', fontWeight: 700, letterSpacing: '-0.01em' }}>{shortAddr}</span>
             <div style={{ display: 'flex', gap: 6 }}>
-              <button className="tcm-icon-btn" onClick={copyAddr} title="Copy contract address">
+              <button className="tcm-icon-btn" onClick={copyAddr} aria-label={copied ? "Copied contract address" : "Copy contract address"} title="Copy contract address">
                 {copied
                   ? <span style={{ fontSize: 11, color: green, fontWeight: 700 }}>✓ Copied</span>
-                  : <><Copy size={13} /> <span style={{ fontSize: 11 }}>Contract Address</span></>}
+                  : <><Copy size={13} aria-hidden="true" /> <span style={{ fontSize: 11 }}>Contract Address</span></>}
               </button>
               {explorerUrl && (
-                <a href={explorerUrl} target="_blank" rel="noopener noreferrer" className="tcm-icon-btn" title="View on explorer">
-                  <ExternalLink size={13} /> <span style={{ fontSize: 11 }}>Explorer</span>
+                <a href={explorerUrl} target="_blank" rel="noopener noreferrer" className="tcm-icon-btn" aria-label="View contract on blockchain explorer" title="View on explorer">
+                  <ExternalLink size={13} aria-hidden="true" /> <span style={{ fontSize: 11 }}>Explorer</span>
                 </a>
               )}
               {dexScreenerUrl && (
-                <a href={dexScreenerUrl} target="_blank" rel="noopener noreferrer" className="tcm-icon-btn tcm-ds-btn" title="View on DexScreener">
-                  <ExternalLink size={13} /> <span style={{ fontSize: 11 }}>DexScreener</span>
+                <a href={dexScreenerUrl} target="_blank" rel="noopener noreferrer" className="tcm-icon-btn tcm-ds-btn" aria-label="View token on DexScreener" title="View on DexScreener">
+                  <ExternalLink size={13} aria-hidden="true" /> <span style={{ fontSize: 11 }}>DexScreener</span>
                 </a>
               )}
             </div>

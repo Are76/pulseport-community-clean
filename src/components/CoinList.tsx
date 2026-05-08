@@ -1,43 +1,112 @@
 ﻿import React from 'react';
 import { Calculator, ChevronDown, ChevronUp, Copy, ExternalLink, MinusCircle, PlusCircle } from 'lucide-react';
+import { CHAIN_COLORS } from '../utils/appConstants';
 
+/**
+ * A single coin/asset item in the CoinList.
+ */
 export interface CoinListItem {
+  /** Unique identifier for the coin */
   id: string;
+
+  /** Full name of the coin (e.g., "Ethereum") */
   name: string;
+
+  /** Symbol/ticker (e.g., "ETH") */
   symbol: string;
+
+  /** Blockchain network (e.g., "ethereum", "pulsechain") */
   chain: string;
+
+  /** Optional logo/icon URL */
   logoUrl?: string;
+
+  /** Current price in USD */
   priceUsd: number;
+
+  /** Optional price in PLS */
   pricePls?: number;
+
+  /** 24-hour price change percentage */
   change24h?: number;
+
+  /** User's token balance */
   balance: number;
+
+  /** Total value in USD (balance * priceUsd) */
   valueUsd: number;
+
+  /** Optional total value in PLS */
   valuePls?: number;
+
+  /** Optional liquidity in USD */
   liquidityUsd?: number;
+
+  /** Optional 24-hour volume in USD */
   volume24hUsd?: number;
+
+  /** Optional number of liquidity pools */
   pools?: number | null;
+
+  /** Optional cost basis in USD for P&L calculation */
   costBasisUsd?: number;
+
+  /** Optional profit/loss in USD */
   pnlUsd?: number;
+
+  /** Optional profit/loss percentage */
   pnlPercent?: number;
+
+  /** Optional smart contract address */
   contractAddress?: string;
+
+  /** Optional metadata string */
   meta?: string;
+
+  /** Optional array of tags for categorization */
   tags?: string[];
 }
 
 type SortField = 'priceUsd' | 'change24h' | 'valueUsd';
 
+/**
+ * Props for the CoinList component.
+ */
 interface CoinListProps {
+  /** Array of coin items to display */
   items: CoinListItem[];
+
+  /** Display variant: 'compact' for minimal info or 'detailed' for full info (default: 'detailed') */
   variant?: 'compact' | 'detailed';
+
+  /** Custom message when the list is empty (default: 'No assets found.') */
   emptyMessage?: string;
+
+  /** ID of currently expanded row (for compact variant) */
   expandedId?: string | null;
+
+  /** Callback when expand/collapse button is clicked */
   onToggleExpanded?: (id: string) => void;
+
+  /** Callback when a row is clicked */
   onRowClick?: (item: CoinListItem) => void;
+
+  /** Optional render function for expanded row content */
   renderExpanded?: (item: CoinListItem) => React.ReactNode;
+
+  /** Callback to copy contract address to clipboard */
   onCopyContract?: (item: CoinListItem) => void;
+
+  /** Callback to open external link (explorer, chart, etc.) */
   onOpenExternal?: (item: CoinListItem) => void;
+
+  /** Callback to open calculator for the coin */
   onCalculator?: (item: CoinListItem) => void;
+
+  /** Callback to add coin to watchlist or portfolio */
   onAdd?: (item: CoinListItem) => void;
+
+  /** Callback to remove coin from list */
   onRemove?: (item: CoinListItem) => void;
 }
 
@@ -60,7 +129,7 @@ const formatCompactUsd = (value?: number) => {
 };
 const formatAmount = (value: number) => value.toLocaleString('en-US', { maximumFractionDigits: value >= 1000 ? 0 : 4 });
 const formatPercent = (value = 0) => `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`;
-const chainAccent = (chain: string) => chain === 'pulsechain' ? '#f739ff' : chain === 'ethereum' ? '#627EEA' : '#0052ff';
+const chainAccent = (chain: string) => CHAIN_COLORS[chain] || CHAIN_COLORS.base;
 const FALLBACK_LOGOS: Record<string, string> = {
   PLS: 'https://tokens.app.pulsex.com/images/tokens/0xA1077a294dDE1B09bB078844df40758a5D0f9a27.png',
   WPLS: 'https://tokens.app.pulsex.com/images/tokens/0xA1077a294dDE1B09bB078844df40758a5D0f9a27.png',
@@ -93,6 +162,39 @@ function formatChainLabel(chain: string) {
   return chain.charAt(0).toUpperCase() + chain.slice(1);
 }
 
+/**
+ * CoinList component for displaying a table of cryptocurrency assets.
+ *
+ * Shows price, balance, value, and performance metrics for a list of coins.
+ * Supports two variants: compact (expandable rows) or detailed (all info visible).
+ * Includes actions like copying addresses, opening explorers, and managing portfolio items.
+ *
+ * @example
+ * ```tsx
+ * <CoinList
+ *   items={coins}
+ *   variant="detailed"
+ *   onRowClick={(coin) => openCoinDetail(coin)}
+ *   onAdd={(coin) => addToWatchlist(coin)}
+ *   onRemove={(coin) => removeFromWatchlist(coin)}
+ * />
+ * ```
+ *
+ * @param props - The component props
+ * @param props.items - Array of coin items to display
+ * @param props.variant - Display mode: 'compact' or 'detailed' (default: 'detailed')
+ * @param props.emptyMessage - Message when list is empty (default: 'No assets found.')
+ * @param props.expandedId - ID of expanded row in compact mode
+ * @param props.onToggleExpanded - Callback when expand/collapse is clicked
+ * @param props.onRowClick - Callback when a row is clicked
+ * @param props.renderExpanded - Render function for expanded row content
+ * @param props.onCopyContract - Callback to copy contract address
+ * @param props.onOpenExternal - Callback to open external links
+ * @param props.onCalculator - Callback to open calculator
+ * @param props.onAdd - Callback to add coin to portfolio
+ * @param props.onRemove - Callback to remove coin from list
+ * @returns The coin list component
+ */
 export function CoinList({
   items,
   variant = 'detailed',
@@ -153,19 +255,12 @@ export function CoinList({
           const canExpand = Boolean(renderExpanded && onToggleExpanded);
           return (
             <div key={item.id} className={`coin-list-row${isExpanded ? ' is-expanded' : ''}`}>
-              <div
+              <button
                 className="coin-list-row-main"
-                role="button"
-                tabIndex={0}
+                type="button"
                 aria-expanded={canExpand ? isExpanded : undefined}
+                aria-label={`${item.name} (${item.symbol}) - ${formatUsd(item.valueUsd)} ${canExpand ? (isExpanded ? 'collapse' : 'expand') : ''}`}
                 onClick={() => canExpand ? onToggleExpanded(item.id) : onRowClick?.(item)}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter' || event.key === ' ') {
-                    event.preventDefault();
-                    if (canExpand) onToggleExpanded(item.id);
-                    else onRowClick?.(item);
-                  }
-                }}
                 >
                   <div className="coin-list-cell coin-list-cell--asset">
                     <CoinListLogo logoUrl={item.logoUrl} symbol={item.symbol} />
@@ -251,7 +346,7 @@ export function CoinList({
                     <small className="coin-list-subvalue">{formatAmount(item.balance)} · <span className={dayTone}>{formatPercent(item.change24h)}</span></small>
                   </div>
                 )}
-              </div>
+              </button>
               {isExpanded && renderExpanded ? <div className="coin-list-expanded">{renderExpanded(item)}</div> : null}
             </div>
           );

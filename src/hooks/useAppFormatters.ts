@@ -1,5 +1,25 @@
 import { useCallback, useMemo } from 'react';
 
+/**
+ * Hook for formatting numbers, prices, and UI colors based on theme.
+ *
+ * Provides formatter functions for display values and theme-aware color constants.
+ * All formatters are memoized callbacks to prevent unnecessary re-renders.
+ *
+ * @example
+ * ```tsx
+ * const { fmtBigNum, fmtDec, fmtTok, themeColors } = useAppFormatters('dark');
+ * return <span>{fmtBigNum(1234567)}</span>;
+ * ```
+ *
+ * @param theme - Current theme ('light' or 'dark') for color selection
+ * @returns Object with formatter functions and theme colors
+ * @returns {function} returns.fmtBigNum - Format integer with thousand separators
+ * @returns {function} returns.fmtDec - Format decimal number with specified precision
+ * @returns {function} returns.fmtTok - Format token amount with M/K suffixes
+ * @returns {function} returns.exportCSV - Download data as CSV file
+ * @returns {object} returns.themeColors - Theme-aware color constants for UI
+ */
 export function useAppFormatters(theme: 'light' | 'dark') {
   const fmtBigNum = useCallback((n: number) => {
     return !isFinite(n) ? '0' : Math.round(n).toLocaleString('en-US').replace(/,/g, ' ');

@@ -11,8 +11,25 @@ const formatUsd = (value: number) => `$${value.toLocaleString('en-US', { maximum
 export function MyInvestmentsAssetPanel({ row, onClose, onOpenTransactions }: MyInvestmentsAssetPanelProps) {
   const pnlTone = row.pnlUsd >= 0 ? 'stat-value--positive' : 'stat-value--negative';
 
+  // Mobile-first responsive: full-screen on mobile, right sidebar on desktop
+  const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 768;
+  const sidebarStyle: React.CSSProperties = {
+    position: 'fixed',
+    right: isDesktop ? 0 : 'auto',
+    top: isDesktop ? 0 : '64px',
+    bottom: 0,
+    left: isDesktop ? 'auto' : 0,
+    width: isDesktop ? '450px' : '100%',
+    background: 'var(--bg-void)',
+    borderLeft: isDesktop ? '1px solid var(--border)' : 'none',
+    borderTop: !isDesktop ? '1px solid var(--border)' : 'none',
+    boxShadow: isDesktop ? '-4px 0 12px rgba(0,0,0,0.15)' : 'none',
+    zIndex: 50,
+    display: 'flex',
+    flexDirection: 'column',
+  } as const;
   return (
-    <aside style={{ position: 'fixed', right: 0, top: 0, bottom: 0, width: '100%', maxWidth: '450px', background: 'var(--bg-void)', borderLeft: '1px solid var(--border)', boxShadow: '-4px 0 12px rgba(0,0,0,0.15)', zIndex: 50, display: 'flex', flexDirection: 'column' }} aria-label={`${row.symbol} details`}>
+    <aside style={sidebarStyle} aria-label={`${row.symbol} details`}>
       <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
           <p className="stat-label" style={{ marginBottom: '0.5rem' }}>Holdings Detail</p>

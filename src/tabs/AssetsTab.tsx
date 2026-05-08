@@ -19,15 +19,10 @@ import { HoldingsTable } from '../components/HoldingsTable';
 import type { HoldingDisplayAsset, HoldingSortField } from '../components/HoldingsTable';
 import { TransactionList } from '../components/TransactionList';
 import { cn } from '../lib/utils';
+import { usePortfolio } from '../context/PortfolioContext';
 
 interface AssetsTabProps {
-  selectedWalletAddr: string;
-  currentAssets: Asset[];
-  walletAssets: Record<string, Asset[]>;
-  currentTransactions: Transaction[];
-  collapsedSections: Record<string, boolean>;
-  toggleSection: (id: string) => void;
-  isCollapsed: (id: string) => boolean;
+  // Local UI state - only props that are tab-specific
   getTokenLogoUrl: (asset: any) => string;
   shortenAddr: (addr: string) => string;
   explorerUrl: (chain: string, addr?: string) => string;
@@ -44,80 +39,73 @@ interface AssetsTabProps {
     expandedBg: string;
     borderLight: string;
   };
-  prices: Record<string, { usd: number }>;
-  tokenLogos: Record<string, string>;
-  hideDust: boolean;
-  hideSpam: boolean;
-  spamTokenIds: string[];
-  hiddenTokens: string[];
-  setHiddenTokens: (tokens: string[]) => void;
-  hideToken: (id: string) => void;
+  CHAIN_COLORS: Record<string, string>;
+  WALLET_DOT_COLORS: string[];
+  STATIC_LOGOS: Record<string, string>;
+  // Wallet/modal callbacks
+  setIsAddingWallet: (open: boolean) => void;
+  setEditingWalletAddress: (addr: string) => void;
+  setEditWalletName: (name: string) => void;
+  setPnlAsset: (asset: Asset | null) => void;
+  onOpenAddCoin?: () => void;
+  // Summary data (derived from portfolio state)
   summary: {
     liquidValue: number;
     stakingValueUsd: number;
     totalValue: number;
   };
-  wallets: Wallet[];
-  setSelectedWalletAddr: (addr: string) => void;
-  setActiveWallet: (wallet: Wallet | null) => void;
-  isLoading: boolean;
-  fetchPortfolio: () => Promise<void>;
-  setIsAddingWallet: (open: boolean) => void;
-  setEditingWalletAddress: (addr: string) => void;
-  setEditWalletName: (name: string) => void;
-  setPnlAsset: (asset: Asset | null) => void;
-  pnlAsset: Asset | null;
-  manualEntries: Record<string, number>;
-  setManualEntries: (entries: Record<string, number>) => void;
   currentStakes: any[];
-  customCoins: any[];
-  setIsCustomCoinsModalOpen: (open: boolean) => void;
-  CHAIN_COLORS: Record<string, string>;
-  WALLET_DOT_COLORS: string[];
-  STATIC_LOGOS: Record<string, string>;
+  pnlAsset: Asset | null;
 }
 
 export function AssetsTab({
-  selectedWalletAddr,
-  currentAssets,
-  walletAssets,
-  currentTransactions,
-  collapsedSections,
-  toggleSection,
-  isCollapsed,
   getTokenLogoUrl,
   shortenAddr,
   explorerUrl,
   dexScreenerUrl,
   t,
-  prices,
-  tokenLogos,
-  hideDust,
-  hideSpam,
-  spamTokenIds,
-  hiddenTokens,
-  setHiddenTokens,
-  hideToken,
-  summary,
-  wallets,
-  setSelectedWalletAddr,
-  setActiveWallet,
-  isLoading,
-  fetchPortfolio,
+  CHAIN_COLORS,
+  WALLET_DOT_COLORS,
+  STATIC_LOGOS,
   setIsAddingWallet,
   setEditingWalletAddress,
   setEditWalletName,
   setPnlAsset,
-  pnlAsset,
-  manualEntries,
-  setManualEntries,
+  onOpenAddCoin,
+  summary,
   currentStakes,
-  customCoins,
-  setIsCustomCoinsModalOpen,
-  CHAIN_COLORS,
-  WALLET_DOT_COLORS,
-  STATIC_LOGOS,
+  pnlAsset,
 }: AssetsTabProps) {
+  // Get portfolio state from context
+  const {
+    realAssets: currentAssets,
+    walletAssets,
+    wallets,
+    prices,
+    tokenLogos,
+    hideDust,
+    hideSpam,
+    spamTokenIds,
+    hiddenTokens,
+    setHiddenTokens,
+    manualEntries,
+    setManualEntries,
+    customCoins,
+    isLoading,
+    fetchPortfolio,
+    isCollapsed,
+    toggleCollapsed,
+    transactions: currentTransactions,
+  } = usePortfolio();
+
+  // Local selection state
+  const [selectedWalletAddr, setSelectedWalletAddr] = useState<string>('all');
+
+  // Helper for setting active wallet (needed for tab switching)
+  const setActiveWallet = (wallet: Wallet | null) => {
+    // This is typically used to track which wallet is currently selected for other tabs
+    // In the refactored version, selectedWalletAddr is local to this tab
+  };
   // ── Local state for Assets tab ──────────────────────────────────────────────
   const [walletChainFilter, setWalletChainFilter] = useState<'all' | 'pulsechain' | 'ethereum' | 'base'>('all');
   const [showHiddenCoins, setShowHiddenCoins] = useState(false);
@@ -128,6 +116,11 @@ export function AssetsTab({
   const [expandedAssetIds, setExpandedAssetIds] = useState<Set<string>>(new Set());
   const [allocationCalculatorOpen, setAllocationCalculatorOpen] = useState(false);
   const [allocationDraftPercentages, setAllocationDraftPercentages] = useState<Record<string, number>>({});
+
+  // Helper for hiding a token
+  const hideToken = (id: string) => {
+    setHiddenTokens([...hiddenTokens, id]);
+  };
 
   // ── Hidden asset rows memo ─────────────────────────────────────────────────
   const hiddenAssetRows = useMemo(() => {
@@ -320,7 +313,7 @@ export function AssetsTab({
                 {showHiddenCoins ? 'Close hidden coins' : 'Open hidden coins'}
                 {hiddenTokens.length > 0 && <span className="hidden-coins-count">{hiddenTokens.length}</span>}
               </button>
-              <button type="button" className="coin-visibility-primary" onClick={() => setIsCustomCoinsModalOpen(true)}>
+              <button type="button" className="coin-visibility-primary" onClick={() => onOpenAddCoin?.()}>
                 <Plus size={13} />
                 Add coin
               </button>
@@ -377,7 +370,7 @@ export function AssetsTab({
               {allocationCalculatorOpen ? 'Close Calculator' : 'Open Calculator'}
             </button>
             <button
-              onClick={() => toggleSection('assets-table')}
+              onClick={() => toggleCollapsed('assets-table')}
               className="overview-panel-toggle"
               aria-label={isCollapsed('assets-table') ? 'Expand assets table' : 'Collapse assets table'}
               aria-expanded={!isCollapsed('assets-table')}

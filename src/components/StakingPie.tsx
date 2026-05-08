@@ -2,11 +2,20 @@ import React from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts';
 import type { HexStake } from '../types';
 
+/**
+ * Props for the StakingPie component.
+ */
 interface StakingPieProps {
+  /** Array of HEX staking positions */
   stakes: HexStake[];
+
+  /** Current HEX to USD exchange rate */
   hexUsdPrice: number;
 }
 
+/**
+ * Internal data structure for staking visualization.
+ */
 interface WalletStakingData {
   label: string;
   tShares: number;
@@ -17,6 +26,22 @@ interface WalletStakingData {
   count: number;
 }
 
+/**
+ * Pie chart component for visualizing HEX staking distribution across wallets.
+ *
+ * Shows the proportion of total staked HEX per wallet with colors for visual distinction.
+ * Clicking on a segment selects it and displays detailed information.
+ *
+ * @example
+ * ```tsx
+ * <StakingPie stakes={userStakes} hexUsdPrice={0.15} />
+ * ```
+ *
+ * @param props - The component props
+ * @param props.stakes - Array of HEX staking positions
+ * @param props.hexUsdPrice - Current HEX price in USD
+ * @returns The staking pie chart component
+ */
 export function StakingPie({ stakes, hexUsdPrice }: StakingPieProps) {
   const [activeIndex, setActiveIndex] = React.useState(0);
   if (!stakes || stakes.length === 0) return null;

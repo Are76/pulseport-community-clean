@@ -2,6 +2,23 @@ import React from 'react';
 import { Sun, Moon } from 'lucide-react';
 import { useTheme } from '../hooks/useTheme';
 
+/**
+ * Theme switcher button component that toggles between light and dark modes.
+ *
+ * A small button that displays the current theme and toggles between light and dark modes.
+ * Uses icons (sun for light mode, moon for dark mode) for intuitive visual feedback.
+ * Integrates with the useTheme hook to manage theme state globally.
+ *
+ * @example
+ * ```tsx
+ * // In header
+ * <ThemeSwitcher className="ml-2" />
+ * ```
+ *
+ * @param props - Component props
+ * @param props.className - Optional CSS class name for custom styling
+ * @returns The theme switcher button component
+ */
 export const ThemeSwitcher: React.FC<{ className?: string }> = ({ className = '' }) => {
   const { theme, toggleTheme } = useTheme();
 

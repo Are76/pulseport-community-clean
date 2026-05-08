@@ -8,9 +8,7 @@
  * Ported from GitLab pulsechain-dashboard/useTokenSearch.jsx and converted to TypeScript.
  */
 import { useState, useEffect, useRef } from 'react';
-
-const WPLS_ADDRESS  = '0xa1077a294dde1b09bb078844df40758a5d0f9a27';
-const MIN_WPLS_RESERVE = 10_000_000; // raw WPLS units (not normalised)
+import { WPLS_ADDRESS, MIN_WPLS_RESERVE } from '../utils/appConstants';
 
 const SUBGRAPH_V1 = 'https://graph.pulsechain.com/subgraphs/name/pulsechain/pulsex';
 const SUBGRAPH_V2 = 'https://graph.pulsechain.com/subgraphs/name/pulsechain/pulsex-v2';

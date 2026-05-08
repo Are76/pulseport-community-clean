@@ -14,6 +14,7 @@ interface HistoryTabProps {
   collapsedSections: Record<string, boolean>;
   toggleSection: (id: string) => void;
   isCollapsed: (id: string) => boolean;
+  isLoading?: boolean;
   t: {
     green: string;
     red: string;
@@ -27,6 +28,7 @@ export function HistoryTab({
   collapsedSections,
   toggleSection,
   isCollapsed,
+  isLoading = false,
   t,
 }: HistoryTabProps) {
   const { wallets, prices, hiddenTxIds, setHiddenTxIds, tokenLogos } = usePortfolio();
@@ -414,6 +416,7 @@ export function HistoryTab({
             showHidden={showHiddenTxs}
             onFilterByAsset={handleFilterByAssetSwap}
             emptyMessage="No swaps found for these filters."
+            isLoading={isLoading && currentTransactions.length === 0}
           />
         </div>
       </div>

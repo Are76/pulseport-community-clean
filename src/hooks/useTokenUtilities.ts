@@ -4,6 +4,26 @@ import { STATIC_LOGOS, ETH_HEX_ADDR, EHEX_PULSECHAIN_ADDR } from '../utils/appCo
 import { TOKENS } from '../constants';
 import { getAddress } from 'viem';
 
+/**
+ * Hook providing token utility functions for logos, explorers, and DEX links.
+ *
+ * Offers memoized functions to generate URLs for blockchain explorers and DexScreener,
+ * and resolve token logo URLs from multiple sources with fallbacks.
+ *
+ * @example
+ * ```tsx
+ * const { getTokenLogoUrl, explorerUrl, dexScreenerUrl } = useTokenUtilities(prices);
+ * const logo = getTokenLogoUrl(hexAsset);
+ * const scanUrl = explorerUrl('pulsechain', hexAddress);
+ * ```
+ *
+ * @param prices - Token price data from market API
+ * @returns Object with utility functions
+ * @returns {function} returns.getTokenLogoUrl - Get logo URL for an asset
+ * @returns {function} returns.explorerUrl - Get block explorer URL for token
+ * @returns {function} returns.dexScreenerUrl - Get DexScreener chart URL
+ * @returns {Object} returns.tokenPrices - Memoized prices for core tokens
+ */
 export function useTokenUtilities(prices: Record<string, { usd?: number }>) {
   const tokenPrices = useMemo<Record<string, number>>(() => {
     const p = prices;

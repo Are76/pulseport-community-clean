@@ -5,19 +5,73 @@ import { ProfitPlannerModal } from '../components/ProfitPlannerModal';
 
 type SubTab = 'investments' | 'planner';
 
+/**
+ * Props for the WalletAnalyzer component.
+ */
 interface Props {
+  /** All portfolio assets */
   assets: Asset[];
+
+  /** Historical portfolio value points for charting */
   history: HistoryPoint[];
+
+  /** All portfolio transactions */
   transactions: Transaction[];
+
+  /** Investment holdings with P&L data */
   investmentRows: InvestmentHoldingRow[];
+
+  /** Total amount invested in fiat (optional) */
   investedFiat?: number;
+
+  /** Current total portfolio value (optional) */
   currentValue?: number;
+
+  /** Liquid holdings value (optional) */
   liquidValue?: number;
+
+  /** Staked holdings value (optional) */
   stakedValue?: number;
+
+  /** PLS to USD exchange rate (optional) */
   plsUsdPrice?: number;
+
+  /** Callback when transaction details are requested (optional) */
   onOpenTransactions?: (row: InvestmentHoldingRow) => void;
 }
 
+/**
+ * Wallet analyzer page with investments overview and profit planner.
+ *
+ * Provides comprehensive portfolio analysis with tabs for investment details and profit planning.
+ * Shows total portfolio metrics and allows drilling into individual holdings.
+ *
+ * @example
+ * ```tsx
+ * <WalletAnalyzer
+ *   assets={userAssets}
+ *   history={portfolioHistory}
+ *   transactions={allTransactions}
+ *   investmentRows={holdings}
+ *   investedFiat={50000}
+ *   currentValue={75000}
+ *   plsUsdPrice={0.0008}
+ * />
+ * ```
+ *
+ * @param props - The component props
+ * @param props.assets - Portfolio assets
+ * @param props.history - Portfolio value history
+ * @param props.transactions - Portfolio transactions
+ * @param props.investmentRows - Investment holdings
+ * @param props.investedFiat - Invested fiat amount
+ * @param props.currentValue - Current portfolio value
+ * @param props.liquidValue - Liquid holdings value
+ * @param props.stakedValue - Staked holdings value
+ * @param props.plsUsdPrice - PLS/USD price
+ * @param props.onOpenTransactions - Callback for transaction requests
+ * @returns The wallet analyzer component
+ */
 export function WalletAnalyzer({
   assets,
   history,

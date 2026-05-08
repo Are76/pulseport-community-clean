@@ -1,12 +1,4 @@
-interface DexScreenerPair {
-  chainId?: string;
-  pairAddress?: string;
-  address?: string;
-}
-
-interface DexScreenerResponse {
-  pairs?: DexScreenerPair[];
-}
+import type { DexScreenerPair, DexScreenerResponse } from '../types';
 
 export async function fetchDexScreenerByAddress(
   chain: string,

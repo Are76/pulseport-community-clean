@@ -2,15 +2,49 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Plus, Check, AlertCircle, Loader } from 'lucide-react';
 import { useDexScreenerSearch } from '../hooks/useDexScreenerSearch';
+import { Modal } from './Modal';
 import { Chain } from '../types';
 
+/**
+ * Props for the AddCoinModal component.
+ */
 interface AddCoinModalProps {
+  /** Whether the modal is open */
   isOpen: boolean;
+
+  /** Callback to close the modal */
   onClose: () => void;
+
+  /** Callback when a coin is successfully added */
   onAdd: (coin: { symbol: string; name: string; chain: Chain; contractAddress: string }) => void;
+
+  /** Optional theme ('dark' or 'light') */
   theme?: 'dark' | 'light';
 }
 
+/**
+ * Modal for adding new coins to the portfolio by contract address.
+ *
+ * Allows users to search and validate token contract addresses using DexScreener.
+ * Shows token information after validation and adds validated coins to the portfolio.
+ *
+ * @example
+ * ```tsx
+ * <AddCoinModal
+ *   isOpen={showAddCoin}
+ *   onClose={() => setShowAddCoin(false)}
+ *   onAdd={handleAddCoin}
+ *   theme="dark"
+ * />
+ * ```
+ *
+ * @param props - The component props
+ * @param props.isOpen - Whether the modal is visible
+ * @param props.onClose - Callback to close the modal
+ * @param props.onAdd - Callback with validated coin data
+ * @param props.theme - Theme variant (default: 'dark')
+ * @returns The add coin modal component
+ */
 export function AddCoinModal({ isOpen, onClose, onAdd, theme = 'dark' }: AddCoinModalProps) {
   const [contractAddress, setContractAddress] = useState('');
   const [selectedChain, setSelectedChain] = useState<Chain>('pulsechain');

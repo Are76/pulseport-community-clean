@@ -1,5 +1,8 @@
 import { useReducer } from 'react';
 
+/**
+ * All available modal types in the application.
+ */
 export type ModalType =
   | 'addWallet'
   | 'removeWallet'
@@ -93,6 +96,36 @@ const initialState: ModalState = {
   tokenCardModalLoading: false,
 };
 
+/**
+ * Hook for managing modal state with support for multiple concurrent modals.
+ *
+ * Provides centralized modal state management using useReducer pattern.
+ * Handles opening, closing, and replacing modals with optional payload data.
+ * Tracks loading states, error messages, and confirmation actions.
+ *
+ * @example
+ * ```tsx
+ * const { openModal, closeModal, isModalOpen, currentModal } = useModalState();
+ *
+ * const handleOpenSettings = () => openModal('settings');
+ * const handleOpenConfirm = () => {
+ *   openModal('confirmAction', {
+ *     confirmActionMessage: 'Delete this item?',
+ *     confirmActionCallback: handleDelete
+ *   });
+ * };
+ * ```
+ *
+ * @returns Object with modal state and action functions
+ * @returns {ModalType | null} returns.currentModal - Currently open modal
+ * @returns {ModalType | null} returns.previousModal - Previously open modal
+ * @returns {string | null} returns.selectedModalId - ID for modal data
+ * @returns {string} returns.confirmActionMessage - Message for confirm modal
+ * @returns {function} returns.openModalAction - Open a modal with payload
+ * @returns {function} returns.closeModal - Close current modal
+ * @returns {function} returns.replaceModal - Replace current with new modal
+ * @returns {function} returns.isModalOpen - Check if specific modal is open
+ */
 export const useModalState = () => {
   const [state, dispatch] = useReducer(modalReducer, initialState);
 

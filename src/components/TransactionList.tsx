@@ -133,6 +133,8 @@ export interface TransactionListProps {
   onFilterByAsset?: (symbol: string) => void;
   /** Shown when the list is empty */
   emptyMessage?: string;
+  /** Show loading skeletons */
+  isLoading?: boolean;
 }
 
 // -- Liberty Swap chain names --------------------------------------------------
@@ -225,6 +227,7 @@ export const TransactionList = React.memo(function TransactionList({
   showHidden = false,
   onFilterByAsset,
   emptyMessage = 'No transactions found.',
+  isLoading = false,
 }: TransactionListProps) {
   // Internal expansion state - no parent needed
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
@@ -267,6 +270,17 @@ export const TransactionList = React.memo(function TransactionList({
       return s;
     });
   }, []);
+
+  // Show loading skeletons
+  if (isLoading && transactions.length === 0) {
+    return (
+      <div className="space-y-3">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div key={i} className="bg-[var(--bg-surface)] rounded-lg h-20 animate-pulse" />
+        ))}
+      </div>
+    );
+  }
 
   const visible = transactions.filter(tx => showHidden || !hideIds.includes(tx.id));
 

@@ -3,17 +3,67 @@ import { EyeOff } from 'lucide-react';
 import { CoinList, type CoinListItem } from '../components/CoinList';
 import type { Asset, Wallet } from '../types';
 
+/**
+ * Props for the WalletHoldingsPage component.
+ */
 interface WalletHoldingsPageProps {
+  /** All assets across all wallets */
   assets: Asset[];
+
+  /** All available wallets */
   wallets: Wallet[];
+
+  /** Currently selected wallet address (null = all wallets) */
   selectedWalletAddr: string | null;
+
+  /** Callback when wallet selection changes */
   onSelectWallet: (addr: string) => void;
+
+  /** Set of hidden token IDs */
   hiddenTokens: Set<string>;
+
+  /** Callback to hide a token from display */
   onHideToken: (id: string) => void;
+
+  /** Callback to remove a token completely */
   onRemoveToken: (id: string) => void;
+
+  /** Callback to add a new coin */
   onAddCoin: (asset: Asset) => void;
 }
 
+/**
+ * Wallet holdings page displaying assets for selected wallet.
+ *
+ * Shows a filterable list of holdings for a single wallet or all wallets combined.
+ * Allows hiding tokens temporarily and removing them permanently.
+ * Displays total portfolio value and individual asset values with price changes.
+ *
+ * @example
+ * ```tsx
+ * <WalletHoldingsPage
+ *   assets={allAssets}
+ *   wallets={userWallets}
+ *   selectedWalletAddr={activeWallet}
+ *   onSelectWallet={handleSelectWallet}
+ *   hiddenTokens={hiddenTokens}
+ *   onHideToken={handleHideToken}
+ *   onRemoveToken={handleRemoveToken}
+ *   onAddCoin={handleAddCoin}
+ * />
+ * ```
+ *
+ * @param props - The component props
+ * @param props.assets - All assets to display
+ * @param props.wallets - Available wallets for selection
+ * @param props.selectedWalletAddr - Currently selected wallet
+ * @param props.onSelectWallet - Callback when wallet is changed
+ * @param props.hiddenTokens - Tokens hidden from view
+ * @param props.onHideToken - Callback to hide a token
+ * @param props.onRemoveToken - Callback to remove a token
+ * @param props.onAddCoin - Callback to add a new coin
+ * @returns The wallet holdings page component
+ */
 export function WalletHoldingsPage(props: WalletHoldingsPageProps) {
   // Filter assets for selected wallet
   const walletAssets = React.useMemo(() => {

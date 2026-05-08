@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { format } from 'date-fns';
 import type { Asset, Chain, HexStake, Transaction } from '../types';
 import { PHEX_YIELD_PER_TSHARE, EHEX_YIELD_PER_TSHARE, FALLBACK_DESCRIPTIONS } from '../constants';
-import { ETH_HEX_ADDR, EHEX_PULSECHAIN_ADDR } from '../utils/appConstants';
+import { ETH_HEX_ADDR, EHEX_PULSECHAIN_ADDR, TIME_WINDOWS } from '../utils/appConstants';
 
 interface SummaryData {
   totalValue: number;
@@ -143,7 +143,6 @@ export function useAppComputations(
     };
 
     const BRIDGE_AMOUNT_TOLERANCE = 0.01;
-    const BRIDGE_WINDOW_MS = 12 * 60 * 60 * 1000;
     const deduped = new Set<string>();
     qualifiedInflows.forEach((tx, i) => {
       if (deduped.has(tx.id)) return;
@@ -153,7 +152,7 @@ export function useAppComputations(
         const other = qualifiedInflows[j];
         if (deduped.has(other.id)) continue;
         if (other.chain === tx.chain) continue;
-        if (other.timestamp - tx.timestamp > BRIDGE_WINDOW_MS) break;
+        if (other.timestamp - tx.timestamp > TIME_WINDOWS.HOURS_12) break;
         const otherCat = assetCategory(other.asset);
         if (otherCat !== cat) continue;
         const otherUsd = txUsdValue(other);
