@@ -1,5 +1,7 @@
 import React, { useEffect, useCallback, useState } from 'react';
 import { X, RefreshCw, ExternalLink, TrendingUp, TrendingDown, Search, Link2, List } from 'lucide-react';
+import { fetchDexScreenerByShareId, parseWatchlistUrl } from '../utils/dexScreener';
+import { useDexScreenerSearch } from '../hooks/useDexScreenerSearch';
 
 // -- helpers ------------------------------------------------------------------
 
@@ -78,116 +80,6 @@ const CHAIN_LABELS: Record<string, string> = {
 
 // -- component -----------------------------------------------------------------
 
-// -- Watchlist URL parser ------------------------------------------------------
-// Returns one of:
-//   { type: 'pairs';   entries }   - pair addresses embedded directly (?watchlist= format)
-//   { type: 'shareId'; shareId }   - opaque share-link ID (/watchlist/{id} format)
-//   null                            - unrecognised input
-
-type ParsedWatchlistUrl =
-  | { type: 'pairs';   entries: { chainId: string; pairAddr: string }[] }
-  | { type: 'shareId'; shareId: string };
-
-function parseWatchlistUrl(raw: string): ParsedWatchlistUrl | null {
-  try {
-    const url = new URL(raw.trim());
-
-    // -- Format A: https://dexscreener.com/watchlist/{shareId}  (new share-link) --
-    const pathMatch = url.pathname.match(/^\/watchlist\/([A-Za-z0-9_-]{4,100})$/);
-    if (pathMatch) {
-      return { type: 'shareId', shareId: pathMatch[1] };
-    }
-
-    // -- Format B: ?watchlist=chainId_0xADDR,...  (legacy copy-link / export) --
-    let wl = url.searchParams.get('watchlist');
-    if (!wl && url.hash) {
-      try {
-        const qMark = url.hash.indexOf('?');
-        if (qMark !== -1) {
-          const hashSearch = new URLSearchParams(url.hash.slice(qMark + 1));
-          wl = hashSearch.get('watchlist');
-        }
-      } catch { /* ignore */ }
-    }
-    if (wl) {
-      const entries = wl.split(',').flatMap(s => {
-        const trimmed = s.trim();
-        const under = trimmed.indexOf('_');
-        if (under < 1) return [];
-        const chainId  = trimmed.slice(0, under).toLowerCase();
-        const pairAddr = trimmed.slice(under + 1).toLowerCase();
-        if (!chainId || !pairAddr) return [];
-        return [{ chainId, pairAddr }];
-      });
-      if (entries.length > 0) return { type: 'pairs', entries };
-    }
-
-    return null;
-  } catch {
-    return null;
-  }
-}
-
-// -- Resolve a DexScreener share-link ID -> pair addresses ----------------------
-// DexScreener's internal API (io.dexscreener.com) is CORS-blocked in browsers.
-// We try the public api.dexscreener.com endpoints first, then fall back.
-// On total failure we throw DS_SHARE_UNAVAILABLE so the caller can show a clean
-// "Open in DexScreener" button instead of a confusing error.
-async function fetchByShareId(shareId: string): Promise<{ chainId: string; pairAddr: string }[]> {
-  const ENDPOINTS = [
-    // Public API - same domain as other DexScreener API calls, likely CORS-allowed
-    `https://api.dexscreener.com/watchlist/v1/share/${shareId}`,
-    `https://api.dexscreener.com/watchlist/v2/share/${shareId}`,
-    // Internal endpoints - may work in some environments (Vercel server-side, etc.)
-    `https://io.dexscreener.com/dex/watchlist/v1/share/${shareId}`,
-    `https://io.dexscreener.com/dex/watchlist/v2/share/${shareId}`,
-    `https://io.dexscreener.com/dex/watchlist/share/${shareId}`,
-  ];
-
-  for (const url of ENDPOINTS) {
-    try {
-      const res = await fetch(url, { headers: { Accept: 'application/json' } });
-      if (!res.ok) continue;
-      const data = await res.json();
-
-      // Normalise every known response shape DexScreener might return
-      let rawItems: any[] =
-        (Array.isArray(data)                    ? data                    : null) ??
-        (Array.isArray(data.pairs)              ? data.pairs              : null) ??
-        (Array.isArray(data.items)              ? data.items              : null) ??
-        (Array.isArray(data.watchlist)          ? data.watchlist          : null) ??
-        (Array.isArray(data.data?.pairs)        ? data.data.pairs         : null) ??
-        (Array.isArray(data.watchlist?.pairs)   ? data.watchlist.pairs    : null) ??
-        (Array.isArray(data.watchlist?.items)   ? data.watchlist.items    : null) ??
-        [];
-
-      const entries: { chainId: string; pairAddr: string }[] = [];
-
-      for (const item of rawItems) {
-        if (typeof item === 'string') {
-          // "chainId_0xpairAddr" string format
-          const under = item.indexOf('_');
-          if (under > 0) {
-            entries.push({ chainId: item.slice(0, under).toLowerCase(), pairAddr: item.slice(under + 1).toLowerCase() });
-          }
-        } else if (typeof item === 'object' && item !== null) {
-          const chain = (item.chainId ?? item.chain ?? 'pulsechain').toString().toLowerCase();
-          // Some responses contain tokenAddress instead of pairAddress
-          const addr = (item.pairAddress ?? item.address ?? item.tokenAddress ?? '').toString().toLowerCase();
-          if (addr.length > 10) {
-            entries.push({ chainId: chain, pairAddr: addr });
-          }
-        }
-      }
-
-      if (entries.length > 0) return entries;
-    } catch { /* try next endpoint */ }
-  }
-
-  // All endpoints exhausted
-  throw Object.assign(new Error('ds-share-unavailable'), { code: 'DS_SHARE_UNAVAILABLE' });
-}
-
 export function MarketWatchModal({ theme, onClose, initialSearch = '' }: Props) {
   const [pairs, setPairs]       = useState<WatchPair[]>([]);
   const [loading, setLoading]   = useState(true);
@@ -208,6 +100,10 @@ export function MarketWatchModal({ theme, onClose, initialSearch = '' }: Props) 
   const [importShareId, setImportShareId]   = useState<string | null>(null); // original share ID for "Open in DexScreener"
   const [watchlistPairs, setWatchlistPairs] = useState<WatchPair[] | null>(null);
   const [customPairs, setCustomPairs]       = useState<WatchPair[]>([]);  // New: custom added pairs
+
+  // Address/URL search hook and state
+  const { results: addressSearchResults, loading: addressLoading, error: addressError, searchByAddress, searchByUrl } = useDexScreenerSearch();
+  const [searchMode, setSearchMode] = useState<'symbol' | 'address' | 'url'>('symbol');
 
   const green = theme === 'dark' ? '#00FF9F' : '#059669';
   const red   = theme === 'dark' ? '#f43f5e' : '#dc2626';
@@ -351,32 +247,50 @@ export function MarketWatchModal({ theme, onClose, initialSearch = '' }: Props) 
             }
           }
         }
-      } catch { /* ignore */ }
+      } catch (fallbackErr) {
+        setSearchError(`Failed to search contract: ${(fallbackErr as Error).message}`);
+        return [];
+      }
     }
     return result;
   }
 
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      // DexScreener silently truncates results at 30 tokens per request.
-      // Chunk core tokens per chain so PulseChain, Ethereum and Base all load.
-      const rawPairs = await fetchDexTokenPairs(CORE_TOKENS);
-      const result = bestCorePairs(rawPairs);
-      setPairs(result);
-      setLastRefresh(new Date());
-      if (result.length === 0) {
-        setError('DexScreener returned no core pairs.');
+  const fetchData = useCallback(
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    async () => {
+      // CORE_TOKENS is module-level and stable; no external dependencies
+      setLoading(true);
+      setError(null);
+      try {
+        // DexScreener silently truncates results at 30 tokens per request.
+        // Chunk core tokens per chain so PulseChain, Ethereum and Base all load.
+        const rawPairs = await fetchDexTokenPairs(CORE_TOKENS);
+        const result = bestCorePairs(rawPairs);
+        setPairs(result);
+        setLastRefresh(new Date());
+        if (result.length === 0) {
+          setError('Unable to load market data. Please refresh.');
+        }
+      } catch (e) {
+        setError('Unable to load market data. Please refresh.');
+      } finally {
+        setLoading(false);
       }
-    } catch (e) {
-      setError('Failed to load market data. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    },
+    []
+  );
 
   useEffect(() => { fetchData(); }, [fetchData]);
+
+  const handleAddressSearch = async () => {
+    if (!search.trim()) return;
+
+    if (searchMode === 'address') {
+      await searchByAddress('pulsechain', search);
+    } else if (searchMode === 'url') {
+      await searchByUrl(search);
+    }
+  };
 
   useEffect(() => {
     const q = search.trim();
@@ -476,9 +390,9 @@ export function MarketWatchModal({ theme, onClose, initialSearch = '' }: Props) 
       if (parsed.type === 'shareId') {
         setImportShareId(parsed.shareId);
         try {
-          entries = await fetchByShareId(parsed.shareId);
+          entries = await fetchDexScreenerByShareId(parsed.shareId);
         } catch (err: any) {
-          if (err?.code === 'DS_SHARE_UNAVAILABLE') {
+          if (err?.message === 'DS_SHARE_UNAVAILABLE') {
             setImportError('DS_SHARE_UNAVAILABLE');
           } else {
             setImportError('Network error loading the watchlist. Please check your connection and try again.');
@@ -491,47 +405,54 @@ export function MarketWatchModal({ theme, onClose, initialSearch = '' }: Props) 
 
       // -- Fetch full pair data for each entry ------------------------------
       const byChain = new Map<string, string[]>();
-      for (const { chainId, pairAddr } of entries) {
+      for (const { chainId, pairAddress } of entries) {
         if (!byChain.has(chainId)) byChain.set(chainId, []);
-        byChain.get(chainId)!.push(pairAddr);
+        byChain.get(chainId)!.push(pairAddress);
       }
       const raw: any[] = [];
       const failedChains: string[] = [];
-      await Promise.all(
-        Array.from(byChain.entries()).map(async ([chainId, addrs]) => {
-          for (let i = 0; i < addrs.length; i += 30) {
-            const sliceAddrs = addrs.slice(i, i + 30);
-            const sliceStr = sliceAddrs.join(',');
-            try {
-              // Per-slice heuristic: if every address in this slice is a 42-char 0x address
-              // it could be either a pair or token address. Try pairs API first; if it returns
-              // no results, fall back to the tokens API so token-address watchlists also work.
-              const looksLike0x = sliceAddrs.every(a => a.length === 42 && a.startsWith('0x'));
-              const pairsRes = await fetch(`https://api.dexscreener.com/latest/dex/pairs/${chainId}/${sliceStr}`);
-              if (pairsRes.ok) {
-                const d = await pairsRes.json();
-                const got = Array.isArray(d.pairs) ? d.pairs : (d.pair ? [d.pair] : []);
-                if (got.length > 0) { raw.push(...got); continue; }
-              }
-              // No pairs found - try token-address endpoint as fallback
-              if (looksLike0x) {
-                const tokRes = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${sliceStr}`);
-                if (tokRes.ok) {
-                  const d = await tokRes.json();
-                  if (Array.isArray(d.pairs)) raw.push(...d.pairs);
-                  else if (d.pair)            raw.push(d.pair);
+      try {
+        const results = await Promise.all(
+          Array.from(byChain.entries()).map(async ([chainId, addrs]) => {
+            for (let i = 0; i < addrs.length; i += 30) {
+              const sliceAddrs = addrs.slice(i, i + 30);
+              const sliceStr = sliceAddrs.join(',');
+              try {
+                // Per-slice heuristic: if every address in this slice is a 42-char 0x address
+                // it could be either a pair or token address. Try pairs API first; if it returns
+                // no results, fall back to the tokens API so token-address watchlists also work.
+                const looksLike0x = sliceAddrs.every(a => a.length === 42 && a.startsWith('0x'));
+                const pairsRes = await fetch(`https://api.dexscreener.com/latest/dex/pairs/${chainId}/${sliceStr}`);
+                if (pairsRes.ok) {
+                  const d = await pairsRes.json();
+                  const got = Array.isArray(d.pairs) ? d.pairs : (d.pair ? [d.pair] : []);
+                  if (got.length > 0) { raw.push(...got); continue; }
+                }
+                // No pairs found - try token-address endpoint as fallback
+                if (looksLike0x) {
+                  const tokRes = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${sliceStr}`);
+                  if (tokRes.ok) {
+                    const d = await tokRes.json();
+                    if (Array.isArray(d.pairs)) raw.push(...d.pairs);
+                    else if (d.pair)            raw.push(d.pair);
+                  } else {
+                    failedChains.push(chainId);
+                  }
                 } else {
                   failedChains.push(chainId);
                 }
-              } else {
+              } catch {
                 failedChains.push(chainId);
               }
-            } catch {
-              failedChains.push(chainId);
             }
-          }
-        })
-      );
+          })
+        );
+      } catch (e) {
+        console.error('Watchlist import failed:', e);
+        setImportError(`Failed to import: ${(e as Error).message}`);
+        setImportLoading(false);
+        return;
+      }
 
       if (raw.length === 0) {
         setImportError('No pairs found for this watchlist. The link may be expired or contain no pairs.');
@@ -565,6 +486,12 @@ export function MarketWatchModal({ theme, onClose, initialSearch = '' }: Props) 
 
   // Source list - either the imported watchlist, search results, default pairs, or custom pairs
   const activePairs = watchlistPairs ?? (search.trim().length >= 2 ? searchPairs : [...pairs, ...customPairs]);
+
+  // Memoize custom pairs set for O(1) lookup instead of O(n) per row
+  const customPairSet = React.useMemo(() =>
+    new Set(customPairs.map(cp => cp.pairAddress)),
+    [customPairs]
+  );
 
   // Filter + sort
   const displayed = React.useMemo(() => {
@@ -758,17 +685,47 @@ export function MarketWatchModal({ theme, onClose, initialSearch = '' }: Props) 
               No dust
             </button>
           </div>
+          {/* Search mode toggle buttons */}
+          <div className="flex gap-2 mb-4">
+            <button
+              onClick={() => setSearchMode('symbol')}
+              className={`filter-pill${searchMode === 'symbol' ? ' active' : ''}`}
+            >
+              Symbol
+            </button>
+            <button
+              onClick={() => setSearchMode('address')}
+              className={`filter-pill${searchMode === 'address' ? ' active' : ''}`}
+            >
+              Contract Address
+            </button>
+            <button
+              onClick={() => setSearchMode('url')}
+              className={`filter-pill${searchMode === 'url' ? ' active' : ''}`}
+            >
+              Share Link
+            </button>
+          </div>
           {/* Search */}
           <div style={{ position: 'relative', flex: '1 1 180px', maxWidth: 260 }}>
             <Search size={12} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--fg-subtle)', pointerEvents: 'none' }} />
             <input
               className="mwm-search"
-              placeholder="Search by name, symbol, or 0x contract address..."
+              placeholder={searchMode === 'address' ? 'Enter 0x contract address...' : searchMode === 'url' ? 'Paste DexScreener share link...' : 'Search by name, symbol, or 0x contract address...'}
               value={search}
               onChange={e => setSearch(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === 'Enter' && (searchMode === 'address' || searchMode === 'url')) {
+                  handleAddressSearch();
+                }
+              }}
             />
             {search && (
-              <button onClick={() => setSearch('')} style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--fg-subtle)', padding: 0, display: 'flex' }}>
+              <button
+                onClick={() => setSearch('')}
+                aria-label="Clear search"
+                style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--fg-subtle)', padding: 0, display: 'flex' }}
+              >
                 <X size={12} />
               </button>
             )}
@@ -865,26 +822,26 @@ export function MarketWatchModal({ theme, onClose, initialSearch = '' }: Props) 
                         {!watchlistPairs && (
                           <button
                             onClick={() => {
-                              const isInCustom = customPairs.some(cp => cp.pairAddress === p.pairAddress);
+                              const isInCustom = customPairSet.has(p.pairAddress);
                               if (isInCustom) {
                                 setCustomPairs(cp => cp.filter(c => c.pairAddress !== p.pairAddress));
                               } else {
                                 setCustomPairs(cp => [...cp, p]);
                               }
                             }}
-                            title={customPairs.some(cp => cp.pairAddress === p.pairAddress) ? 'Remove from watchlist' : 'Add to watchlist'}
+                            title={customPairSet.has(p.pairAddress) ? 'Remove from watchlist' : 'Add to watchlist'}
                             style={{
                               background: 'none',
                               border: 'none',
                               cursor: 'pointer',
-                              color: customPairs.some(cp => cp.pairAddress === p.pairAddress) ? 'var(--accent)' : 'var(--fg-subtle)',
+                              color: customPairSet.has(p.pairAddress) ? 'var(--accent)' : 'var(--fg-subtle)',
                               padding: 0,
                               display: 'flex',
                               alignItems: 'center',
                               fontSize: 16
                             }}
                           >
-                            {customPairs.some(cp => cp.pairAddress === p.pairAddress) ? '−' : '+'}
+                            {customPairSet.has(p.pairAddress) ? '−' : '+'}
                           </button>
                         )}
                         <a href={p.dexScreenerUrl} target="_blank" rel="noopener noreferrer"

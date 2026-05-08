@@ -6,6 +6,7 @@ import { PnLModal } from './PnLModal';
 import { TokenCardModal } from './TokenCardModal';
 import { MarketWatchModal } from './MarketWatchModal';
 import { ProfitPlannerModal } from './ProfitPlannerModal';
+import { AddCoinModal } from './AddCoinModal';
 
 interface AppModalsProps {
   // Wallet modals
@@ -283,57 +284,22 @@ export function AppModals({
         />
       )}
 
-      {/* Custom Coin Modal */}
-      <AnimatePresence>
-        {isCustomCoinsModalOpen && (
-          <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center sm:p-6">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsCustomCoinsModalOpen(false)}
-              className="absolute inset-0 bg-black/80 backdrop-blur-sm"
-            />
-            <motion.div
-              initial={{ opacity: 0, y: '100%' }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: '100%' }}
-              transition={{ type: 'spring', damping: 22, stiffness: 120 }}
-              className="custom-coin-modal sm:rounded-[20px]"
-            >
-              <div className="custom-coin-modal-head">
-                <Plus size={18} />
-                <div>
-                  <strong>Add coin manually</strong>
-                  <span>Use this when a wallet token has no reliable price feed yet.</span>
-                </div>
-              </div>
-              <div className="custom-coin-grid">
-                <label>
-                  Symbol
-                  <input value={customCoinDraft.symbol} onChange={e => setCustomCoinDraft(prev => ({ ...prev, symbol: e.target.value }))} placeholder="GO" autoFocus />
-                </label>
-                <label>
-                  Name
-                  <input value={customCoinDraft.name} onChange={e => setCustomCoinDraft(prev => ({ ...prev, name: e.target.value }))} placeholder="GoPulse" />
-                </label>
-                <label>
-                  Balance
-                  <input type="number" min="0" step="any" value={customCoinDraft.balance} onChange={e => setCustomCoinDraft(prev => ({ ...prev, balance: e.target.value }))} placeholder="1000" />
-                </label>
-                <label>
-                  Price USD
-                  <input type="number" min="0" step="any" value={customCoinDraft.price} onChange={e => setCustomCoinDraft(prev => ({ ...prev, price: e.target.value }))} placeholder="0.001" onKeyDown={e => { if (e.key === 'Enter') submitCustomCoin(); }} />
-                </label>
-              </div>
-              <div className="custom-coin-actions">
-                <button type="button" onClick={() => setIsCustomCoinsModalOpen(false)}>Cancel</button>
-                <button type="button" className="custom-coin-submit" onClick={submitCustomCoin}>Add to portfolio</button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+      {/* Custom Coin Modal - Now uses AddCoinModal with DexScreener validation */}
+      <AddCoinModal
+        isOpen={isCustomCoinsModalOpen}
+        onClose={() => setIsCustomCoinsModalOpen(false)}
+        onAdd={(coin) => {
+          setCustomCoinDraft({
+            symbol: coin.symbol,
+            name: coin.name,
+            balance: '',
+            price: '',
+          });
+          submitCustomCoin();
+          setIsCustomCoinsModalOpen(false);
+        }}
+        theme={theme}
+      />
 
       {/* Market Watch Modal */}
       {showMarketWatch && (

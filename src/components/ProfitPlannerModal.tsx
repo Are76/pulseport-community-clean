@@ -295,7 +295,7 @@ export function ProfitPlannerModal({ open, onClose, assets, totalValue }: Profit
             background: 'var(--bg-surface)',
             border: '1px solid var(--accent-border)',
             borderRadius: 20,
-            width: '100%', maxWidth: 780,
+            width: '100%', maxWidth: 'min(780px, calc(100% - 2rem))',
             maxHeight: '92vh',
             overflowY: 'auto',
             boxShadow: '0 0 80px rgba(0,255,159,0.06)',
