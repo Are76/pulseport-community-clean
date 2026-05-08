@@ -844,6 +844,10 @@ export default function App() {
       title: 'Wallet Analyzer',
       subtitle: 'Analytics, investments and profit planning across all wallets.',
     },
+    holdings: {
+      title: 'Wallet Holdings',
+      subtitle: 'Manage your coin holdings, visibility, and portfolio composition',
+    },
   };
   const mobilePrimaryNavItems = navItems.filter(item => ['home', 'overview', 'history'].includes(item.id));
   const mobileMoreNavItems = navItems.filter(item => !['home', 'overview', 'history'].includes(item.id));
@@ -1165,6 +1169,7 @@ export default function App() {
                 collapsedSections={collapsedSections}
                 toggleSection={toggleSection}
                 isCollapsed={isCollapsed}
+                isLoading={isLoading}
                 t={t}
               />
             )}
