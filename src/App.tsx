@@ -74,6 +74,7 @@ import { scheduleLocalStorageWrite, resolveBlockscoutBase, resolveEtherscanCompa
 import { BRAND_ASSETS } from './branding/brand-assets';
 import { MyInvestmentsPage } from './pages/MyInvestmentsPage';
 import { WalletAnalyzer } from './pages/WalletAnalyzer';
+import { WalletHoldingsPage } from './pages/WalletHoldingsPage';
 import { MyInvestmentsUtilityStrip } from './components/my-investments/MyInvestmentsUtilityStrip';
 import { usePortfolio } from './context/PortfolioContext';
 import { HistoryTab } from './tabs/HistoryTab';
@@ -1875,6 +1876,31 @@ export default function App() {
             }}
             t={t}
             WALLET_DOT_COLORS={WALLET_DOT_COLORS}
+          />
+        )}
+
+        {activeTab === 'holdings' && (
+          <WalletHoldingsPage
+            assets={currentAssets}
+            wallets={wallets}
+            selectedWalletAddr={selectedWalletAddr}
+            onSelectWallet={setSelectedWalletAddr}
+            hiddenTokens={new Set(hiddenTokens)}
+            onHideToken={(id) => hideToken(id)}
+            onRemoveToken={(id) => setRealAssets(realAssets.filter(a => a.id !== id))}
+            isScanning={isScanning}
+            scanResult={scanResult ? { spam: spamTokenIds, legitimate: [] } : null}
+            onScan={scanForSpam}
+            onAddCoin={(asset) => {
+              const customCoin = {
+                id: Math.random().toString(36).substr(2, 9),
+                symbol: asset.symbol,
+                name: asset.name,
+                balance: asset.balance,
+                price: asset.price
+              };
+              setCustomCoins([...customCoins, customCoin]);
+            }}
           />
         )}
 
