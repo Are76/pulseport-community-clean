@@ -38,11 +38,12 @@ export function useDexScreenerSearch() {
       const pairs = await fetchDexScreenerByShareId(shareId);
       const mapped = pairs.map((p) => ({
         chainId: p.chainId,
-        pairAddress: p.pairAddr,
-        dexScreenerUrl: `https://dexscreener.com/${p.chainId}/${p.pairAddr}`,
+        pairAddress: p.pairAddress,
+        dexScreenerUrl: `https://dexscreener.com/${p.chainId}/${p.pairAddress}`,
       }));
       setResults(mapped);
-    } catch {
+    } catch (e) {
+      console.error('Share link fetch failed:', e);
       setError('Share link not found or unavailable');
       setResults([]);
     } finally {
@@ -63,8 +64,8 @@ export function useDexScreenerSearch() {
       setResults(
         parsed.entries.map((e) => ({
           chainId: e.chainId,
-          pairAddress: e.pairAddr,
-          dexScreenerUrl: `https://dexscreener.com/${e.chainId}/${e.pairAddr}`,
+          pairAddress: e.pairAddress,
+          dexScreenerUrl: `https://dexscreener.com/${e.chainId}/${e.pairAddress}`,
         }))
       );
     }

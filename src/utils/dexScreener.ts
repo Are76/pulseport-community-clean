@@ -1,3 +1,13 @@
+interface DexScreenerPair {
+  chainId?: string;
+  pairAddress?: string;
+  address?: string;
+}
+
+interface DexScreenerResponse {
+  pairs?: DexScreenerPair[];
+}
+
 export async function fetchDexScreenerByAddress(
   chain: string,
   contractAddress: string
@@ -11,9 +21,9 @@ export async function fetchDexScreenerByAddress(
     try {
       const res = await fetch(url, { headers: { Accept: 'application/json' } });
       if (!res.ok) continue;
-      const data = await res.json();
+      const data: DexScreenerResponse = await res.json();
 
-      const pairs = (data.pairs || []).map((p: any) => ({
+      const pairs = (data.pairs || []).map((p: DexScreenerPair) => ({
         chainId: p.chainId || chain,
         pairAddress: p.pairAddress || p.address,
       }));
@@ -27,7 +37,7 @@ export async function fetchDexScreenerByAddress(
   return [];
 }
 
-export async function fetchDexScreenerByShareId(shareId: string): Promise<{ chainId: string; pairAddr: string }[]> {
+export async function fetchDexScreenerByShareId(shareId: string): Promise<{ chainId: string; pairAddress: string }[]> {
   const ENDPOINTS = [
     `https://api.dexscreener.com/watchlist/v1/share/${shareId}`,
     `https://api.dexscreener.com/watchlist/v2/share/${shareId}`,
@@ -40,25 +50,25 @@ export async function fetchDexScreenerByShareId(shareId: string): Promise<{ chai
       if (!res.ok) continue;
       const data = await res.json();
 
-      const rawItems: any[] =
+      const rawItems: DexScreenerPair[] =
         (Array.isArray(data) ? data : null) ??
         (Array.isArray(data.pairs) ? data.pairs : null) ??
         (Array.isArray(data.items) ? data.items : null) ??
         [];
 
-      const entries: { chainId: string; pairAddr: string }[] = [];
+      const entries: { chainId: string; pairAddress: string }[] = [];
 
       for (const item of rawItems) {
         if (typeof item === 'string') {
           const under = item.indexOf('_');
           if (under > 0) {
-            entries.push({ chainId: item.slice(0, under).toLowerCase(), pairAddr: item.slice(under + 1).toLowerCase() });
+            entries.push({ chainId: item.slice(0, under).toLowerCase(), pairAddress: item.slice(under + 1).toLowerCase() });
           }
         } else if (typeof item === 'object' && item !== null) {
-          const chain = (item.chainId ?? item.chain ?? 'pulsechain').toString().toLowerCase();
-          const addr = (item.pairAddress ?? item.address ?? item.tokenAddress ?? '').toString().toLowerCase();
+          const chain = (item.chainId ?? 'pulsechain').toString().toLowerCase();
+          const addr = (item.pairAddress ?? item.address ?? '').toString().toLowerCase();
           if (addr.length > 10) {
-            entries.push({ chainId: chain, pairAddr: addr });
+            entries.push({ chainId: chain, pairAddress: addr });
           }
         }
       }
@@ -72,7 +82,7 @@ export async function fetchDexScreenerByShareId(shareId: string): Promise<{ chai
   throw new Error('DS_SHARE_UNAVAILABLE');
 }
 
-export function parseWatchlistUrl(raw: string): { type: 'pairs'; entries: { chainId: string; pairAddr: string }[] } | { type: 'shareId'; shareId: string } | null {
+export function parseWatchlistUrl(raw: string): { type: 'pairs'; entries: { chainId: string; pairAddress: string }[] } | { type: 'shareId'; shareId: string } | null {
   try {
     const url = new URL(raw.trim());
 
@@ -100,9 +110,9 @@ export function parseWatchlistUrl(raw: string): { type: 'pairs'; entries: { chai
         const under = trimmed.indexOf('_');
         if (under < 1) return [];
         const chainId = trimmed.slice(0, under).toLowerCase();
-        const pairAddr = trimmed.slice(under + 1).toLowerCase();
-        if (!chainId || !pairAddr) return [];
-        return [{ chainId, pairAddr }];
+        const pairAddress = trimmed.slice(under + 1).toLowerCase();
+        if (!chainId || !pairAddress) return [];
+        return [{ chainId, pairAddress }];
       });
       if (entries.length > 0) return { type: 'pairs', entries };
     }
