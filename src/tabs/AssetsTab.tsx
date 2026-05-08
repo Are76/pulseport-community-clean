@@ -8,7 +8,6 @@ import {
   RefreshCcw,
   Eye,
   EyeOff,
-  Shield,
   Calculator,
   X,
   ChevronDown,
@@ -72,9 +71,6 @@ interface AssetsTabProps {
   setManualEntries: (entries: Record<string, number>) => void;
   currentStakes: any[];
   customCoins: any[];
-  scanForSpam: () => Promise<void>;
-  isScanning: boolean;
-  scanResult: number | null;
   setIsCustomCoinsModalOpen: (open: boolean) => void;
   CHAIN_COLORS: Record<string, string>;
   WALLET_DOT_COLORS: string[];
@@ -117,9 +113,6 @@ export function AssetsTab({
   setManualEntries,
   currentStakes,
   customCoins,
-  scanForSpam,
-  isScanning,
-  scanResult,
   setIsCustomCoinsModalOpen,
   CHAIN_COLORS,
   WALLET_DOT_COLORS,
@@ -330,13 +323,6 @@ export function AssetsTab({
               <button type="button" className="coin-visibility-primary" onClick={() => setIsCustomCoinsModalOpen(true)}>
                 <Plus size={13} />
                 Add coin
-              </button>
-              <button type="button" onClick={scanForSpam} disabled={isScanning || wallets.length === 0}>
-                <Shield size={13} />
-                {isScanning ? 'Scanning...' : 'Scan spam'}
-                {scanResult !== null && !isScanning && (
-                  <span className="hidden-coins-count">{scanResult > 0 ? `+${scanResult}` : 'clean'}</span>
-                )}
               </button>
             </div>
             <div className="coin-visibility-dropdown">
