@@ -75,16 +75,16 @@ import { BRAND_ASSETS } from './branding/brand-assets';
 import {
   LazyMyInvestmentsPage,
   LazyWalletAnalyzer,
-  LazyWalletHoldingsPage
+  LazyWalletHoldingsPage,
+  LazyHomeTab,
+  LazyAssetsTab,
+  LazyStakesTab,
+  LazyHistoryTab,
+  LazyOverviewTab,
+  LazyWalletsTab
 } from './utils/lazyComponents';
 import { MyInvestmentsUtilityStrip } from './components/my-investments/MyInvestmentsUtilityStrip';
 import { usePortfolio } from './context/PortfolioContext';
-import { HistoryTab } from './tabs/HistoryTab';
-import { StakesTab } from './tabs/StakesTab';
-import { AssetsTab } from './tabs/AssetsTab';
-import { WalletsTab } from './tabs/WalletsTab';
-import { HomeTab } from './tabs/HomeTab';
-import { OverviewTab } from './tabs/OverviewTab';
 import { shortenAddr, normalizeAssetSymbol, sameAssetSymbol, tryReadCache, readStoredJSON, bigIntReviver, bigIntReplacer, isNoContractDataError, decodeLibertySwapInput } from './utils/appHelpers';
 import { ERC20_ABI, WALLET_DOT_COLORS, CHAIN_COLORS, CHAIN_LABELS, STATIC_LOGOS, LIBERTY_SWAP_ROUTERS, LIBERTY_SWAP_SELECTOR, MIN_INVESTMENT_THRESHOLD, CORE_TOKENS, ACTIVE_TABS, ACTIVE_TAB_STORAGE_KEY, ETH_HEX_ADDR, EHEX_PULSECHAIN_ADDR, type ActiveTab } from './utils/appConstants';
 import { useAppUI } from './context/AppUIContext';
@@ -1627,7 +1627,7 @@ export default function App() {
 
           <AnimatePresence mode="wait">
             {activeTab === 'home' && (
-              <HomeTab
+              <LazyHomeTab
                 currentAssets={currentAssets}
                 summary={summary}
                 topHoldingCards={topHoldingCards}
@@ -1642,7 +1642,7 @@ export default function App() {
             )}
 
             {activeTab === 'overview' && (
-              <OverviewTab
+              <LazyOverviewTab
                 wallets={wallets}
                 currentAssets={currentAssets}
                 currentStakes={currentStakes}
@@ -1654,7 +1654,7 @@ export default function App() {
             )}
 
             {activeTab === 'stakes' && (
-              <StakesTab
+              <LazyStakesTab
                 selectedWalletAddr={selectedWalletAddr}
               />
             )}
@@ -1669,7 +1669,7 @@ export default function App() {
             )}
 
             {activeTab === 'assets' && (
-              <AssetsTab
+              <LazyAssetsTab
                 selectedWalletAddr={selectedWalletAddr}
                 currentAssets={currentAssets}
                 walletAssets={walletAssets}
@@ -1716,7 +1716,7 @@ export default function App() {
             )}
 
             {activeTab === 'history' && (
-              <HistoryTab
+              <LazyHistoryTab
                 selectedWalletAddr={selectedWalletAddr}
                 getTokenLogoUrl={getTokenLogoUrl}
                 shortenAddr={shortenAddr}
@@ -1866,7 +1866,7 @@ export default function App() {
         )}
 
         {activeTab === 'wallets' && (
-          <WalletsTab
+          <LazyWalletsTab
             wallets={wallets}
             selectedWalletAddr={selectedWalletAddr}
             onSelectWallet={setSelectedWalletAddr}
