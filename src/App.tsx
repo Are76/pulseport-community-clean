@@ -72,8 +72,11 @@ import { PulseBoardFeed } from './components/PulseBoardFeed';
 import { buildInvestmentRows } from './utils/buildInvestmentRows';
 import { scheduleLocalStorageWrite, resolveBlockscoutBase, resolveEtherscanCompatBase } from './utils/localStorageDebounce';
 import { BRAND_ASSETS } from './branding/brand-assets';
-import { MyInvestmentsPage } from './pages/MyInvestmentsPage';
-import { WalletAnalyzer } from './pages/WalletAnalyzer';
+import {
+  LazyMyInvestmentsPage,
+  LazyWalletAnalyzer,
+  LazyWalletHoldingsPage
+} from './utils/lazyComponents';
 import { MyInvestmentsUtilityStrip } from './components/my-investments/MyInvestmentsUtilityStrip';
 import { usePortfolio } from './context/PortfolioContext';
 import { HistoryTab } from './tabs/HistoryTab';
@@ -90,7 +93,6 @@ import { PriceDisplay } from './components/PriceDisplay';
 import { StakingLadder } from './components/StakingLadder';
 import { StakingPie } from './components/StakingPie';
 import { WalletSelector } from './components/WalletSelector';
-import { WalletHoldingsPage } from './pages/WalletHoldingsPage';
 
 // Note: STATIC_LOGOS, EHEX_PULSECHAIN_ADDR, ETH_HEX_ADDR, normalizeAssetSymbol, sameAssetSymbol,
 // MIN_INVESTMENT_THRESHOLD, LIBERTY_SWAP_ROUTERS, LIBERTY_SWAP_SELECTOR, decodeLibertySwapInput,
@@ -1727,7 +1729,7 @@ export default function App() {
 
         {activeTab === 'pulsechain-official' && (
           <motion.div key='pulsechain-official' initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            <MyInvestmentsPage
+            <LazyMyInvestmentsPage
               investedFiat={summary.netInvestment > MIN_INVESTMENT_THRESHOLD ? Math.abs(summary.netInvestment) : 0}
               currentValue={summary.totalValue}
               liquidValue={summary.liquidValue}
@@ -1881,7 +1883,7 @@ export default function App() {
 
         {activeTab === 'wallet-analyzer' && (
           <motion.div key="wallet-analyzer" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            <WalletAnalyzer
+            <LazyWalletAnalyzer
               assets={currentAssets}
               history={history}
               transactions={transactions}
@@ -1900,7 +1902,7 @@ export default function App() {
 
         {activeTab === 'holdings' && (
           <motion.div key="holdings" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            <WalletHoldingsPage
+            <LazyWalletHoldingsPage
               assets={currentAssets}
               wallets={wallets}
               selectedWallet={selectedWalletAddr}
