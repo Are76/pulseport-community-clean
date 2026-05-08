@@ -43,9 +43,6 @@ describe('WalletHoldingsPage', () => {
         hiddenTokens={new Set()}
         onHideToken={() => {}}
         onRemoveToken={() => {}}
-        isScanning={false}
-        scanResult={null}
-        onScan={() => {}}
         onAddCoin={() => {}}
       />
     );
@@ -63,9 +60,6 @@ describe('WalletHoldingsPage', () => {
         hiddenTokens={new Set()}
         onHideToken={() => {}}
         onRemoveToken={() => {}}
-        isScanning={false}
-        scanResult={null}
-        onScan={() => {}}
         onAddCoin={() => {}}
       />
     );
@@ -83,9 +77,6 @@ describe('WalletHoldingsPage', () => {
         hiddenTokens={new Set()}
         onHideToken={() => {}}
         onRemoveToken={() => {}}
-        isScanning={false}
-        scanResult={null}
-        onScan={() => {}}
         onAddCoin={() => {}}
       />
     );
@@ -93,28 +84,6 @@ describe('WalletHoldingsPage', () => {
     const selector = screen.getByRole('combobox');
     expect(selector).toBeInTheDocument();
     expect(selector).toHaveValue('0x123abc');
-  });
-
-  it('shows scan button and disables it when scanning', () => {
-    render(
-      <WalletHoldingsPage
-        assets={mockAssets}
-        wallets={mockWallets}
-        selectedWalletAddr="0x123abc"
-        onSelectWallet={() => {}}
-        hiddenTokens={new Set()}
-        onHideToken={() => {}}
-        onRemoveToken={() => {}}
-        isScanning={true}
-        scanResult={null}
-        onScan={() => {}}
-        onAddCoin={() => {}}
-      />
-    );
-
-    const scanBtn = screen.getByRole('button', { name: /scanning/i });
-    expect(scanBtn).toBeInTheDocument();
-    expect(scanBtn).toBeDisabled();
   });
 
   it('shows hidden tokens notice when tokens are hidden', () => {
@@ -129,9 +98,6 @@ describe('WalletHoldingsPage', () => {
         hiddenTokens={hiddenSet}
         onHideToken={() => {}}
         onRemoveToken={() => {}}
-        isScanning={false}
-        scanResult={null}
-        onScan={() => {}}
         onAddCoin={() => {}}
       />
     );
@@ -149,33 +115,10 @@ describe('WalletHoldingsPage', () => {
         hiddenTokens={new Set()}
         onHideToken={() => {}}
         onRemoveToken={() => {}}
-        isScanning={false}
-        scanResult={null}
-        onScan={() => {}}
         onAddCoin={() => {}}
       />
     );
 
     expect(screen.getByText('No holdings found')).toBeInTheDocument();
-  });
-
-  it('displays spam detection results when available', () => {
-    render(
-      <WalletHoldingsPage
-        assets={mockAssets}
-        wallets={mockWallets}
-        selectedWalletAddr="0x123abc"
-        onSelectWallet={() => {}}
-        hiddenTokens={new Set()}
-        onHideToken={() => {}}
-        onRemoveToken={() => {}}
-        isScanning={false}
-        scanResult={{ spam: ['spam1', 'spam2'], legitimate: [] }}
-        onScan={() => {}}
-        onAddCoin={() => {}}
-      />
-    );
-
-    expect(screen.getByText(/Found 2 spam tokens/)).toBeInTheDocument();
   });
 });
