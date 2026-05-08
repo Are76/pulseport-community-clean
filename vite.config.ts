@@ -18,9 +18,40 @@ export default defineConfig(({mode}) => {
     },
     build: {
       minify: 'esbuild',
+      chunkSizeWarningLimit: 2000,
       rollupOptions: {
         output: {
-          // Suppress CSS minification warnings for unsupported properties
+          manualChunks(id) {
+            // Split node_modules into vendor chunk
+            if (id.includes('node_modules')) {
+              // Core dependencies
+              if (id.includes('react') || id.includes('react-dom')) {
+                return 'vendor-react';
+              }
+              // UI/Animation libraries
+              if (id.includes('lucide-react') || id.includes('motion')) {
+                return 'vendor-ui';
+              }
+              // Web3 libraries
+              if (id.includes('viem') || id.includes('wagmi')) {
+                return 'vendor-web3';
+              }
+              // Utility libraries
+              return 'vendor-common';
+            }
+
+            // Split pages into separate chunks
+            if (id.includes('/pages/')) {
+              const match = id.match(/\/pages\/([^/]+)\./);
+              if (match) return `page-${match[1].toLowerCase()}`;
+            }
+
+            // Split tabs into separate chunks
+            if (id.includes('/tabs/')) {
+              const match = id.match(/\/tabs\/([^/]+)\./);
+              if (match) return `tab-${match[1].toLowerCase()}`;
+            }
+          },
         },
       },
     },
