@@ -259,8 +259,6 @@ export default function App() {
   const [profitPlannerOpen, setProfitPlannerOpen] = useState(false);
   const [showReceivedAssets, setShowReceivedAssets] = useState(true);
   const [showRecentActivity, setShowRecentActivity] = useState(true);
-  const [isScanning, setIsScanning] = useState(false);
-  const [scanResult, setScanResult] = useState<number | null>(null);
 
   useEffect(() => {
     if (selectedWalletAddr === 'all') return;
@@ -394,57 +392,6 @@ export default function App() {
     setEditingWalletAddress(null);
   };
 
-  const scanForSpam = async () => {
-    const baseAssets = wallets.length > 0 ? realAssets : [];
-    const unpriced = baseAssets.filter(a => a.price === 0 && (a as any).address && (a as any).address !== 'native');
-    if (unpriced.length === 0) { setScanResult(0); return; }
-    setIsScanning(true);
-    setScanResult(null);
-    const newSpamIds: string[] = [...spamTokenIds];
-    let detected = 0;
-
-    // For Ethereum tokens use DeFi Llama (most comprehensive price coverage)
-    const ethAssets = unpriced.filter(a => a.chain === 'ethereum');
-    const otherAssets = unpriced.filter(a => a.chain !== 'ethereum');
-
-    if (ethAssets.length > 0) {
-      try {
-        const keys = ethAssets.map(a => `ethereum:${(a as any).address.toLowerCase()}`);
-        const r = await fetch(`https://coins.llama.fi/prices/current/${keys.join(',')}`);
-        if (r.ok) {
-          const data = await r.json();
-          ethAssets.forEach(asset => {
-            const key = `ethereum:${(asset as any).address.toLowerCase()}`;
-            const hasPrice = data.coins?.[key]?.price != null;
-            if (!hasPrice && !newSpamIds.includes(asset.id)) {
-              newSpamIds.push(asset.id);
-              detected++;
-            }
-          });
-        }
-      } catch { /* ignore */ }
-    }
-
-    // For PulseChain/Base tokens use Blockscout
-    await Promise.allSettled(otherAssets.map(async (asset) => {
-      try {
-        const addr = (asset as any).address;
-        const host = asset.chain === 'base' ? 'base.blockscout.com' : 'scan.pulsechain.com';
-        const r = await fetch(`https://${host}/api/v2/tokens/${addr}`);
-        if (!r.ok) return;
-        const data = await r.json();
-        const hasMarket = data.exchange_rate || data.circulating_market_cap || data.volume_24h;
-        if (!hasMarket && !newSpamIds.includes(asset.id)) {
-          newSpamIds.push(asset.id);
-          detected++;
-        }
-      } catch { /* ignore */ }
-    }));
-
-    setSpamTokenIds(newSpamIds);
-    setIsScanning(false);
-    setScanResult(detected);
-  };
 
   const assetUniverse = useMemo(() => {
     const activeWalletKey = activeWallet?.toLowerCase() ?? null;
@@ -1703,9 +1650,6 @@ export default function App() {
                 setManualEntries={setManualEntries}
                 currentStakes={currentStakes}
                 customCoins={customCoins}
-                scanForSpam={scanForSpam}
-                isScanning={isScanning}
-                scanResult={scanResult}
                 setIsCustomCoinsModalOpen={setIsCustomCoinsModalOpen}
                 CHAIN_COLORS={CHAIN_COLORS}
                 WALLET_DOT_COLORS={WALLET_DOT_COLORS}
@@ -1888,9 +1832,6 @@ export default function App() {
             hiddenTokens={new Set(hiddenTokens)}
             onHideToken={(id) => hideToken(id)}
             onRemoveToken={(id) => setRealAssets(realAssets.filter(a => a.id !== id))}
-            isScanning={isScanning}
-            scanResult={scanResult ? { spam: spamTokenIds, legitimate: [] } : null}
-            onScan={scanForSpam}
             onAddCoin={(asset) => {
               const customCoin = {
                 id: Math.random().toString(36).substr(2, 9),
