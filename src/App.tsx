@@ -91,6 +91,10 @@ import { PriceDisplay } from './components/PriceDisplay';
 import { StakingLadder } from './components/StakingLadder';
 import { StakingPie } from './components/StakingPie';
 import { WalletSelector } from './components/WalletSelector';
+import { useAppComputations } from './hooks/useAppComputations';
+import { useAppUIStateHandlers } from './hooks/useAppUIStateHandlers';
+import { useTokenUtilities } from './hooks/useTokenUtilities';
+import { useAppFormatters } from './hooks/useAppFormatters';
 
 // Note: STATIC_LOGOS, EHEX_PULSECHAIN_ADDR, ETH_HEX_ADDR, normalizeAssetSymbol, sameAssetSymbol,
 // MIN_INVESTMENT_THRESHOLD, LIBERTY_SWAP_ROUTERS, LIBERTY_SWAP_SELECTOR, decodeLibertySwapInput,
@@ -184,51 +188,54 @@ export default function App() {
     setModalError,
   } = useAppModals();
 
-  const [newWalletAddress, setNewWalletAddress] = useState('');
-  const [newWalletName, setNewWalletName] = useState('');
-  const [walletFormError, setWalletFormError] = useState('');
-  const [isAddingWallet, setIsAddingWallet] = useState(false);
-  const [editingWalletAddress, setEditingWalletAddress] = useState<string | null>(null);
-  const [editWalletName, setEditWalletName] = useState('');
-  const [isCustomCoinsModalOpen, setIsCustomCoinsModalOpen] = useState(false);
-  const [customCoinDraft, setCustomCoinDraft] = useState({ symbol: '', name: '', balance: '', price: '' });
-  const [receivedCoinFilter, setReceivedCoinFilter] = useState<string>('all');
-  const [receivedChainFilter, setReceivedChainFilter] = useState<string>('all');
-  const [timeSinceLastUpdate, setTimeSinceLastUpdate] = useState<number>(0);
+  // Initialize UI state handlers hook - consolidates all UI state management
+  const uiState = useAppUIStateHandlers();
+  const {
+    newWalletAddress, setNewWalletAddress,
+    newWalletName, setNewWalletName,
+    walletFormError, setWalletFormError,
+    isAddingWallet, setIsAddingWallet,
+    editingWalletAddress, setEditingWalletAddress,
+    editWalletName, setEditWalletName,
+    isCustomCoinsModalOpen, setIsCustomCoinsModalOpen,
+    customCoinDraft, setCustomCoinDraft,
+    receivedCoinFilter, setReceivedCoinFilter,
+    receivedChainFilter, setReceivedChainFilter,
+    timeSinceLastUpdate, setTimeSinceLastUpdate,
+    marketWatchInitialSearch, setMarketWatchInitialSearch,
+    isApiKeyModalOpen, setIsApiKeyModalOpen,
+    apiKeyInput, setApiKeyInput,
+    activeWallet, setActiveWallet,
+    selectedWalletAddr, setSelectedWalletAddr,
+    sidebarWalletsOpen, setSidebarWalletsOpen,
+    tokenCardModal, setTokenCardModal,
+    tokenCardModalLoading, setTokenCardModalLoading,
+    pnlAsset, setPnlAsset,
+    selectedBridgeTxId, setSelectedBridgeTxId,
+    profitPlannerOpen, setProfitPlannerOpen,
+    showReceivedAssets, setShowReceivedAssets,
+    showRecentActivity, setShowRecentActivity,
+  } = uiState;
 
-  const [marketWatchInitialSearch, setMarketWatchInitialSearch] = useState('');
-  const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState(false);
-  const [apiKeyInput, setApiKeyInput] = useState('');
-  const [activeWallet, setActiveWallet] = useState<string | null>(null);
-  const [selectedWalletAddr, setSelectedWalletAddr] = useState('all');
-  const [sidebarWalletsOpen, setSidebarWalletsOpen] = useState(false);
-  const [tokenCardModal, setTokenCardModal] = useState<any>(null);
-  const [tokenCardModalLoading, setTokenCardModalLoading] = useState(false);
+  // Initialize formatters, computations, and utilities from hooks
+  const { fmtBigNum, fmtDec, fmtTok, exportCSV, themeColors: t } = useAppFormatters(theme);
 
+  const computations = useAppComputations(
+    currentAssets,
+    currentStakes,
+    currentTransactions,
+    realAssets,
+    realStakes,
+    history,
+    wallets,
+    manualEntries,
+    prices,
+    receivedCoinFilter,
+    receivedChainFilter
+  );
+  const { summary, stakeSummary, assetAllocation, rotationSummary, monthlyPnlData, receivedAssetsData } = computations;
 
-  // -- Formatting helpers (defined once here, used throughout) ----------------
-  const fmtBigNum = (n: number) => !isFinite(n) ? '0' : Math.round(n).toLocaleString('en-US').replace(/,/g, ' ');
-  const fmtDec = (n: number, dp = 2) => {
-    if (!isFinite(n)) return '0';
-    const safeDp = Math.min(Math.max(Math.abs(dp), 0), 20);
-    return n.toLocaleString('en-US', { minimumFractionDigits: safeDp, maximumFractionDigits: safeDp });
-  };
-  const fmtTok = (n: number) => {
-    if (!isFinite(n)) return '0';
-    return n > 1e6 ? `${(n/1e6).toFixed(2)}M` : n > 1000 ? `${(n/1000).toFixed(2)}K` : n.toLocaleString('en-US', { maximumFractionDigits: 4 });
-  };
-  // -- CSV Export helper ------------------------------------------------------
-  const exportCSV = (filename: string, headers: string[], rows: (string | number)[][]) => {
-    const escCell = (c: string | number) => {
-      const s = String(c);
-      return s.includes(',') || s.includes('"') || s.includes('\n') ? '"' + s.replace(/"/g, '""') + '"' : s;
-    };
-    const csv = [headers, ...rows].map(r => r.map(escCell).join(',')).join('\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = filename; a.click();
-    URL.revokeObjectURL(url);
-  };
+  const { tokenPrices, explorerUrl, dexScreenerUrl, getTokenLogoUrl } = useTokenUtilities(prices);
 
 
   useEffect(() => {
@@ -254,11 +261,6 @@ export default function App() {
     setIsCustomCoinsModalOpen(false);
     setActiveTab('overview');
   };
-  const [pnlAsset, setPnlAsset] = useState<Asset | null>(null);
-  const [selectedBridgeTxId, setSelectedBridgeTxId] = useState<string | null>(null);
-  const [profitPlannerOpen, setProfitPlannerOpen] = useState(false);
-  const [showReceivedAssets, setShowReceivedAssets] = useState(true);
-  const [showRecentActivity, setShowRecentActivity] = useState(true);
 
   useEffect(() => {
     if (selectedWalletAddr === 'all') return;
@@ -292,32 +294,6 @@ export default function App() {
     setMobileMoreOpen(false);
   }, [activeTab]);
 
-  // Theme-aware color helpers - CSS variable-backed for automatic light/dark theming
-  const t = useMemo(() => ({
-    surface: 'var(--bg-void)',
-    card: 'var(--bg-surface)',
-    cardHigh: 'var(--bg-elevated)',
-    cardHighest: 'var(--bg-elevated)',
-    border: 'var(--border)',
-    borderLight: 'var(--border)',
-    text: 'var(--fg)',
-    textSecondary: 'var(--fg-muted)',    /* labels, prices, percent values - strong contrast */
-    textMuted: 'var(--fg-subtle)',       /* icons and separators - strong contrast */
-    textTertiary: 'var(--fg-subtle)',    /* helper text - strong contrast */
-    sidebar: 'var(--bg-sidebar)',
-    header: 'var(--bg-header)',
-    hoverBg: 'var(--bg-elevated)',
-    expandedBg: 'var(--bg-elevated)',
-    green: theme === 'dark' ? '#00FF9F' : '#059669',
-    red: theme === 'dark' ? '#f43f5e' : '#dc2626',
-    purple: '#8b5cf6',
-    orange: '#f97316',
-    blue: 'var(--chain-eth)',
-    pink: 'var(--chain-pulse)',
-    gradientHero: theme === 'dark'
-      ? 'linear-gradient(135deg, #0b1a12 0%, #08100e 40%, #080d16 100%)'
-      : 'linear-gradient(135deg, #eef8f4 0%, #f5f5f5 40%, #eef0fa 100%)',
-  }), [theme]);
 
   const toggleSection = (id: string) => setCollapsedSections(prev => ({ ...prev, [id]: !prev[id] }));
   const isCollapsed = (id: string) => !!collapsedSections[id];
@@ -509,381 +485,7 @@ export default function App() {
     return currentTransactions;
   }, [currentTransactions]);
 
-  const summary = useMemo(() => {
-    const assets = currentAssets;
-    const liquidValue = assets.reduce((acc, curr) => acc + curr.value, 0);
-
-    // Add HEX staking value so the grand total reflects everything the user owns.
-    // Recalculate accrued yield from tShares * daysStaked * chain-specific rate so
-    // stale cached interestHearts never corrupt the total.
-    const stakingValueUsd = currentStakes.reduce((acc, s) => {
-      if ((s.daysRemaining ?? 0) <= 0) return acc; // exclude ended stakes
-      const hexPriceKey = `${s.chain}:0x2b591e99afe9f32eaa6214f7b7629768c40eeb39`;
-      const chainHexFallback = s.chain === 'pulsechain' ? prices['pulsechain:hex']?.usd : prices['hex']?.usd;
-      const hexPrice = prices[hexPriceKey]?.usd || chainHexFallback || 0;
-      const stakedHex  = Number(s.stakedHearts ?? 0n) / 1e8;
-      const tShares    = Number(s.stakeShares  ?? 0n) / 1e12;
-      const daysStaked = Math.max(0, (s.stakedDays ?? 0) - (s.daysRemaining ?? 0));
-      const rate = s.chain === 'pulsechain' ? PHEX_YIELD_PER_TSHARE : EHEX_YIELD_PER_TSHARE;
-      const interestHex = tShares * daysStaked * rate;
-      return acc + (stakedHex + interestHex) * hexPrice;
-    }, 0);
-
-    const totalValue = liquidValue + stakingValueUsd;
-    const totalPnl = assets.reduce((acc, curr) => acc + (curr.value * (curr.pnl24h || 0) / 100), 0);
-
-    const distribution: Record<Chain, number> = { pulsechain: 0, ethereum: 0, base: 0 };
-    const chainPnlUsd: Record<Chain, number> = { pulsechain: 0, ethereum: 0, base: 0 };
-    const chainPnlPercent: Record<Chain, number> = { pulsechain: 0, ethereum: 0, base: 0 };
-
-    assets.forEach(a => {
-      if (a.chain in distribution) {
-        distribution[a.chain] += a.value;
-        chainPnlUsd[a.chain] += (a.value * (a.pnl24h || 0) / 100);
-      }
-    });
-
-    Object.keys(chainPnlUsd).forEach(chain => {
-      const c = chain as Chain;
-      if (distribution[c] > 0) {
-        chainPnlPercent[c] = (chainPnlUsd[c] / distribution[c]) * 100;
-      }
-    });
-
-    // Native Value (Portfolio Value in PLS terms)
-    const plsPrice = assets.find(a => a.symbol === 'PLS')?.price || 0.00005;
-    const nativeValue = totalValue / plsPrice;
-
-    const nativePlsBalance = assets.find(a => a.symbol === 'PLS' && a.chain === 'pulsechain')?.balance || 0;
-    const stakedPlsValue = currentStakes.reduce((acc, curr) => (
-      (curr.daysRemaining ?? 0) > 0 ? acc + (curr.estimatedValueUsd / plsPrice) : acc
-    ), 0);
-    const tokenPlsValue = nativeValue - nativePlsBalance - stakedPlsValue;
-
-    // Net Investment = total stablecoin + ETH received from external addresses into own wallets
-    // Matches what's shown in Received Assets History: only ETH and stables, from external sources
-    const ownAddrs = new Set(wallets.map(w => w.address.toLowerCase()));
-    const isStableAsset = (asset: string) => {
-      const u = asset.toUpperCase();
-      return u.includes('USDC') || u.includes('USD COIN') || u.includes('USDBC') ||
-             u.includes('USDT') || u.includes('TETHER') ||
-             u.includes('DAI');
-    };
-    // Normalise asset name to a canonical category for bridge-echo matching
-    const assetCategory = (asset: string) => {
-      const u = asset.toUpperCase();
-      if (u.includes('USDC') || u.includes('USD COIN') || u.includes('USDBC')) return 'USDC';
-      if (u.includes('USDT') || u.includes('TETHER')) return 'USDT';
-      if (u.includes('DAI')) return 'DAI';
-      if (u === 'ETH') return 'ETH';
-      return u;
-    };
-    // Collect all qualifying inflows first
-    const qualifiedInflows = currentTransactions.filter(tx => {
-      if (tx.type !== 'deposit') return false;
-      if (tx.chain === 'pulsechain') return false; // always exclude; already counted via ETH/Base
-      const assetUpper = tx.asset.toUpperCase();
-      const isEth = assetUpper === 'ETH';
-      const isStable = isStableAsset(tx.asset);
-      if (!isEth && !isStable) return false;
-      const fromOwn = ownAddrs.has(tx.from.toLowerCase());
-      const toOwn = ownAddrs.has(tx.to.toLowerCase());
-      if (fromOwn || !toOwn) return false;
-      return true;
-    }).sort((a, b) => a.timestamp - b.timestamp); // oldest first
-
-    // Use the live prices state as a fallback for ETH valueUsd - this handles the case where
-    // transactions were fetched before CoinGecko prices loaded (valueUsd would be 0 at that point).
-    // Also try the pWETH LP-derived price (stored under 'ethereum:native') so the fallback
-    // works even when CoinGecko is rate-limited.
-    const ethPriceFallback = prices['ethereum']?.usd
-      || prices['ethereum:native']?.usd
-      || prices['pulsechain:0x02dcdd04e3f455d838cd1249292c58f3b79e3c3c']?.usd
-      || 0;
-    // Helper: derive a consistent USD value for a tx (handles stale-zero valueUsd for ETH)
-    const txUsdValue = (tx: { asset: string; valueUsd: number; amount: number }) => {
-      if (tx.valueUsd > 0) return tx.valueUsd;
-      if (tx.asset.toUpperCase() === 'ETH') return tx.amount * ethPriceFallback;
-      return tx.amount; // stablecoins: amount is approximately USD
-    };
-
-    // Bridge-echo deduplication:
-    // If the same asset+amount (within 1%) is received on a different chain within 12h,
-    // treat the later one as a bridge echo and exclude it from netInvestment.
-    // 1% tolerance for matching bridge echo amounts across chains
-    const BRIDGE_AMOUNT_TOLERANCE = 0.01;
-    const BRIDGE_WINDOW_MS = 12 * 60 * 60 * 1000; // 12 hours
-    const deduped = new Set<string>();
-    qualifiedInflows.forEach((tx, i) => {
-      if (deduped.has(tx.id)) return; // already marked as echo
-      const cat = assetCategory(tx.asset);
-      const usd = txUsdValue(tx);
-      for (let j = i + 1; j < qualifiedInflows.length; j++) {
-        const other = qualifiedInflows[j];
-        if (deduped.has(other.id)) continue;
-        if (other.chain === tx.chain) continue; // same chain: not a bridge
-        if (other.timestamp - tx.timestamp > BRIDGE_WINDOW_MS) break; // time window exceeded
-        const otherCat = assetCategory(other.asset);
-        if (otherCat !== cat) continue;
-        const otherUsd = txUsdValue(other);
-        const maxVal = Math.max(usd, otherUsd, 1);
-        if (Math.abs(usd - otherUsd) / maxVal <= BRIDGE_AMOUNT_TOLERANCE) {
-          deduped.add(other.id); // mark later occurrence as bridge echo
-        }
-      }
-    });
-
-    const netInvestment = qualifiedInflows.reduce((acc, tx) => {
-      if (deduped.has(tx.id)) return acc; // skip bridge echoes
-      const assetUpper = tx.asset.toUpperCase();
-      const isEth = assetUpper === 'ETH';
-      if (isStableAsset(tx.asset)) return acc + tx.amount;
-      if (isEth) return acc + txUsdValue(tx);
-      return acc;
-    }, 0);
-
-    const unifiedPnl = totalValue - netInvestment;
-
-    // Realized PNL Calculation with basic cost basis tracking
-    const costBasisMap: Record<string, { amount: number, totalCost: number }> = {};
-    let realizedPnl = 0;
-
-    // Sort transactions by date to track cost basis chronologically
-    const sortedTxs = [...currentTransactions].sort((a, b) =>
-      new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-    );
-
-    sortedTxs.forEach(tx => {
-      const addCost = (symbol: string, amount: number, value: number) => {
-        const assetKey = `${tx.chain}:${symbol}`;
-        if (!costBasisMap[assetKey]) costBasisMap[assetKey] = { amount: 0, totalCost: 0 };
-        costBasisMap[assetKey].amount += amount;
-        costBasisMap[assetKey].totalCost += value;
-      };
-
-      const realizeSale = (symbol: string, amount: number, value: number, countProfit: boolean) => {
-        const assetKey = `${tx.chain}:${symbol}`;
-        if (!costBasisMap[assetKey] || costBasisMap[assetKey].amount <= 0) return;
-        const avgCost = costBasisMap[assetKey].totalCost / costBasisMap[assetKey].amount;
-        const costOfSold = Math.min(costBasisMap[assetKey].totalCost, amount * avgCost);
-        if (countProfit) realizedPnl += value - costOfSold;
-        costBasisMap[assetKey].amount = Math.max(0, costBasisMap[assetKey].amount - amount);
-        costBasisMap[assetKey].totalCost = Math.max(0, costBasisMap[assetKey].totalCost - costOfSold);
-      };
-
-      if (tx.type === 'deposit') {
-        addCost(tx.asset, tx.amount, tx.valueUsd || 0);
-      } else if (tx.type === 'withdraw') {
-        realizeSale(tx.asset, tx.amount, tx.valueUsd || 0, false);
-      } else if (tx.type === 'swap') {
-        if (tx.counterAsset && tx.counterAmount) {
-          realizeSale(tx.counterAsset, tx.counterAmount, tx.valueUsd || 0, true);
-        }
-        addCost(tx.asset, tx.amount, tx.valueUsd || 0);
-      }
-    });
-
-    return {
-      totalValue,
-      liquidValue,
-      stakingValueUsd,
-      pnl24h: totalPnl,
-      pnl24hPercent: totalValue > 0 ? (totalPnl / totalValue) * 100 : 0,
-      chainDistribution: distribution,
-      nativeValue,
-      nativePlsBalance,
-      stakedPlsValue,
-      tokenPlsValue,
-      netInvestment,
-      unifiedPnl,
-      realizedPnl,
-      chainPnlUsd,
-      chainPnlPercent
-    };
-  }, [currentAssets, currentStakes, currentTransactions, prices, wallets]);
-
-  const pieData = Object.entries(summary.chainDistribution).map(([name, value]) => ({
-    name: name.charAt(0).toUpperCase() + name.slice(1),
-    value: value as number
-  })).filter(d => (d.value as number) > 0);
-
-  const COLORS = [CHAINS.pulsechain.color, CHAINS.ethereum.color, CHAINS.base.color];
-
-  const stakeSummary = useMemo(() => {
-    const stakes = wallets.length > 0 ? realStakes : [];
-    const activeStakes = stakes.filter(s => (s.daysRemaining ?? 0) > 0);
-    let totalStakedHex = 0;
-    let totalTShares = 0;
-    let totalValueUsd = 0;
-    let totalInterestHex = 0;
-
-    activeStakes.forEach(s => {
-      const stakedHex  = Number(s.stakedHearts ?? 0n) / 1e8;
-      const tShares    = Number(s.stakeShares  ?? 0n) / 1e12;
-      // Recalculate accrued yield from first principles using chain-specific rate
-      // so stale cached interestHearts never corrupt the totals.
-      const daysStaked  = Math.max(0, (s.stakedDays ?? 0) - (s.daysRemaining ?? 0));
-      const rate = s.chain === 'pulsechain' ? PHEX_YIELD_PER_TSHARE : EHEX_YIELD_PER_TSHARE;
-      const interestHex = tShares * daysStaked * rate;
-
-      // Use chain-specific HEX price; fall back to 0 (not 0.004) so we show
-      // $0 instead of a wrong value while prices are still loading.
-      const hexPriceKey = `${s.chain}:0x2b591e99afe9f32eaa6214f7b7629768c40eeb39`;
-      const chainHexFallback = s.chain === 'pulsechain' ? prices['pulsechain:hex']?.usd : prices['hex']?.usd;
-      const hexPrice = prices[hexPriceKey]?.usd || chainHexFallback || 0;
-
-      totalStakedHex  += stakedHex;
-      totalTShares    += tShares;
-      totalValueUsd   += (stakedHex + interestHex) * hexPrice;
-      totalInterestHex += interestHex;
-    });
-
-    const phexPrice = prices['pulsechain:0x2b591e99afe9f32eaa6214f7b7629768c40eeb39']?.usd || prices['pulsechain:hex']?.usd || 0;
-    // Daily payout uses chain-specific rates; sum pHEX and eHEX T-Share contributions separately
-    const estimatedDailyPayoutHex = activeStakes.reduce((sum, s) => {
-      const tS = Number(s.stakeShares ?? 0n) / 1e12;
-      const rate = s.chain === 'pulsechain' ? PHEX_YIELD_PER_TSHARE : EHEX_YIELD_PER_TSHARE;
-      return sum + tS * rate;
-    }, 0);
-    const estimatedDailyPayoutUsd = estimatedDailyPayoutHex * phexPrice;
-
-    return {
-      totalStakedHex,
-      totalTShares,
-      totalValueUsd,
-      totalInterestHex,
-      totalHexWithRewards: totalStakedHex + totalInterestHex,
-      estimatedDailyPayoutHex,
-      estimatedDailyPayoutUsd
-    };
-  }, [wallets.length, realStakes, prices]);
-
-  const assetAllocation = useMemo(() => {
-    // Aggregate by symbol across chains (e.g. ETH on Ethereum + ETH on Base)
-    const agg: Record<string, number> = {};
-    realAssets.filter(a => a.value > 0).forEach(a => {
-      agg[a.symbol] = (agg[a.symbol] || 0) + a.value;
-    });
-    return Object.entries(agg)
-      .map(([name, value]) => ({ name, value }))
-      .sort((a, b) => b.value - a.value)
-      .slice(0, 5);
-  }, [realAssets]);
-
-  const rotationSummary = useMemo(() => {
-    let totalRotationPnlPls = 0;
-    let totalRotationPnlUsd = 0;
-    const plsPrice = prices['pulsechain']?.usd || 0.00005;
-
-    realAssets.forEach(asset => {
-      const entryPls = manualEntries[asset.id];
-      if (entryPls && entryPls > 0) {
-        const currentPlsValue = asset.value / plsPrice;
-        const pnlPls = currentPlsValue - entryPls;
-        totalRotationPnlPls += pnlPls;
-        totalRotationPnlUsd += pnlPls * plsPrice;
-      }
-    });
-
-    return {
-      totalRotationPnlPls,
-      totalRotationPnlUsd
-    };
-  }, [realAssets, manualEntries, prices]);
-
-  const monthlyPnlData = useMemo(() => {
-    const pts = history.length > 0 ? history : [];
-    const byMonth: Record<string, { month: string; pnl: number }> = {};
-    pts.forEach(p => {
-      const key = format(p.timestamp, 'MMM yy');
-      if (!byMonth[key]) byMonth[key] = { month: key, pnl: 0 };
-      byMonth[key].pnl += p.pnl;
-    });
-    return Object.values(byMonth).slice(-12);
-  }, [wallets.length, history]);
-
-  const receivedAssetsData = useMemo(() => {
-    const START_2021 = new Date('2021-01-01').getTime();
-    const ethPrice = prices['ethereum']?.usd || 3400;
-    const effectiveReceivedChainFilter = receivedChainFilter === 'pulsechain' ? 'all' : receivedChainFilter;
-
-    const filtered = currentTransactions.filter(tx => {
-      const typeMatch = tx.type === 'deposit' || (tx.type as string) === 'receive';
-      const allowedBridgeChain = tx.chain === 'ethereum' || tx.chain === 'base';
-      const chainMatch = allowedBridgeChain && (effectiveReceivedChainFilter === 'all' || tx.chain === effectiveReceivedChainFilter);
-      const dateMatch = tx.timestamp >= START_2021;
-      const assetUpper = tx.asset.toUpperCase();
-      const assetMatch = assetUpper === 'ETH' ||
-                         assetUpper === 'PLS' ||
-                         assetUpper.includes('USDC') ||
-                         assetUpper.includes('USD COIN') ||
-                         assetUpper.includes('USDBC') ||
-                         assetUpper.includes('USDT') ||
-                         assetUpper.includes('TETHER') ||
-                         assetUpper.includes('DAI');
-      // Exclude dust (gas refunds, tiny transfers)
-      const notDust = tx.valueUsd ? tx.valueUsd >= 1 : (tx.amount > 0.0001 || (assetUpper !== 'ETH' && assetUpper !== 'PLS' && tx.amount > 0.01));
-      return typeMatch && chainMatch && dateMatch && assetMatch && notDust;
-    });
-
-    // Apply coin filter
-    const coinFiltered = receivedCoinFilter === 'all' ? filtered : filtered.filter(tx => {
-      const assetUpper = tx.asset.toUpperCase();
-      if (receivedCoinFilter === 'ETH') return assetUpper === 'ETH';
-      if (receivedCoinFilter === 'PLS') return assetUpper === 'PLS';
-      if (receivedCoinFilter === 'USDC') return assetUpper.includes('USDC') || assetUpper.includes('USD COIN') || assetUpper.includes('USDBC');
-      if (receivedCoinFilter === 'USDT') return assetUpper.includes('USDT') || assetUpper.includes('TETHER');
-      if (receivedCoinFilter === 'DAI') return assetUpper.includes('DAI');
-      return true;
-    });
-
-    // Sort oldest first - shows the full history chronologically
-    const list = [...coinFiltered].sort((a, b) => a.timestamp - b.timestamp);
-
-    // Per-asset totals
-    const plsPrice = prices['pulsechain']?.usd || 0.00005;
-    const getStablePrice = (tx: typeof list[0], stable: 'USDC' | 'USDT' | 'DAI') => {
-      if (tx.chain === 'pulsechain') {
-        if (stable === 'DAI') {
-          return prices['pulsechain:0xefd766ccb38eaf1dfd701853bfce31359239f305']?.usd
-            ?? prices['pulsechain:0x6b175474e89094c44da98b954eedeac495271d0f']?.usd
-            ?? prices['pulsechain:dai']?.usd
-            ?? 0;
-        }
-        if (stable === 'USDT') return prices['pulsechain:0x0cb6f5a34ad42ec934882a05265a7d5f59b51a2f']?.usd ?? 0;
-        return prices['pulsechain:0x15d38573d2feeb82e7ad5187ab8c1d52810b1f07']?.usd ?? 0;
-      }
-      if (stable === 'DAI') return prices['dai']?.usd ?? 0;
-      if (stable === 'USDT') return prices['tether']?.usd ?? 1;
-      return prices['usd-coin']?.usd ?? 1;
-    };
-
-    const getUsd = (tx: typeof list[0]) => {
-      if (tx.valueUsd) return tx.valueUsd;
-      const a = tx.asset.toUpperCase();
-      if (a === 'ETH') return tx.amount * ethPrice;
-      if (a === 'PLS') return tx.amount * plsPrice;
-      if (a.includes('USDT') || a.includes('TETHER')) return tx.amount * getStablePrice(tx, 'USDT');
-      if (a.includes('DAI')) return tx.amount * getStablePrice(tx, 'DAI');
-      return tx.amount * getStablePrice(tx, 'USDC'); // USDC and other stables
-    };
-
-    const byAsset: Record<string, { amount: number; valueUsd: number }> = {};
-    list.forEach(tx => {
-      const assetUpper = tx.asset.toUpperCase();
-      const key = assetUpper === 'PLS' ? 'PLS' :
-                  assetUpper === 'ETH' ? 'ETH' :
-                  assetUpper.includes('DAI') ? 'DAI' :
-                  assetUpper.includes('USDT') || assetUpper.includes('TETHER') ? 'USDT' : 'USDC';
-      if (!byAsset[key]) byAsset[key] = { amount: 0, valueUsd: 0 };
-      byAsset[key].amount += tx.amount;
-      byAsset[key].valueUsd += getUsd(tx);
-    });
-
-    const totalValue = list.reduce((acc, tx) => acc + getUsd(tx), 0);
-
-    return { list, totalValue, byAsset };
-  }, [currentTransactions, prices, receivedCoinFilter, receivedChainFilter]);
+  // receivedAssetsData is now computed via useAppComputations hook
 
   // -- Fetch market data when token card modal opens ------------------------
   // For native PLS, use the WPLS contract address since DexScreener tracks WPLS pairs.
@@ -1002,23 +604,6 @@ export default function App() {
   }, [activeTab, currentAssets.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // -- tokenPrices: symbol -> USD price map for LP hook ---------------------
-  const tokenPrices = useMemo<Record<string, number>>(() => {
-    const p = prices;
-    const wplsUsd = p['pulsechain']?.usd ?? p['pulsechain:native']?.usd ?? 0;
-    return {
-      'WPLS':  wplsUsd,
-      'PLS':   wplsUsd,
-      'PLSX':  p['pulsechain:0x95b303987a60c71504d99aa1b13b4da07b0790ab']?.usd ?? p['pulsex']?.usd ?? 0,
-      'INC':   p['pulsechain:0x2fa878ab3f87cc1c9737fc071108f904c0b0c95d']?.usd ?? p['incentive']?.usd ?? 0,
-      'pHEX':  p['pulsechain:0x2b591e99afe9f32eaa6214f7b7629768c40eeb39']?.usd ?? p['pulsechain:hex']?.usd ?? 0,
-      'pWETH': p['pulsechain:0x02dcdd04e3f455d838cd1249292c58f3b79e3c3c']?.usd ?? p['ethereum']?.usd ?? 0,
-      'pWBTC': p['pulsechain:0xb17d901469b9208b17d916112988a3fed19b5ca1']?.usd ?? p['wrapped-bitcoin']?.usd ?? 0,
-      'pDAI':  p['pulsechain:0xefd766ccb38eaf1dfd701853bfce31359239f305']?.usd ?? 0,
-      'pUSDC': p['pulsechain:0x15d38573d2feeb82e7ad5187ab8c1d52810b1f07']?.usd ?? 0,
-      'pUSDT': p['pulsechain:0x0cb6f5a34ad42ec934882a05265a7d5f59b51a2f']?.usd ?? 0,
-    };
-  }, [prices]);
-
   const explorerUrl = (chain: string, address: string) => {
     if (!address || address === 'native') return null;
     if (chain === 'pulsechain') return `https://scan.pulsechain.com/token/${address}`;
@@ -1032,54 +617,6 @@ export default function App() {
     const slug = chain === 'pulsechain' ? 'pulsechain' : chain === 'base' ? 'base' : 'ethereum';
     return `https://dexscreener.com/${slug}/${address}`;
   };
-
-  const getTokenLogoUrl = useCallback((asset: Asset): string => {
-    // 0. STATIC_LOGOS always wins - curated logos that must never be overwritten by any remote source
-    const addrKey0 = (asset as any).address?.toLowerCase?.() as string | undefined;
-    if (addrKey0 && STATIC_LOGOS[addrKey0]) return STATIC_LOGOS[addrKey0];
-    // 1. Use any logo already fetched and stored on the asset (CoinGecko / DeFi Llama)
-    if (asset.logoUrl) return asset.logoUrl;
-    // 2. Well-known native / base tokens
-    if (asset.symbol === 'ETH') return 'https://assets.coingecko.com/coins/images/279/small/ethereum.png';
-    if (asset.symbol === 'PLS' || asset.symbol === 'WPLS') return 'https://tokens.app.pulsex.com/images/tokens/0xA1077a294dDE1B09bB078844df40758a5D0f9a27.png';
-    // 3. PulseChain tokens via PulseX CDN (URL path is case-sensitive - must use checksummed address)
-    if (asset.chain === 'pulsechain') {
-      const tokenConfig = TOKENS.pulsechain.find(t => t.symbol === asset.symbol);
-      if (tokenConfig && tokenConfig.address !== 'native') {
-        try { return `https://tokens.app.pulsex.com/images/tokens/${getAddress(tokenConfig.address)}.png`; } catch { /* invalid address */ }
-      }
-      // Also try the address stored directly on the asset (for discovered tokens)
-      const addrOnAsset = (asset as any).address;
-      if (addrOnAsset && addrOnAsset !== 'native') {
-        try { return `https://tokens.app.pulsex.com/images/tokens/${getAddress(addrOnAsset)}.png`; } catch { /* invalid address */ }
-      }
-    }
-    // 4. Ethereum + Base tokens via TrustWallet (also case-sensitive)
-    if (asset.chain === 'ethereum' || asset.chain === 'base') {
-      const chainName = asset.chain === 'base' ? 'base' : 'ethereum';
-      const tokenConfig = (TOKENS[asset.chain] as any[]).find((t: any) => t.symbol === asset.symbol);
-      if (tokenConfig && tokenConfig.address !== 'native') {
-        try { return `https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/${chainName}/assets/${getAddress(tokenConfig.address)}/logo.png`; } catch { /* invalid address */ }
-      }
-    }
-    // 5. Fall back to tokenLogos map (covers DexScreener CDN images cached during market-data fetch)
-    if (addrKey0 && tokenLogos[addrKey0]) return tokenLogos[addrKey0];
-    return '';
-  }, [tokenLogos]);
-
-  // Stable callbacks for TransactionList props
-  const handleToggleHide = useCallback((id: string) => {
-    setHiddenTxIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
-  }, []);
-  const handleFilterByAssetHistory = useCallback((symbol: string) => {
-    setActiveTab('history');
-  }, []);
-  const handleFilterByAssetSwap = useCallback((symbol: string) => {
-    setActiveTab('history');
-  }, []);
-  const handleFilterByAssetOnly = useCallback((symbol: string) => {
-    // Filtering is now handled within HistoryTab component
-  }, []);
 
   // -- RENDER ----------------------------------------------------------------
 
