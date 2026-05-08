@@ -45,36 +45,21 @@ export function WalletsTab({
 
   return (
     <div className="wallets-tab-shell">
-      <div className="wallets-page-container" style={{ maxWidth: 1200, margin: '0 auto' }}>
-        {/* Wallets Header */}
-        <div style={{ marginBottom: 24 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+      <div className="wallets-page-container">
+        {/* Header */}
+        <div className="wallets-header">
+          <div className="wallets-header-top">
             <div>
-              <h3 style={{ fontSize: 18, fontWeight: 700, color: t.text, marginBottom: 4 }}>
+              <h3 className="wallets-header-title">
                 Tracked Wallets
               </h3>
-              <p style={{ fontSize: 14, color: t.textMuted }}>
+              <p className="wallets-header-subtitle">
                 Manage your portfolio's wallet addresses across all chains
               </p>
             </div>
             <button
               onClick={onOpenAddWallet}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-                padding: '10px 16px',
-                background: 'var(--accent)',
-                color: '#000',
-                border: 'none',
-                borderRadius: 8,
-                fontSize: 14,
-                fontWeight: 600,
-                cursor: 'pointer',
-                transition: 'opacity 0.2s'
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.8')}
-              onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
+              className="wallets-header-button"
             >
               <Plus size={16} />
               Add Wallet
@@ -84,34 +69,18 @@ export function WalletsTab({
 
         {/* Wallets List */}
         {wallets.length === 0 ? (
-          <div
-            style={{
-              padding: 32,
-              background: t.card,
-              border: `1px solid ${t.border}`,
-              borderRadius: 12,
-              textAlign: 'center'
-            }}
-          >
-            <Shield size={32} style={{ color: t.textMuted, margin: '0 auto 12px' }} />
-            <p style={{ color: t.textMuted, marginBottom: 12 }}>No wallets tracked yet</p>
+          <div className="wallets-list-empty">
+            <Shield size={32} className="wallets-list-empty-icon" />
+            <p className="wallets-list-empty-text">No wallets tracked yet</p>
             <button
               onClick={onOpenAddWallet}
-              style={{
-                fontSize: 14,
-                color: 'var(--accent)',
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                fontWeight: 600,
-                textDecoration: 'underline'
-              }}
+              className="wallets-list-empty-button"
             >
               Add your first wallet
             </button>
           </div>
         ) : (
-          <div style={{ display: 'grid', gap: 12 }}>
+          <div className="wallets-list">
             {wallets.map((wallet, idx) => {
               const isSelected = selectedWalletAddr === wallet.address.toLowerCase();
               const dotColor = getWalletDotColor(idx);
@@ -120,76 +89,35 @@ export function WalletsTab({
                 <div
                   key={wallet.address}
                   onClick={() => onSelectWallet(wallet.address.toLowerCase())}
-                  style={{
-                    padding: 16,
-                    background: isSelected ? t.expandedBg : t.card,
-                    border: `1px solid ${isSelected ? 'var(--accent)' : t.border}`,
-                    borderRadius: 12,
-                    cursor: 'pointer',
-                    transition: 'all 0.2s',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 12
-                  }}
+                  className={cn('wallet-item', isSelected && 'active')}
                 >
                   {/* Wallet Dot */}
                   <div
+                    className={cn('wallet-dot', isSelected && 'wallet-dot-shadow')}
                     style={{
-                      width: 12,
-                      height: 12,
-                      borderRadius: '50%',
                       background: dotColor,
-                      boxShadow: `0 0 8px ${dotColor}88`,
-                      flexShrink: 0
                     }}
                   />
 
                   {/* Wallet Info */}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: t.text, marginBottom: 4 }}>
+                  <div className="wallet-info">
+                    <div className="wallet-name">
                       {wallet.name}
                     </div>
-                    <div
-                      style={{
-                        fontSize: 12,
-                        color: t.textMuted,
-                        fontFamily: 'monospace',
-                        letterSpacing: '0.5px'
-                      }}
-                    >
+                    <div className="wallet-address">
                       {wallet.address}
                     </div>
                   </div>
 
                   {/* Wallet Actions */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                  <div className="wallet-actions">
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         navigator.clipboard.writeText(wallet.address);
                       }}
                       title="Copy address"
-                      style={{
-                        width: 36,
-                        height: 36,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        background: t.borderLight,
-                        border: 'none',
-                        borderRadius: 6,
-                        cursor: 'pointer',
-                        color: t.textMuted,
-                        transition: 'all 0.2s'
-                      }}
-                      onMouseEnter={(e) => {
-                        (e.currentTarget as HTMLButtonElement).style.background = t.border;
-                        (e.currentTarget as HTMLButtonElement).style.color = t.text;
-                      }}
-                      onMouseLeave={(e) => {
-                        (e.currentTarget as HTMLButtonElement).style.background = t.borderLight;
-                        (e.currentTarget as HTMLButtonElement).style.color = t.textMuted;
-                      }}
+                      className="wallet-action-button"
                     >
                       <Copy size={16} />
                     </button>
@@ -200,27 +128,7 @@ export function WalletsTab({
                         onOpenEditWallet(wallet.address, wallet.name);
                       }}
                       title="Rename"
-                      style={{
-                        width: 36,
-                        height: 36,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        background: t.borderLight,
-                        border: 'none',
-                        borderRadius: 6,
-                        cursor: 'pointer',
-                        color: t.textMuted,
-                        transition: 'all 0.2s'
-                      }}
-                      onMouseEnter={(e) => {
-                        (e.currentTarget as HTMLButtonElement).style.background = t.border;
-                        (e.currentTarget as HTMLButtonElement).style.color = t.text;
-                      }}
-                      onMouseLeave={(e) => {
-                        (e.currentTarget as HTMLButtonElement).style.background = t.borderLight;
-                        (e.currentTarget as HTMLButtonElement).style.color = t.textMuted;
-                      }}
+                      className="wallet-action-button"
                     >
                       <Pencil size={16} />
                     </button>
@@ -231,27 +139,7 @@ export function WalletsTab({
                         onRemoveWallet(wallet.address);
                       }}
                       title="Remove"
-                      style={{
-                        width: 36,
-                        height: 36,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        background: t.borderLight,
-                        border: 'none',
-                        borderRadius: 6,
-                        cursor: 'pointer',
-                        color: t.textMuted,
-                        transition: 'all 0.2s'
-                      }}
-                      onMouseEnter={(e) => {
-                        (e.currentTarget as HTMLButtonElement).style.background = '#ef4444';
-                        (e.currentTarget as HTMLButtonElement).style.color = '#fff';
-                      }}
-                      onMouseLeave={(e) => {
-                        (e.currentTarget as HTMLButtonElement).style.background = t.borderLight;
-                        (e.currentTarget as HTMLButtonElement).style.color = t.textMuted;
-                      }}
+                      className="wallet-action-button delete"
                     >
                       <Trash2 size={16} />
                     </button>
