@@ -2,6 +2,7 @@ import React, { useEffect, useCallback } from 'react';
 import { X, TrendingUp, TrendingDown, ExternalLink } from 'lucide-react';
 import type { Asset, Transaction } from '../types';
 import { CHAINS } from '../constants';
+import { DEFAULT_PRICES, VALIDATION } from '../utils/appConstants';
 
 // --- Helpers ----------------------------------------------------------------
 function fmtD(n: number, dp = 2): string {
@@ -43,7 +44,7 @@ const PERIOD_MS: Record<FilterPeriod, number> = {
   'all': Infinity,
 };
 
-const SWAP_PRESETS = [10, 25, 50, 100] as const;
+const SWAP_PRESETS = VALIDATION.SWAP_PRESETS;
 
 // --- Component ---------------------------------------------------------------
 export function PnLModal({ asset, transactions, prices, logoUrl, onClose, walletAddress }: PnLModalProps) {
@@ -68,8 +69,8 @@ export function PnLModal({ asset, transactions, prices, logoUrl, onClose, wallet
   const sym       = asset.symbol.toUpperCase();
   const chainKey  = asset.chain as keyof typeof CHAINS;
   const assetName = asset.name || asset.symbol;
-  const plsPrice  = prices['pulsechain']?.usd || 0.00005;
-  const ethPrice  = prices['ethereum']?.usd || 3400;
+  const plsPrice  = prices['pulsechain']?.usd || DEFAULT_PRICES.PLS;
+  const ethPrice  = prices['ethereum']?.usd || DEFAULT_PRICES.ETH;
   const nativePrice = chainKey === 'ethereum' ? ethPrice : plsPrice;
 
   // -- Symbol alias: PulseChain fork-copy tokens store their original symbol
@@ -198,7 +199,7 @@ export function PnLModal({ asset, transactions, prices, logoUrl, onClose, wallet
         className="pnl-modal-panel"
         style={{
           position: 'relative',
-          width: '100%', maxWidth: 700,
+          width: '100%', maxWidth: 'min(700px, calc(100% - 2rem))',
           maxHeight: 'calc(100vh - 32px)',
           display: 'flex', flexDirection: 'column',
           background: 'var(--bg-surface)',

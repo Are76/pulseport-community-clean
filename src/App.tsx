@@ -84,7 +84,7 @@ import { WalletsTab } from './tabs/WalletsTab';
 import { HomeTab } from './tabs/HomeTab';
 import { OverviewTab } from './tabs/OverviewTab';
 import { shortenAddr, normalizeAssetSymbol, sameAssetSymbol, tryReadCache, readStoredJSON, bigIntReviver, bigIntReplacer, isNoContractDataError, decodeLibertySwapInput } from './utils/appHelpers';
-import { ERC20_ABI, WALLET_DOT_COLORS, CHAIN_COLORS, CHAIN_LABELS, STATIC_LOGOS, LIBERTY_SWAP_ROUTERS, LIBERTY_SWAP_SELECTOR, MIN_INVESTMENT_THRESHOLD, CORE_TOKENS, ACTIVE_TABS, ACTIVE_TAB_STORAGE_KEY, ETH_HEX_ADDR, EHEX_PULSECHAIN_ADDR, type ActiveTab } from './utils/appConstants';
+import { ERC20_ABI, WALLET_DOT_COLORS, CHAIN_COLORS, CHAIN_LABELS, STATIC_LOGOS, LIBERTY_SWAP_ROUTERS, LIBERTY_SWAP_SELECTOR, MIN_INVESTMENT_THRESHOLD, CORE_TOKENS, ACTIVE_TABS, ACTIVE_TAB_STORAGE_KEY, ETH_HEX_ADDR, EHEX_PULSECHAIN_ADDR, WPLS_ADDRESS, API_ENDPOINTS, TIME_WINDOWS, type ActiveTab } from './utils/appConstants';
 import { useAppUI } from './context/AppUIContext';
 import { useAppModals } from './context/AppModalsContext';
 import { PriceDisplay } from './components/PriceDisplay';
@@ -219,21 +219,8 @@ export default function App() {
 
   // Initialize formatters, computations, and utilities from hooks
   const { fmtBigNum, fmtDec, fmtTok, exportCSV, themeColors: t } = useAppFormatters(theme);
+  // Temporary placeholder arrays - will be replaced with actual computations below
 
-  const computations = useAppComputations(
-    currentAssets,
-    currentStakes,
-    currentTransactions,
-    realAssets,
-    realStakes,
-    history,
-    wallets,
-    manualEntries,
-    prices,
-    receivedCoinFilter,
-    receivedChainFilter
-  );
-  const { summary, stakeSummary, assetAllocation, rotationSummary, monthlyPnlData, receivedAssetsData } = computations;
 
   const { tokenPrices, explorerUrl, dexScreenerUrl, getTokenLogoUrl } = useTokenUtilities(prices);
 
@@ -468,12 +455,28 @@ export default function App() {
     }));
   }, [wallets.length, transactions]);
 
+  const computations = useAppComputations(
+    currentAssets,
+    currentStakes,
+    currentTransactions,
+    realAssets,
+    realStakes,
+    history,
+    wallets,
+    manualEntries,
+    prices,
+    receivedCoinFilter,
+    receivedChainFilter
+  );
+  const { summary, stakeSummary, assetAllocation, rotationSummary, monthlyPnlData, receivedAssetsData } = computations;
+
+
   const unpricedCount = useMemo(() => {
     return currentAssets.filter(a => a.price === 0).length;
   }, [currentAssets]);
 
   const swapTransactions24h = useMemo(() => {
-    const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+    const cutoff = Date.now() - TIME_WINDOWS.HOURS_24;
     return currentTransactions.filter((tx) => {
       if (tx.chain !== 'pulsechain') return false;
       if (tx.timestamp < cutoff) return false;
@@ -489,14 +492,13 @@ export default function App() {
 
   // -- Fetch market data when token card modal opens ------------------------
   // For native PLS, use the WPLS contract address since DexScreener tracks WPLS pairs.
-  const WPLS_ADDR = '0xa1077a294dde1b09bb078844df40758a5d0f9a27';
   useEffect(() => {
     if (!tokenCardModal) return;
     const id   = tokenCardModal.id;
     const rawAddr = (tokenCardModal as any).address as string | undefined;
     // PLS is native - fall back to WPLS so we can show DexScreener market data
     const isNativePls = (!rawAddr || rawAddr === 'native') && tokenCardModal.chain === 'pulsechain';
-    const addr = isNativePls ? WPLS_ADDR : rawAddr;
+    const addr = isNativePls ? WPLS_ADDRESS : rawAddr;
     if (!addr || addr === 'native') return;
     if (tokenMarketData[id]) { setTokenCardModalLoading(false); return; }
     setTokenCardModalLoading(true);
@@ -504,7 +506,7 @@ export default function App() {
       try {
         const bsBase = resolveBlockscoutBase();
         const [dsResult, holderResult] = await Promise.allSettled([
-          fetch(`https://api.dexscreener.com/latest/dex/tokens/${addr}`).then(r => r.ok ? r.json() : null),
+          fetch(`${API_ENDPOINTS.DEXSCREENER_LATEST}/tokens/${addr}`).then(r => r.ok ? r.json() : null),
           tokenCardModal?.chain === 'pulsechain' && !isNativePls
             ? fetch(`${bsBase}/tokens/${addr}`).then(r => r.ok ? r.json() : null)
             : Promise.resolve(null),
@@ -562,7 +564,7 @@ export default function App() {
       try {
         // Fetch DexScreener data + Blockscout holder count in parallel
         const [dsResult, holderResult] = await Promise.allSettled([
-          fetch(`https://api.dexscreener.com/latest/dex/tokens/${addr}`).then(r => r.ok ? r.json() : null),
+          fetch(`${API_ENDPOINTS.DEXSCREENER_LATEST}/tokens/${addr}`).then(r => r.ok ? r.json() : null),
           asset.chain === 'pulsechain'
             ? fetch(`${bsBase}/tokens/${addr}`).then(r => r.ok ? r.json() : null)
             : Promise.resolve(null),
@@ -603,21 +605,6 @@ export default function App() {
     }));
   }, [activeTab, currentAssets.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // -- tokenPrices: symbol -> USD price map for LP hook ---------------------
-  const explorerUrl = (chain: string, address: string) => {
-    if (!address || address === 'native') return null;
-    if (chain === 'pulsechain') return `https://scan.pulsechain.com/token/${address}`;
-    if (chain === 'ethereum') return `https://etherscan.io/token/${address}`;
-    if (chain === 'base') return `https://base.blockscout.com/token/${address}`;
-    return null;
-  };
-
-  const dexScreenerUrl = (chain: string, address: string) => {
-    if (!address || address === 'native') return null;
-    const slug = chain === 'pulsechain' ? 'pulsechain' : chain === 'base' ? 'base' : 'ethereum';
-    return `https://dexscreener.com/${slug}/${address}`;
-  };
-
   // -- RENDER ----------------------------------------------------------------
 
   const getFrontMarketChange = (marketData: any, priceData: any, asset?: Asset | null): number | null => {
@@ -642,12 +629,11 @@ export default function App() {
     if (activeTab !== 'overview' && activeTab !== 'home') return;
     const missing = coreLiveTokens.filter(token => !tokenMarketData[`live:${token.id}`]);
     if (missing.length === 0) return;
-    const WPLS = '0xa1077a294dde1b09bb078844df40758a5d0f9a27';
     missing.forEach(async (token) => {
-      const rawAddr = token.priceKey === 'pulsechain' ? WPLS : token.priceKey.includes(':') ? token.priceKey.split(':')[1] : null;
+      const rawAddr = token.priceKey === 'pulsechain' ? WPLS_ADDRESS : token.priceKey.includes(':') ? token.priceKey.split(':')[1] : null;
       if (!rawAddr) return;
       try {
-        const res = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${rawAddr.toLowerCase()}`);
+        const res = await fetch(`${API_ENDPOINTS.DEXSCREENER_LATEST}/tokens/${rawAddr.toLowerCase()}`);
         if (!res.ok) return;
         const data = await res.json();
         const pairs: any[] = data.pairs || [];
@@ -1152,45 +1138,22 @@ export default function App() {
 
             {activeTab === 'assets' && (
               <AssetsTab
-                selectedWalletAddr={selectedWalletAddr}
-                currentAssets={currentAssets}
-                walletAssets={walletAssets}
-                currentTransactions={currentTransactions}
-                collapsedSections={collapsedSections}
-                toggleSection={toggleSection}
-                isCollapsed={isCollapsed}
                 getTokenLogoUrl={getTokenLogoUrl}
                 shortenAddr={shortenAddr}
                 explorerUrl={explorerUrl}
                 dexScreenerUrl={dexScreenerUrl}
                 t={t}
-                prices={prices}
-                tokenLogos={tokenLogos}
-                hideDust={hideDust}
-                hideSpam={hideSpam}
-                spamTokenIds={spamTokenIds}
-                hiddenTokens={hiddenTokens}
-                setHiddenTokens={setHiddenTokens}
-                hideToken={hideToken}
-                summary={summary}
-                wallets={wallets}
-                setSelectedWalletAddr={setSelectedWalletAddr}
-                setActiveWallet={setActiveWallet}
-                isLoading={isLoading}
-                fetchPortfolio={fetchPortfolio}
+                CHAIN_COLORS={CHAIN_COLORS}
+                WALLET_DOT_COLORS={WALLET_DOT_COLORS}
+                STATIC_LOGOS={STATIC_LOGOS}
                 setIsAddingWallet={setIsAddingWallet}
                 setEditingWalletAddress={setEditingWalletAddress}
                 setEditWalletName={setEditWalletName}
                 setPnlAsset={setPnlAsset}
-                pnlAsset={pnlAsset}
-                manualEntries={manualEntries}
-                setManualEntries={setManualEntries}
+                onOpenAddCoin={() => setIsCustomCoinsModalOpen(true)}
+                summary={summary}
                 currentStakes={currentStakes}
-                customCoins={customCoins}
-                setIsCustomCoinsModalOpen={setIsCustomCoinsModalOpen}
-                CHAIN_COLORS={CHAIN_COLORS}
-                WALLET_DOT_COLORS={WALLET_DOT_COLORS}
-                STATIC_LOGOS={STATIC_LOGOS}
+                pnlAsset={pnlAsset}
               />
             )}
 
@@ -1480,39 +1443,11 @@ export default function App() {
         renameWallet={renameWallet}
         isCustomCoinsModalOpen={isCustomCoinsModalOpen}
         setIsCustomCoinsModalOpen={setIsCustomCoinsModalOpen}
-        customCoinDraft={customCoinDraft}
-        setCustomCoinDraft={setCustomCoinDraft}
-        submitCustomCoin={submitCustomCoin}
-        showMarketWatch={showMarketWatch}
-        setShowMarketWatch={setShowMarketWatch}
-        marketWatchInitialSearch={marketWatchInitialSearch}
         theme={theme}
-        profitPlannerOpen={profitPlannerOpen}
-        setProfitPlannerOpen={setProfitPlannerOpen}
-        currentAssets={currentAssets}
-        summary={summary}
-        isApiKeyModalOpen={isApiKeyModalOpen}
-        setIsApiKeyModalOpen={setIsApiKeyModalOpen}
-        apiKeyInput={apiKeyInput}
-        setApiKeyInput={setApiKeyInput}
-        etherscanApiKey={etherscanApiKey}
-        setEtherscanApiKey={setEtherscanApiKey}
-        fetchPortfolio={fetchPortfolio}
-        pnlAsset={pnlAsset}
-        setPnlAsset={setPnlAsset}
-        currentTransactions={currentTransactions}
-        prices={prices}
-        tokenLogos={tokenLogos}
-        STATIC_LOGOS={STATIC_LOGOS}
-        selectedWalletAddr={selectedWalletAddr}
+        t={t}
         getTokenLogoUrl={getTokenLogoUrl}
-        tokenCardModal={tokenCardModal}
-        setTokenCardModal={setTokenCardModal}
-        tokenCardModalLoading={tokenCardModalLoading}
-        tokenMarketData={tokenMarketData}
         dexScreenerUrl={dexScreenerUrl}
         explorerUrl={explorerUrl}
-        t={t}
       />
 
     </div>

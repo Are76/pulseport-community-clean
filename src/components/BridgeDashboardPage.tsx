@@ -1,31 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeftRight, ExternalLink, RefreshCcw, Shield, Zap, CreditCard, ArrowUpDown, Copy, Check } from 'lucide-react';
-
-const BRIDGE_TOKENS = [
-  { symbol: 'pWETH', name: 'Wrapped Ether',  address: '0x02dcdd04e3f455d838cd1249292c58f3b79e3c3c', decimals: 18, coingeckoId: 'ethereum', color: '#627EEA' },
-  { symbol: 'pDAI',  name: 'DAI Stablecoin', address: '0xefd766ccb38eaf1dfd701853bfce31359239f305', decimals: 18, coingeckoId: 'dai',      color: '#f5a623' },
-  { symbol: 'pUSDC', name: 'USD Coin',        address: '0x15d38573d2feeb82e7ad5187ab8c1d52810b1f07', decimals: 6,  coingeckoId: 'usd-coin', color: '#2775ca' },
-  { symbol: 'pUSDT', name: 'Tether USD',      address: '0x0cb6f5a34ad42ec934882a05265a7d5f59b51a2f', decimals: 6,  coingeckoId: 'tether',   color: '#26a17b' },
-  { symbol: 'pWBTC', name: 'Wrapped Bitcoin', address: '0xb17d901469b9208b17d916112988a3fed19b5ca1', decimals: 8,  coingeckoId: 'bitcoin',  color: '#f7931a' },
-  { symbol: 'eHEX',  name: 'HEX (bridged)',   address: '0x57fde0a71132198bbec939b98976993d8d89d225', decimals: 8,  coingeckoId: 'hex',      color: '#ff00ff' },
-];
-
-const CORE_TOKENS = [
-  { symbol: 'PLS', role: 'Native gas', contract: 'native', note: 'Pays PulseChain transaction fees.', color: 'var(--accent)' },
-  { symbol: 'WPLS', role: 'Wrapped PLS', contract: '0xa1077a294dde1b09bb078844df40758a5d0f9a27', note: 'ERC20-style PLS for DeFi pools.', color: '#06b6d4' },
-  { symbol: 'PLSX', role: 'PulseX token', contract: '0x95b303987a60c71504d99aa1b13b4da07b0790ab', note: 'PulseX DEX token with buy-and-burn mechanics.', color: '#f739ff' },
-  { symbol: 'INC', role: 'Farm incentive', contract: '0x2fa878ab3f87cc1c9737fc071108f904c0b0c95d', note: 'Earned by PulseX liquidity farmers.', color: '#22d3ee' },
-  { symbol: 'pHEX', role: 'HEX on PulseChain', contract: '0x2b591e99afe9f32eaa6214f7b7629768c40eeb39', note: 'Fork-copy HEX that can be staked on PulseChain.', color: '#a855f7' },
-];
-
-const BRIDGED_REFERENCE = [
-  { symbol: 'eHEX', contract: '0x57fde0a71132198bbec939b98976993d8d89d225', note: 'Ethereum HEX bridged to PulseChain. Not pHEX staking HEX.' },
-  { symbol: 'pDAI', contract: '0xefd766ccb38eaf1dfd701853bfce31359239f305', note: 'Market-priced DAI bridge token. Do not assume $1.' },
-  { symbol: 'pUSDC', contract: '0x15d38573d2feeb82e7ad5187ab8c1d52810b1f07', note: 'Market-priced USDC bridge token.' },
-  { symbol: 'pUSDT', contract: '0x0cb6f5a34ad42ec934882a05265a7d5f59b51a2f', note: 'Market-priced USDT bridge token.' },
-  { symbol: 'pWETH', contract: '0x02dcdd04e3f455d838cd1249292c58f3b79e3c3c', note: 'Wrapped ETH bridged to PulseChain.' },
-  { symbol: 'pWBTC', contract: '0xb17d901469b9208b17d916112988a3fed19b5ca1', note: 'Wrapped BTC bridged to PulseChain.' },
-];
+import { BRIDGE_TOKENS, PULSECHAIN_CORE_TOKENS, API_ENDPOINTS, TOAST_DURATIONS } from '../utils/appConstants';
 
 const QUICK_CHECKS = [
   ['PulseChain', 'EVM-compatible Layer 1, chain ID 369, native gas token PLS.'],
@@ -38,8 +13,8 @@ interface TokenData {
   supply: number | null; price: number | null; tvl: number | null;
 }
 
-const SCANNER = 'https://api.scan.pulsechain.com/api';
-const COINGECKO = 'https://api.coingecko.com/api/v3/simple/price';
+const SCANNER = API_ENDPOINTS.PULSECHAIN_SCANNER;
+const COINGECKO = API_ENDPOINTS.COINGECKO_PRICE;
 
 function fmt(n: number): string {
   if (n >= 1e9) return `$${(n / 1e9).toFixed(2)}B`;
@@ -57,7 +32,7 @@ function fmtAmount(n: number): string {
 function CopyBtn({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
   return (
-    <button onClick={() => { navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
+    <button onClick={() => { navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), TOAST_DURATIONS.COPY_FEEDBACK); }}
       style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px 4px', color: 'var(--fg-muted)' }}>
       {copied ? <Check size={11} color="var(--accent)" /> : <Copy size={11} />}
     </button>
@@ -149,7 +124,7 @@ export default function BridgeDashboardPage({ afterOfficialBridge }: { afterOffi
   const knownTvl = tokens.some(t => t.tvl != null);
 
   return (
-    <div style={{ maxWidth: 960, margin: '0 auto', paddingBottom: 48 }}>
+    <div style={{ maxWidth: 'min(960px, calc(100% - 2rem))', margin: '0 auto', paddingBottom: 48, paddingLeft: '1rem', paddingRight: '1rem' }}>
 
       {/* -- HERO BANNER ------------------------------------------------------- */}
       <div style={{
@@ -416,7 +391,7 @@ export default function BridgeDashboardPage({ afterOfficialBridge }: { afterOffi
           PulseChain fork copies, native assets, and bridged tokens can share familiar names while trading as separate markets.
         </p>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: 12 }}>
-          {CORE_TOKENS.map(token => (
+          {PULSECHAIN_CORE_TOKENS.map(token => (
             <div key={token.symbol} style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderTop: `2px solid ${token.color}`, borderRadius: 8, padding: 14 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                 <strong style={{ color: token.color, fontSize: 18 }}>{token.symbol}</strong>
