@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, ReactNode } from 'react';
+import { useModalState } from '../hooks/useModalState';
 
 interface AppModalsState {
   showAddWallet: boolean;
@@ -43,59 +44,43 @@ interface AppModalsContextType extends AppModalsState {
 const AppModalsContext = createContext<AppModalsContextType | undefined>(undefined);
 
 export function AppModalsProvider({ children }: { children: ReactNode }) {
-  const [showAddWallet, setShowAddWallet] = useState(false);
-  const [showRemoveWallet, setShowRemoveWallet] = useState(false);
-  const [showMarketWatch, setShowMarketWatch] = useState(false);
-  const [showPriceCard, setShowPriceCard] = useState(false);
-  const [showInvestmentDetail, setShowInvestmentDetail] = useState(false);
-  const [showStakeDetail, setShowStakeDetail] = useState(false);
-  const [showLpDetail, setShowLpDetail] = useState(false);
-  const [showFarmDetail, setShowFarmDetail] = useState(false);
-  const [showConfirmAction, setShowConfirmAction] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
-  const [showHelp, setShowHelp] = useState(false);
-  const [showAbout, setShowAbout] = useState(false);
-  const [selectedModalId, setSelectedModalId] = useState<string | null>(null);
-  const [confirmActionMessage, setConfirmActionMessage] = useState('');
-  const [confirmActionCallback, setConfirmActionCallback] = useState<(() => void) | null>(null);
-  const [isLoadingModal, setIsLoadingModal] = useState(false);
-  const [modalError, setModalError] = useState<string | null>(null);
+  const modalState = useModalState();
 
   const value: AppModalsContextType = {
-    showAddWallet,
-    showRemoveWallet,
-    showMarketWatch,
-    showPriceCard,
-    showInvestmentDetail,
-    showStakeDetail,
-    showLpDetail,
-    showFarmDetail,
-    showConfirmAction,
-    showSettings,
-    showHelp,
-    showAbout,
-    selectedModalId,
-    confirmActionMessage,
-    confirmActionCallback,
-    isLoadingModal,
-    modalError,
-    setShowAddWallet,
-    setShowRemoveWallet,
-    setShowMarketWatch,
-    setShowPriceCard,
-    setShowInvestmentDetail,
-    setShowStakeDetail,
-    setShowLpDetail,
-    setShowFarmDetail,
-    setShowConfirmAction,
-    setShowSettings,
-    setShowHelp,
-    setShowAbout,
-    setSelectedModalId,
-    setConfirmActionMessage,
-    setConfirmActionCallback,
-    setIsLoadingModal,
-    setModalError,
+    showAddWallet: modalState.isModalOpen('addWallet'),
+    showRemoveWallet: modalState.isModalOpen('removeWallet'),
+    showMarketWatch: modalState.isModalOpen('marketWatch'),
+    showPriceCard: modalState.isModalOpen('priceCard'),
+    showInvestmentDetail: modalState.isModalOpen('investmentDetail'),
+    showStakeDetail: modalState.isModalOpen('stakeDetail'),
+    showLpDetail: modalState.isModalOpen('lpDetail'),
+    showFarmDetail: modalState.isModalOpen('farmDetail'),
+    showConfirmAction: modalState.isModalOpen('confirmAction'),
+    showSettings: modalState.isModalOpen('settings'),
+    showHelp: modalState.isModalOpen('help'),
+    showAbout: modalState.isModalOpen('about'),
+    selectedModalId: modalState.selectedModalId,
+    confirmActionMessage: modalState.confirmActionMessage,
+    confirmActionCallback: modalState.confirmActionCallback,
+    isLoadingModal: modalState.isLoadingModal,
+    modalError: modalState.modalError,
+    setShowAddWallet: (show: boolean) => show ? modalState.openModalAction('addWallet') : modalState.closeModal(),
+    setShowRemoveWallet: (show: boolean) => show ? modalState.openModalAction('removeWallet') : modalState.closeModal(),
+    setShowMarketWatch: (show: boolean) => show ? modalState.openModalAction('marketWatch') : modalState.closeModal(),
+    setShowPriceCard: (show: boolean) => show ? modalState.openModalAction('priceCard') : modalState.closeModal(),
+    setShowInvestmentDetail: (show: boolean) => show ? modalState.openModalAction('investmentDetail') : modalState.closeModal(),
+    setShowStakeDetail: (show: boolean) => show ? modalState.openModalAction('stakeDetail') : modalState.closeModal(),
+    setShowLpDetail: (show: boolean) => show ? modalState.openModalAction('lpDetail') : modalState.closeModal(),
+    setShowFarmDetail: (show: boolean) => show ? modalState.openModalAction('farmDetail') : modalState.closeModal(),
+    setShowConfirmAction: (show: boolean) => show ? modalState.openModalAction('confirmAction') : modalState.closeModal(),
+    setShowSettings: (show: boolean) => show ? modalState.openModalAction('settings') : modalState.closeModal(),
+    setShowHelp: (show: boolean) => show ? modalState.openModalAction('help') : modalState.closeModal(),
+    setShowAbout: (show: boolean) => show ? modalState.openModalAction('about') : modalState.closeModal(),
+    setSelectedModalId: modalState.setSelectedModalId,
+    setConfirmActionMessage: modalState.setConfirmActionMessage,
+    setConfirmActionCallback: modalState.setConfirmActionCallback,
+    setIsLoadingModal: modalState.setIsLoadingModal,
+    setModalError: modalState.setModalError,
   };
 
   return (
