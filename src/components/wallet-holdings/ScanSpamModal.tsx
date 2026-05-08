@@ -6,6 +6,7 @@ interface ScanSpamModalProps {
   onClose: () => void;
   isScanning: boolean;
   scanResult: number | null;
+  spamIds?: string[];
   onConfirmRemove: (spamIds: string[]) => void;
 }
 
@@ -14,6 +15,7 @@ export function ScanSpamModal({
   onClose,
   isScanning,
   scanResult,
+  spamIds = [],
   onConfirmRemove,
 }: ScanSpamModalProps) {
   const [progress, setProgress] = useState(0);
@@ -117,7 +119,7 @@ export function ScanSpamModal({
                 Keep
               </button>
               <button
-                onClick={() => onConfirmRemove([])}
+                onClick={() => onConfirmRemove(spamIds)}
                 disabled={!scanResult || scanResult === 0}
                 className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
               >

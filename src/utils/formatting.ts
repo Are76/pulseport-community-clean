@@ -9,10 +9,11 @@
  * @returns Formatted price string
  */
 export const fmtPrice = (p: number): string => {
-  if (p >= 1) return p.toLocaleString('en-US', { maximumFractionDigits: 2, minimumFractionDigits: 2 });
-  if (p >= 0.01) return p.toLocaleString('en-US', { maximumFractionDigits: 4, minimumFractionDigits: 4 });
-  if (p >= 0.0001) return p.toLocaleString('en-US', { maximumFractionDigits: 6, minimumFractionDigits: 6 });
-  if (p >= 0.00000001) return p.toLocaleString('en-US', { maximumFractionDigits: 8, minimumFractionDigits: 8 });
+  const abs = Math.abs(p);
+  if (abs >= 1) return p.toLocaleString('en-US', { maximumFractionDigits: 2, minimumFractionDigits: 2 });
+  if (abs >= 0.01) return p.toLocaleString('en-US', { maximumFractionDigits: 4, minimumFractionDigits: 4 });
+  if (abs >= 0.0001) return p.toLocaleString('en-US', { maximumFractionDigits: 6, minimumFractionDigits: 6 });
+  if (abs >= 0.00000001) return p.toLocaleString('en-US', { maximumFractionDigits: 8, minimumFractionDigits: 8 });
   return p.toExponential(2);
 };
 
@@ -43,11 +44,14 @@ export const fmtAmount = (val: number): string => {
  * @param n - The number to format
  * @returns Formatted number string
  */
-export const fmtCompact = (n: number): string =>
-  n >= 1e9 ? `${(n / 1e9).toFixed(2)}B` :
-  n >= 1e6 ? `${(n / 1e6).toFixed(2)}M` :
-  n >= 1e3 ? `${(n / 1e3).toFixed(1)}K` :
-  n.toLocaleString('en-US', { maximumFractionDigits: 0 });
+export const fmtCompact = (n: number): string => {
+  const abs = Math.abs(n);
+  const sign = n < 0 ? '-' : '';
+  return abs >= 1e9 ? `${sign}${(abs / 1e9).toFixed(2)}B` :
+         abs >= 1e6 ? `${sign}${(abs / 1e6).toFixed(2)}M` :
+         abs >= 1e3 ? `${sign}${(abs / 1e3).toFixed(1)}K` :
+         n.toLocaleString('en-US', { maximumFractionDigits: 0 });
+};
 
 /**
  * Format a market value with currency symbol and compact notation.

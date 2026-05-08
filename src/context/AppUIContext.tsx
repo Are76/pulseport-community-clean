@@ -61,7 +61,7 @@ export function AppUIProvider({ children }: { children: ReactNode }) {
   // Persist activeTab when it changes
   const handleSetActiveTab = useCallback((tab: string) => {
     setActiveTab(tab);
-    localStorage.setItem('pulseport_active_tab', tab);
+    localStorage.setItem('pulseport_active_tab', JSON.stringify(tab));
   }, []);
 
   // Persist yieldUnit when it changes

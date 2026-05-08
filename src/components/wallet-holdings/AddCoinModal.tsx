@@ -27,10 +27,11 @@ export function AddCoinModal({ isOpen, onClose, onAdd, theme = 'light' }: AddCoi
   const [contractAddress, setContractAddress] = useState('');
   const [error, setError] = useState('');
   const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const symbolInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (isOpen) {
-      closeButtonRef.current?.focus();
+      symbolInputRef.current?.focus();
       const handleKeyDown = (e: KeyboardEvent) => {
         if (e.key === 'Escape') onClose();
       };
@@ -96,6 +97,7 @@ export function AddCoinModal({ isOpen, onClose, onAdd, theme = 'light' }: AddCoi
               Symbol *
             </label>
             <input
+              ref={symbolInputRef}
               type="text"
               value={symbol}
               onChange={(e) => setSymbol(e.target.value)}

@@ -22,6 +22,8 @@ export function CoinFilters({
     <div className="flex flex-wrap gap-2 mb-4">
       <button
         onClick={onToggleHidden}
+        title={showHiddenCoins ? 'Hide hidden coins' : 'Show hidden coins'}
+        aria-label={showHiddenCoins ? 'Hide hidden coins' : 'Show hidden coins'}
         className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg border transition-colors ${
           showHiddenCoins
             ? 'bg-purple-500 border-purple-500 text-white'
@@ -34,6 +36,8 @@ export function CoinFilters({
 
       <button
         onClick={onToggleDustFilter}
+        title={showDustFilter ? 'Disable dust filter' : 'Enable dust filter'}
+        aria-label={showDustFilter ? 'Disable dust filter' : 'Enable dust filter'}
         className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg border transition-colors ${
           showDustFilter
             ? 'bg-orange-500 border-orange-500 text-white'

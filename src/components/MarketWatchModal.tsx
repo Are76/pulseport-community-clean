@@ -202,19 +202,20 @@ export function MarketWatchModal({ theme, onClose, initialSearch = '' }: Props) 
 
   // New: Helper to detect and search by contract address
   function isContractAddress(query: string): { chainId: string; address: string } | null {
-    const q = query.trim().toLowerCase();
-    if (!q.startsWith('0x') || q.length < 40) return null;
-    // Try to match chain:address format or just address (default to pulsechain)
+    const q = query.trim();
+    // Try chain:address format first
     const parts = q.split(':');
     if (parts.length === 2) {
       const [chain, addr] = parts;
-      if (SUPPORTED_MARKET_CHAINS.has(chain) && addr.match(/^0x[a-f0-9]{40}$/)) {
-        return { chainId: chain, address: addr };
+      const lowerAddr = addr.toLowerCase();
+      if (SUPPORTED_MARKET_CHAINS.has(chain) && lowerAddr.match(/^0x[a-f0-9]{40}$/)) {
+        return { chainId: chain, address: lowerAddr };
       }
     }
-    // Single address - try all supported chains
-    if (q.match(/^0x[a-f0-9]{40}$/)) {
-      return { chainId: 'pulsechain', address: q }; // Default to PulseChain first
+    // Plain address (default to pulsechain)
+    const lowerQ = q.toLowerCase();
+    if (lowerQ.match(/^0x[a-f0-9]{40}$/)) {
+      return { chainId: 'pulsechain', address: lowerQ };
     }
     return null;
   }

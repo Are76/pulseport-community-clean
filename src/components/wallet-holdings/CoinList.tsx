@@ -18,6 +18,7 @@ interface CoinListProps {
   coins: CoinData[];
   hiddenCoins: string[];
   showDust: boolean;
+  showHiddenCoins?: boolean;
   onHideToggle: (id: string) => void;
   onRemove: (id: string) => void;
 }
@@ -48,6 +49,7 @@ export function CoinList({
   coins,
   hiddenCoins,
   showDust,
+  showHiddenCoins = false,
   onHideToggle,
   onRemove,
 }: CoinListProps) {
@@ -67,9 +69,8 @@ export function CoinList({
       return true;
     }
 
-    // For hidden coins, only show if they should be visible
-    // (This will be determined by the parent component)
-    return false;
+    // For hidden coins, only show if showHiddenCoins is true
+    return showHiddenCoins;
   });
 
   if (filtered.length === 0) {

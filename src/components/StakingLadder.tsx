@@ -18,13 +18,15 @@ export function StakingLadder({ stakes }: StakingLadderProps) {
     const bucketIdx = Math.floor(days / bucketSize);
     if (!buckets[bucketIdx]) {
       const start = bucketIdx * bucketSize;
-      buckets[bucketIdx] = { totalShares: INITIAL_BUCKET_SHARES, stakeCount: 0, bucketRange: `${start}-${start + bucketSize - 1}` };
+      buckets[bucketIdx] = { totalShares: 0, stakeCount: 0, bucketRange: `${start}-${start + bucketSize - 1}` };
     }
-    buckets[bucketIdx].totalShares = (buckets[bucketIdx].totalShares === INITIAL_BUCKET_SHARES ? 0 : buckets[bucketIdx].totalShares) + (stake.tShares ?? 0);
+    buckets[bucketIdx].totalShares += (stake.tShares ?? 0);
     buckets[bucketIdx].stakeCount += 1;
   });
 
+  // Filter out buckets with zero or negative totalShares for log scale safety
   const chartData = Object.entries(buckets)
+    .filter(([_, d]) => d.totalShares > 0)
     .sort(([a], [b]) => Number(a) - Number(b))
     .map(([idx, d]) => ({ daysRemaining: Number(idx) * bucketSize + bucketSize / 2, ...d }));
 

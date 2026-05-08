@@ -41,6 +41,8 @@ export function StakingPie({ stakes, hexUsdPrice }: StakingPieProps) {
   const totalUsd = Object.values(byWallet).reduce((a, b) => a + b.totalUsd, 0);
   const totalHex = Object.values(byWallet).reduce((a, b) => a + b.totalHex, 0);
 
+  if (totalTShares === 0) return null;
+
   const sorted = Object.values(byWallet).sort((a, b) => b.tShares - a.tShares);
   const threshold = 0.02;
   const large = sorted.filter(w => w.tShares / totalTShares >= threshold);

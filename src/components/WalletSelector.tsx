@@ -30,11 +30,19 @@ export function WalletSelector({ wallets, activeWallet, onSelect, onAdd, onRemov
         const dotColor = WALLET_DOT_COLORS[idx % WALLET_DOT_COLORS.length];
         const isActive = activeWallet === addr;
         return (
-          <button
+          <div
             key={addr}
             className={`wallet-pill${isActive ? ' active' : ''}`}
+            role="button"
+            tabIndex={0}
             title={addr}
             onClick={() => onSelect(addr)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onSelect(addr);
+              }
+            }}
             style={isActive ? {
               background: `${dotColor}1a`,
               borderColor: `${dotColor}55`,
@@ -53,7 +61,7 @@ export function WalletSelector({ wallets, activeWallet, onSelect, onAdd, onRemov
                 x
               </button>
             )}
-          </button>
+          </div>
         );
       })}
       <button

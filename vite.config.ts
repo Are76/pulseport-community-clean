@@ -24,17 +24,17 @@ export default defineConfig(({mode}) => {
           manualChunks(id) {
             // Split node_modules into vendor chunk
             if (id.includes('node_modules')) {
-              // Core dependencies
-              if (id.includes('react') || id.includes('react-dom')) {
-                return 'vendor-react';
+              // Web3 libraries (before common, as they may have common deps)
+              if (id.includes('/viem/') || id.includes('/wagmi/')) {
+                return 'vendor-web3';
               }
-              // UI/Animation libraries
-              if (id.includes('lucide-react') || id.includes('motion')) {
+              // UI/Animation libraries (before common)
+              if (id.includes('/lucide-react/') || id.includes('/motion/')) {
                 return 'vendor-ui';
               }
-              // Web3 libraries
-              if (id.includes('viem') || id.includes('wagmi')) {
-                return 'vendor-web3';
+              // Core dependencies (specific: react and react-dom)
+              if (id.match(/\/react(-dom)?\//)) {
+                return 'vendor-react';
               }
               // Utility libraries
               return 'vendor-common';
