@@ -13435,3 +13435,93 @@ body,
     padding: 0 14px 14px;
   }
 }
+
+/* -- ADD COIN MODAL VALIDATION STYLES ---------------------------------- */
+.contract-address-input-wrapper {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.contract-address-input {
+  flex: 1;
+}
+
+.validate-address-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-elevated);
+  color: var(--fg-muted);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.validate-address-button:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.validate-address-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.validation-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  margin-top: 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.validation-status.loading {
+  background: var(--accent-dim);
+  border: 1px solid var(--accent-border);
+  color: var(--accent);
+}
+
+.validation-status.success {
+  background: rgba(0, 230, 118, 0.1);
+  border: 1px solid rgba(0, 230, 118, 0.28);
+  color: var(--positive-text);
+}
+
+.validation-status.error {
+  background: rgba(255, 23, 68, 0.1);
+  border: 1px solid var(--negative-border);
+  color: var(--negative-text);
+}
+
+.custom-coin-grid input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.custom-coin-grid select {
+  width: 100%;
+  min-width: 0;
+  height: 42px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-elevated);
+  color: var(--fg);
+  font-size: 14px;
+  outline: 0;
+}
+
+.custom-coin-grid select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
