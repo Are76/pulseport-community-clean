@@ -165,6 +165,7 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
 
   // ── Persistence effects ──────────────────────────────────────────────────────
 
+  useEffect(() => { scheduleLocalStorageWrite('pulseport_wallets', JSON.stringify(wallets)); }, [wallets]);
   useEffect(() => { scheduleLocalStorageWrite('pulseport_custom_coins', JSON.stringify(customCoins)); }, [customCoins]);
   useEffect(() => { scheduleLocalStorageWrite('pulseport_cache_assets', JSON.stringify(realAssets)); }, [realAssets]);
   useEffect(() => { scheduleLocalStorageWrite('pulseport_cache_stakes', JSON.stringify(realStakes, (_k, v) => typeof v === 'bigint' ? v.toString() : v)); }, [realStakes]);
