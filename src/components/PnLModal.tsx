@@ -23,6 +23,7 @@ function pnlColor(n: number): string { return n >= 0 ? 'var(--positive)' : 'var(
 
 // --- Props --------------------------------------------------------------------
 export interface PnLModalProps {
+  // Component properties
   asset: Asset;
   transactions: Transaction[];
   prices: Record<string, { usd: number; usd_24h_change?: number }>;

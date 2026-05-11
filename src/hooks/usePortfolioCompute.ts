@@ -23,6 +23,10 @@ interface PortfolioComputeInput {
   collapsedSections: Record<string, boolean>;
 }
 
+/**
+ * Computes the full portfolio state from raw assets, stakes, prices, and user preferences.
+ * @returns Filtered assets, current stakes, LP positions, and computed summary figures.
+ */
 export function usePortfolioCompute(input: PortfolioComputeInput) {
   const {
     wallets, realAssets, realStakes, prices, manualEntries, hiddenTokens, hideDust, hideSpam, spamTokenIds,

@@ -1,3 +1,4 @@
+/** @module BridgeActivityTimeline - Displays grouped bridge transaction history. */
 import { useMemo, useState } from 'react';
 import { format } from 'date-fns';
 import { ArrowRight, ExternalLink, GitBranch, BarChart2 } from 'lucide-react';
@@ -21,6 +22,7 @@ const CHAIN_LABELS: Record<BridgeActivity['fromChain'], string> = {
   pulsechain: 'PulseChain',
   ethereum: 'Ethereum',
   base: 'Base',
+  arbitrum: 'Arbitrum',
   external: 'External',
 };
 
@@ -28,6 +30,7 @@ const CHAIN_SHORT: Record<BridgeActivity['fromChain'], string> = {
   pulsechain: 'PLS',
   ethereum: 'ETH',
   base: 'BASE',
+  arbitrum: 'ARB',
   external: 'EXT',
 };
 
@@ -35,6 +38,7 @@ const CHAIN_TONE: Record<BridgeActivity['fromChain'], string> = {
   pulsechain: '#f739ff',
   ethereum: '#818cf8',
   base: '#60a5fa',
+  arbitrum: '#12AAFF',
   external: 'var(--fg-subtle)',
 };
 

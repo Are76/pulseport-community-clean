@@ -2,6 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { ArrowLeftRight, ExternalLink, RefreshCcw, Shield, Zap, CreditCard, ArrowUpDown, Copy, Check } from 'lucide-react';
 import { BRIDGE_TOKENS, PULSECHAIN_CORE_TOKENS, API_ENDPOINTS, TOAST_DURATIONS } from '../utils/appConstants';
 
+const BRIDGED_REFERENCE = [
+  { symbol: 'pWETH', contract: '0x02dcdd04e3f455d838cd1249292c58f3b79e3c3c', note: 'Bridged Wrapped Ether from Ethereum. Tracks ETH price but is market-priced on PulseChain — do not assume 1:1 with ETH.' },
+  { symbol: 'pDAI',  contract: '0xefd766ccb38eaf1dfd701853bfce31359239f305', note: 'Bridged DAI from Ethereum. Soft-pegged stablecoin; live price depends on bridge liquidity. Do not assume $1.' },
+  { symbol: 'pUSDC', contract: '0x15d38573d2feeb82e7ad5187ab8c1d52810b1f07', note: 'Bridged USD Coin from Ethereum. Fiat-backed on Ethereum; price on PulseChain set by market. Do not assume $1.' },
+  { symbol: 'pUSDT', contract: '0x0cb6f5a34ad42ec934882a05265a7d5f59b51a2f', note: 'Bridged Tether from Ethereum. Fiat-backed on Ethereum; price on PulseChain set by market. Do not assume $1.' },
+  { symbol: 'pWBTC', contract: '0xb17d901469b9208b17d916112988a3fed19b5ca1', note: 'Bridged Wrapped Bitcoin from Ethereum. Tracks BTC price but is market-priced on PulseChain.' },
+  { symbol: 'eHEX',  contract: '0x57fde0a71132198bbec939b98976993d8d89d225', note: 'Bridged Ethereum HEX on PulseChain. Different contract from pHEX; yield rates differ from pHEX.' },
+] as const;
+
 const QUICK_CHECKS = [
   ['PulseChain', 'EVM-compatible Layer 1, chain ID 369, native gas token PLS.'],
   ['pHEX vs eHEX', 'pHEX is the fork-copy staking token. eHEX is bridged Ethereum HEX on a different PulseChain contract.'],

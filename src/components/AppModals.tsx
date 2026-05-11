@@ -1,3 +1,4 @@
+/** @module AppModals - Renders all application-level modals. */
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Pencil, Plus, Settings, ExternalLink } from 'lucide-react';
@@ -70,7 +71,7 @@ export function AppModals({
   const [selectedWalletAddr] = React.useState('all');
   const [STATIC_LOGOS] = React.useState<Record<string, string>>({});
 
-  // Helper for custom coin submission
+  const portfolioTotal = currentAssets.reduce((acc, a) => acc + a.value, 0);
   const submitCustomCoin = () => {
     // Implementation would add coin to portfolio
   };
@@ -259,7 +260,7 @@ export function AppModals({
       {tokenCardModal && (
         <TokenCardModal
           asset={tokenCardModal}
-          portfolioTotal={summary.totalValue}
+          portfolioTotal={portfolioTotal}
           logoUrl={STATIC_LOGOS[(tokenCardModal as any).address?.toLowerCase?.()] || (tokenCardModal as any).logoUrl || tokenLogos[(tokenCardModal as any).address?.toLowerCase?.()] || getTokenLogoUrl(tokenCardModal)}
           marketData={tokenMarketData[tokenCardModal.id]}
           isLoadingMarketData={tokenCardModalLoading}
@@ -302,7 +303,7 @@ export function AppModals({
           open={profitPlannerOpen}
           onClose={() => setProfitPlannerOpen(false)}
           assets={currentAssets}
-          totalValue={summary?.totalValue ?? 0}
+          totalValue={portfolioTotal}
         />
       )}
 

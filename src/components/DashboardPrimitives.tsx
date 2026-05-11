@@ -1,3 +1,4 @@
+/** @module DashboardPrimitives - Shared layout primitives: PageHeader, StatGrid, and SectionHeader. */
 import type { ReactNode } from 'react';
 
 type PageHeaderProps = {

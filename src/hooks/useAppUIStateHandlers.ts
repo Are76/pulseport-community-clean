@@ -2,6 +2,10 @@ import { useState, useCallback } from 'react';
 import type { Wallet } from '../types';
 import { getAddress } from 'viem';
 
+/**
+ * Manages all wallet-level UI interaction state (add/remove/rename wallets, form fields).
+ * @returns State values and callbacks for the wallet management UI.
+ */
 export function useAppUIStateHandlers() {
   const [newWalletAddress, setNewWalletAddress] = useState('');
   const [newWalletName, setNewWalletName] = useState('');

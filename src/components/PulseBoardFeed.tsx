@@ -1,4 +1,5 @@
-﻿export interface PulseBoardFeedItem {
+/** @module PulseBoardFeed - Embedded community news feed for PulseChain ecosystem updates. */
+export interface PulseBoardFeedItem {
   tag: string;
   title: string;
   body: string;
@@ -6,6 +7,7 @@
 }
 
 interface PulseBoardFeedProps {
+  // Component properties
   items: PulseBoardFeedItem[];
 }
 

@@ -40,7 +40,7 @@ interface AssetsTabProps {
     borderLight: string;
   };
   CHAIN_COLORS: Record<string, string>;
-  WALLET_DOT_COLORS: string[];
+  WALLET_DOT_COLORS: readonly string[];
   STATIC_LOGOS: Record<string, string>;
   // Wallet/modal callbacks
   setIsAddingWallet: (open: boolean) => void;

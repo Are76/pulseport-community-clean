@@ -1,3 +1,4 @@
+import React from 'react';
 import type { InvestmentHoldingRow } from '../../types';
 
 interface MyInvestmentsAssetPanelProps {

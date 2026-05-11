@@ -1,3 +1,4 @@
+/** @module LiquiditySection - Displays all LP positions for the portfolio with farming rewards. */
 import React, { useEffect, useRef } from 'react';
 import {
   Droplets,
@@ -113,6 +114,7 @@ function IncLogo({ size = 28 }: { size?: number }) {
 
 // --- Farming Rewards Banner ---------------------------------------------------
 interface FarmingRewardsBannerProps {
+  // Component properties
   stakedPositions: LpPositionEnriched[];
   incPrice: number;
 }

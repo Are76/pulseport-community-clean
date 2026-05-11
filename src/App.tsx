@@ -490,6 +490,10 @@ export default function App() {
 
   // receivedAssetsData is now computed via useAppComputations hook
 
+  const handleToggleHide = useCallback((id: string) => {
+    setHiddenTxIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  }, [setHiddenTxIds]);
+
   // -- Fetch market data when token card modal opens ------------------------
   // For native PLS, use the WPLS contract address since DexScreener tracks WPLS pairs.
   useEffect(() => {

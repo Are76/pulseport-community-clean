@@ -9,6 +9,8 @@ export type HoldingSortDir = 'asc' | 'desc';
 
 /**
  * Asset display data with calculated price and value fields.
+ * @example
+ * { id: 'pls', symbol: 'PLS', priceUsd: 0.00005, pricePls: 1, valueUsd: 50, valuePls: 1000000, leagueLabel: 'Whale' }
  */
 export interface HoldingDisplayAsset extends Asset {
   /** Price in USD */
@@ -37,6 +39,7 @@ export interface HoldingDisplayAsset extends Asset {
  * Props for the HoldingsTable component.
  */
 interface HoldingsTableProps {
+  // Component properties
   assets: HoldingDisplayAsset[];
   allAssets: Asset[];
   wallets: Wallet[];

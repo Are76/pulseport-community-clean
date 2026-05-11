@@ -1,3 +1,4 @@
+/** @module LiquidityPositionCard - Card displaying a single LP position with token pair details. */
 import React from 'react';
 import { ChevronRight, ExternalLink, ArrowUpRight } from 'lucide-react';
 import {
@@ -15,6 +16,7 @@ function tokenLogoUrl(address: string): string {
 
 // --- Token Logo ---------------------------------------------------------------
 interface TokenLogoProps {
+  // Component properties
   address: string;
   symbol: string;
   size: number;
