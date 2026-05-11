@@ -43,6 +43,10 @@ interface ReceivedAssetsData {
   byAsset: Record<string, { amount: number; valueUsd: number }>;
 }
 
+/**
+ * Computes derived portfolio metrics from raw asset, stake, and transaction data.
+ * @returns Portfolio summary, stake summary, asset allocation, and received-assets breakdown.
+ */
 export function useAppComputations(
   currentAssets: Asset[],
   currentStakes: HexStake[],
@@ -76,9 +80,9 @@ export function useAppComputations(
     const totalValue = liquidValue + stakingValueUsd;
     const totalPnl = assets.reduce((acc, curr) => acc + (curr.value * (curr.pnl24h || 0) / 100), 0);
 
-    const distribution: Record<Chain, number> = { pulsechain: 0, ethereum: 0, base: 0 };
-    const chainPnlUsd: Record<Chain, number> = { pulsechain: 0, ethereum: 0, base: 0 };
-    const chainPnlPercent: Record<Chain, number> = { pulsechain: 0, ethereum: 0, base: 0 };
+    const distribution: Record<Chain, number> = { pulsechain: 0, ethereum: 0, base: 0, arbitrum: 0 };
+    const chainPnlUsd: Record<Chain, number> = { pulsechain: 0, ethereum: 0, base: 0, arbitrum: 0 };
+    const chainPnlPercent: Record<Chain, number> = { pulsechain: 0, ethereum: 0, base: 0, arbitrum: 0 };
 
     assets.forEach(a => {
       if (a.chain in distribution) {
@@ -136,7 +140,7 @@ export function useAppComputations(
       || prices['ethereum:native']?.usd
       || prices['pulsechain:0x02dcdd04e3f455d838cd1249292c58f3b79e3c3c']?.usd
       || 0;
-    const txUsdValue = (tx: { asset: string; valueUsd: number; amount: number }) => {
+    const txUsdValue = (tx: { asset: string; valueUsd?: number; amount: number }) => {
       if (tx.valueUsd > 0) return tx.valueUsd;
       if (tx.asset.toUpperCase() === 'ETH') return tx.amount * ethPriceFallback;
       return tx.amount;

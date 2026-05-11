@@ -4,6 +4,8 @@ import { CHAIN_COLORS } from '../utils/appConstants';
 
 /**
  * A single coin/asset item in the CoinList.
+ * @example
+ * { id: 'pls', symbol: 'PLS', name: 'PulseChain', chain: 'pulsechain', balance: 1000, value: 5 }
  */
 export interface CoinListItem {
   /** Unique identifier for the coin */

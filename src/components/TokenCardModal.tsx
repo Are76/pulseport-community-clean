@@ -1,3 +1,4 @@
+/** @module TokenCardModal - Detail modal for a single token with price, market data, and chart links. */
 import React, { useEffect, useCallback } from 'react';
 import { X, Copy, ExternalLink, TrendingUp, TrendingDown, Globe, Twitter, Send } from 'lucide-react';
 import type { Asset } from '../types';
@@ -55,6 +56,7 @@ function ChangeRow({ label, pct, theme }: { label: string; pct: number | null | 
 // -- props --------------------------------------------------------------------
 
 interface Props {
+  // Component properties
   asset: Asset;
   portfolioTotal: number;
   logoUrl?: string;

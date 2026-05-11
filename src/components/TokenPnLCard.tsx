@@ -14,6 +14,8 @@ import type { Transaction, Asset } from '../types';
 // --- Props --------------------------------------------------------------------
 /**
  * Props for the TokenPnLCard component.
+ * @example
+ * <TokenPnLCard symbol="PLS" transactions={txs} asset={plsAsset} priceUsd={0.00005} plsPriceUsd={0.00005} />
  */
 export interface TokenPnLCardProps {
   /** The token symbol being analyzed */

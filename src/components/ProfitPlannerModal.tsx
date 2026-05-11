@@ -1,3 +1,4 @@
+/** @module ProfitPlannerModal - Interactive profit planning calculator with scenario modeling. */
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { X, TrendingUp, Lightbulb, AlertTriangle, ChevronDown, ChevronUp, ChevronRight, ChevronLeft } from 'lucide-react';
 import {
@@ -11,6 +12,7 @@ type Horizon = '1m' | '3m' | '6m' | '1y';
 type Preset = 'conservative' | 'balanced' | 'aggressive' | 'moon';
 
 export interface ProfitPlannerModalProps {
+  // Component properties
   open: boolean;
   onClose: () => void;
   assets: Asset[];

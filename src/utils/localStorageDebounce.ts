@@ -1,3 +1,4 @@
+/** @module localStorageDebounce - Debounced localStorage write utilities to reduce write frequency. */
 const pending = new Map<string, number>();
 
 export function scheduleLocalStorageWrite(key: string, value: string, delay = 500): void {

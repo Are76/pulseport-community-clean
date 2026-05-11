@@ -1675,7 +1675,7 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
       const nativeValue = totalValue / plsPrice;
 
       // Calculate chain-specific PNL for the history point
-      const chainPnl: Record<Chain, number> = { pulsechain: 0, ethereum: 0, base: 0 };
+      const chainPnl: Record<Chain, number> = { pulsechain: 0, ethereum: 0, base: 0, arbitrum: 0 };
       Object.values(assetMap).forEach(asset => {
         chainPnl[asset.chain] += (asset.value * (asset.pnl24h || 0) / 100);
       });

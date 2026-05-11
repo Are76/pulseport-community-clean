@@ -1,3 +1,4 @@
+/** @module MarketWatchModal - Full-screen market watch panel for tracking token pairs and importing watchlists. */
 import React, { useEffect, useCallback, useState } from 'react';
 import { X, RefreshCw, ExternalLink, TrendingUp, TrendingDown, Search, Link2, List } from 'lucide-react';
 import { fetchDexScreenerByShareId, parseWatchlistUrl } from '../utils/dexScreener';
@@ -65,6 +66,7 @@ interface WatchPair {
 // -- props ---------------------------------------------------------------------
 
 interface Props {
+  // Component properties
   theme: 'dark' | 'light';
   onClose: () => void;
   initialSearch?: string;
@@ -384,7 +386,7 @@ export function MarketWatchModal({ theme, onClose, initialSearch = '' }: Props) 
     setImportShareId(null);
 
     try {
-      let entries: { chainId: string; pairAddr: string }[];
+      let entries: { chainId: string; pairAddress: string }[];
 
       // -- Resolve share-link ID to pair addresses --------------------------
       if (parsed.type === 'shareId') {

@@ -1,3 +1,4 @@
+/** @module StakesSection - HEX staking positions overview with pie chart and filter controls. */
 import React, { useState } from 'react';
 import {
   PieChart, Pie, Cell, ResponsiveContainer,
@@ -10,6 +11,7 @@ import { PHEX_YIELD_PER_TSHARE, EHEX_YIELD_PER_TSHARE } from '../constants';
 // -- Types ---------------------------------------------------------------------
 
 export interface StakesSectionProps {
+  // Component properties
   stakes: HexStake[];
   hexUsdPrice: number;
   phexUsdPrice: number;

@@ -1,3 +1,4 @@
+/** @module StakingLadder - Bar chart of HEX stakes bucketed by days remaining. */
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts';
 import type { HexStake } from '../types';
@@ -5,6 +6,7 @@ import type { HexStake } from '../types';
 const INITIAL_BUCKET_SHARES = 0.001;
 
 interface StakingLadderProps {
+  // Component properties
   stakes: HexStake[];
 }
 

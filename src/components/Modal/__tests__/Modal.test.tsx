@@ -1,6 +1,5 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import { Modal, useModal } from '../Modal';
 
 describe('Modal', () => {
@@ -23,7 +22,7 @@ describe('Modal', () => {
   });
 
   it('calls onClose when backdrop is clicked', () => {
-    const onClose = jest.fn();
+    const onClose = vi.fn();
     const { container } = render(
       <Modal isOpen={true} onClose={onClose} closeOnBackdrop={true}>
         <div>Content</div>
@@ -38,7 +37,7 @@ describe('Modal', () => {
   });
 
   it('does not close on backdrop click when closeOnBackdrop is false', () => {
-    const onClose = jest.fn();
+    const onClose = vi.fn();
     const { container } = render(
       <Modal isOpen={true} onClose={onClose} closeOnBackdrop={false}>
         <div>Content</div>
@@ -53,7 +52,7 @@ describe('Modal', () => {
   });
 
   it('closes on Escape key when closeOnEscape is true', () => {
-    const onClose = jest.fn();
+    const onClose = vi.fn();
     render(
       <Modal isOpen={true} onClose={onClose} closeOnEscape={true}>
         <div>Content</div>
@@ -65,7 +64,7 @@ describe('Modal', () => {
   });
 
   it('does not close on Escape when closeOnEscape is false', () => {
-    const onClose = jest.fn();
+    const onClose = vi.fn();
     render(
       <Modal isOpen={true} onClose={onClose} closeOnEscape={false}>
         <div>Content</div>
@@ -108,7 +107,7 @@ describe('Modal', () => {
   });
 
   it('Header close button calls modal onClose', () => {
-    const onClose = jest.fn();
+    const onClose = vi.fn();
     render(
       <Modal isOpen={true} onClose={onClose}>
         <Modal.Header title="Test" />
@@ -160,7 +159,7 @@ describe('Modal', () => {
     };
 
     // Suppress console.error for this test
-    const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     expect(() => {
       render(<TestComponent />);
@@ -170,7 +169,7 @@ describe('Modal', () => {
   });
 
   it('works with compound component pattern', () => {
-    const onClose = jest.fn();
+    const onClose = vi.fn();
     render(
       <Modal isOpen={true} onClose={onClose}>
         <Modal.Header title="Test Modal" subtitle="Test subtitle" />

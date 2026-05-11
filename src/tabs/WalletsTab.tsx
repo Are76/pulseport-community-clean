@@ -28,7 +28,7 @@ interface WalletsTabProps {
     expandedBg: string;
     borderLight: string;
   };
-  WALLET_DOT_COLORS: string[];
+  WALLET_DOT_COLORS: readonly string[];
 }
 
 export function WalletsTab({

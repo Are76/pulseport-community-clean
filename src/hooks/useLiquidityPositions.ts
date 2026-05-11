@@ -137,6 +137,10 @@ export interface UseLiquidityPositionsResult {
   refetch: () => void;
 }
 
+/**
+ * Fetches and subscribes to LP position data for the given wallet addresses.
+ * @returns Enriched LP positions, loading flag, error message, and a refetch callback.
+ */
 export function useLiquidityPositions(
   walletAddresses: string[],
   tokenPrices: Record<string, number>,

@@ -1,3 +1,4 @@
+/** @module dexScreener - Functions for fetching token pair data from DexScreener API. */
 import type { DexScreenerPair, DexScreenerResponse } from '../types';
 
 export async function fetchDexScreenerByAddress(
@@ -42,7 +43,7 @@ export async function fetchDexScreenerByShareId(shareId: string): Promise<{ chai
       if (!res.ok) continue;
       const data = await res.json();
 
-      const rawItems: DexScreenerPair[] =
+      const rawItems: (DexScreenerPair | string)[] =
         (Array.isArray(data) ? data : null) ??
         (Array.isArray(data.pairs) ? data.pairs : null) ??
         (Array.isArray(data.items) ? data.items : null) ??

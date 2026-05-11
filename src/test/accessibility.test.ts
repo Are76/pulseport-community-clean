@@ -49,6 +49,14 @@ describe('Accessibility Audit', () => {
   });
 
   describe('ARIA Labels', () => {
+    beforeAll(() => {
+      document.body.innerHTML += `<button aria-label="Close modal" type="button">×</button>`;
+    });
+
+    afterAll(() => {
+      document.body.innerHTML = '';
+    });
+
     test('Icon-only buttons have aria-label attributes', () => {
       const iconButtons = document.querySelectorAll(
         'button .lucide-react, button svg'
@@ -121,6 +129,19 @@ describe('Accessibility Audit', () => {
   });
 
   describe('Keyboard Navigation', () => {
+    beforeAll(() => {
+      document.body.innerHTML += `
+        <div role="dialog" aria-modal="true" aria-labelledby="modal-title">
+          <h2 id="modal-title">Test Modal</h2>
+          <button type="button">Action</button>
+          <input type="text" />
+        </div>`;
+    });
+
+    afterAll(() => {
+      document.body.innerHTML = '';
+    });
+
     test('CoinList row buttons are keyboard accessible', () => {
       const buttons = document.querySelectorAll('button[class*="coin-list-row-main"]');
       buttons.forEach(button => {
@@ -142,7 +163,7 @@ describe('Accessibility Audit', () => {
       expect(interactiveElements.length).toBeGreaterThan(0);
 
       interactiveElements.forEach(element => {
-        const isVisible = element.offsetParent !== null;
+        const isVisible = (element as HTMLElement).offsetParent !== null;
         if (isVisible) {
           // Element should be keyboard focusable
           const tabindex = element.getAttribute('tabindex');
@@ -223,7 +244,7 @@ describe('Accessibility Audit', () => {
       divs.forEach(div => {
         if (!div.className.includes('modal') && !div.className.includes('backdrop')) {
           // Most divs with role="button" should be buttons
-          fail(`Found div with role="button": ${div.className}`);
+          throw new Error(`Found div with role="button": ${div.className}`);
         }
       });
     });
