@@ -194,6 +194,21 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
     document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
 
+  // ── Clear cached portfolio data when all wallets are removed ────────────────
+  // fetchPortfolio only runs when wallets.length > 0, so without this effect
+  // the stale assets/stakes/transactions would remain visible after removal.
+  useEffect(() => {
+    if (wallets.length === 0) {
+      setRealAssets([]);
+      setRealStakes([]);
+      setLpPositions([]);
+      setFarmPositions([]);
+      setWalletAssets({});
+      setTransactions([]);
+      setHistory([]);
+    }
+  }, [wallets.length]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // ── Section collapse helpers ─────────────────────────────────────────────────
 
   const isCollapsed = useCallback((key: string) => !!collapsedSections[key], [collapsedSections]);
